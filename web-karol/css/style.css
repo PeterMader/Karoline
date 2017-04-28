@@ -1,0 +1,53 @@
+html, body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+}
+
+main {
+  display: flex;
+  height: 60%;
+}
+
+.pane {
+  flex: 1;
+}
+
+.console {
+  position: relative;
+  height: 40%;
+}
+
+#console-output {
+  height: calc(100% - 30px);
+  overflow-y: auto;
+}
+
+#console-input {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+
+#console-input input {
+  display: block;
+  height: 20px;
+  padding: 2px 10px;
+  width: calc(100% - 22px);
+}
+
+.console-log-message {
+  background-color: #DDDDDD;
+}
+
+.console-message span:first-child {
+  margin-right: 10px;
+}
+
+.console-info-message {
+  background-color: #DDDDFF;
+}
+
+.console-error-message {
+  background-color: #FF6666;
+}
