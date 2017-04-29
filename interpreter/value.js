@@ -1,4 +1,6 @@
-Karol.Value = class {
+const Procedure = require('./procedure.js')
+
+const Value = module.exports = class {
 
   constructor (type, value) {
     this.type = type
@@ -11,69 +13,69 @@ Karol.Value = class {
   }
 
   toString () {
-    if (this.type === Karol.Value.NULL) {
+    if (this.type === Value.NULL) {
       return 'null'
     }
-    if (this.type === Karol.Value.NUMBER) {
+    if (this.type === Value.NUMBER) {
       return this.value.toString()
     }
-    if (this.type === Karol.Value.STRING) {
+    if (this.type === Value.STRING) {
       return this.value.toString()
     }
-    if (this.type === Karol.Value.BOOLEAN) {
+    if (this.type === Value.BOOLEAN) {
       return this.value ? 'true' : 'false'
     }
-    if (this.type === Karol.Value.PROCEDURE) {
+    if (this.type === Value.PROCEDURE) {
       return 'procedure ' + this.value.name
     }
   }
 
   castToBoolean () {
     if (this.value === false || this.value === '' || this.value === 0 || this.value === null) {
-      return Karol.Value.createFalse()
+      return Value.createFalse()
     }
-    return Karol.Value.createTrue()
+    return Value.createTrue()
   }
 
   static createNull () {
-    return new Karol.Value(Karol.Value.NULL, null)
+    return new Value(Value.NULL, null)
   }
 
   static createNumber (number) {
-    return new Karol.Value(Karol.Value.NUMBER, Number(number))
+    return new Value(Value.NUMBER, Number(number))
   }
 
   static createString (string) {
-    return new Karol.Value(Karol.Value.STRING, String(string))
+    return new Value(Value.STRING, String(string))
   }
 
   static createBoolean (value) {
-    return new Karol.Value(Karol.Value.BOOLEAN, !!value)
+    return new Value(Value.BOOLEAN, !!value)
   }
 
   static createTrue () {
-    return new Karol.Value(Karol.Value.BOOLEAN, true)
+    return new Value(Value.BOOLEAN, true)
   }
 
   static createFalse () {
-    return new Karol.Value(Karol.Value.BOOLEAN, false)
+    return new Value(Value.BOOLEAN, false)
   }
 
   static createProcedure (procedure) {
-    return new Karol.Value(Karol.Value.PROCEDURE, procedure)
+    return new Value(Value.PROCEDURE, procedure)
   }
 
 }
 
-Karol.Value.NUMBER = 'Number'
-Karol.Value.STRING = 'String'
-Karol.Value.BOOLEAN = 'Boolean'
-Karol.Value.PROCEDURE = 'Procedure'
-Karol.Value.NULL = 'Null'
-Karol.Value.ANY = 'Any'
+Value.NUMBER = 'Number'
+Value.STRING = 'String'
+Value.BOOLEAN = 'Boolean'
+Value.PROCEDURE = 'Procedure'
+Value.NULL = 'Null'
+Value.ANY = 'Any'
 
-Karol.Value.OPERATOR_PLUS_UNARY = Symbol('Operator plus unary')
-Karol.Value.prototype[Karol.Value.OPERATOR_PLUS_UNARY] = Karol.Procedure.FAIL
+Value.OPERATOR_PLUS_UNARY = Symbol('Operator plus unary')
+Value.prototype[Value.OPERATOR_PLUS_UNARY] = Procedure.FAIL
 
-Karol.Value.OPERATOR_PLUS_BINARY = Symbol('Operator plus binary')
-Karol.Value.prototype[Karol.Value.OPERATOR_PLUS_BINARY] = Karol.Procedure.FAIL
+Value.OPERATOR_PLUS_BINARY = Symbol('Operator plus binary')
+Value.prototype[Value.OPERATOR_PLUS_BINARY] = Procedure.FAIL

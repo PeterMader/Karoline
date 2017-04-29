@@ -1,16 +1,18 @@
-Karol.ParserSymbol = class extends Karol.Token {
+const Token = require('./token.js')
+
+const ParserSymbol = module.exports = class extends Token {
 
   constructor (options) {
     super(options)
     this.bindingPower = options.bindingPower || 0
-    this.operatorType = Karol.ParserSymbol.OPERATOR_TYPE_UNARY
+    this.operatorType = ParserSymbol.OPERATOR_TYPE_UNARY
 
     this._nullDenotation = typeof options.nullDenotation === 'function' ? options.nullDenotation : this.defaultNullDenotation
     this._leftDenotation = typeof options.leftDenotation === 'function' ? options.leftDenotation : this.defaultLeftDenotation
   }
 
   clone () {
-    return new Karol.ParserSymbol(this)
+    return new ParserSymbol(this)
   }
 
   nullDenotation (self, parser) {
@@ -35,5 +37,5 @@ Karol.ParserSymbol = class extends Karol.Token {
 
 }
 
-Karol.ParserSymbol.OPERATOR_TYPE_UNARY = 'OPERATOR_TYPE_UNARY'
-Karol.ParserSymbol.OPERATOR_TYPE_BINARY = 'OPERATOR_TYPE_BINARY'
+ParserSymbol.OPERATOR_TYPE_UNARY = 'OPERATOR_TYPE_UNARY'
+ParserSymbol.OPERATOR_TYPE_BINARY = 'OPERATOR_TYPE_BINARY'

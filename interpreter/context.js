@@ -1,4 +1,4 @@
-Karol.Context = class {
+const Context = module.exports = class {
 
   constructor (main) {
     this.scope = {}
@@ -19,12 +19,12 @@ Karol.Context = class {
 
   pushScope () {
     this.scope = {
-      [Karol.Context.PARENT_SCOPE]: this.scope
+      [Context.PARENT_SCOPE]: this.scope
     }
   }
 
   popScope () {
-    this.scope = this.scope[Karol.Context.PARENT_SCOPE]
+    this.scope = this.scope[Context.PARENT_SCOPE]
   }
 
   clearCallStack () {
@@ -39,7 +39,7 @@ Karol.Context = class {
       if (scope.hasOwnProperty(name)) {
         return scope[name]
       }
-    } while (scope = scope[Karol.Context.PARENT_SCOPE])
+    } while (scope = scope[Context.PARENT_SCOPE])
     return null
   }
 
@@ -54,4 +54,4 @@ Karol.Context = class {
 
 }
 
-Karol.Context.PARENT_SCOPE = Symbol('Parent scope')
+Context.PARENT_SCOPE = Symbol('Parent scope')

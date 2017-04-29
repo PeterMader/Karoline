@@ -1,11 +1,13 @@
-Karol.Interpreter = class extends Karol.KarolParser {
+const Context = require('./context.js')
+const Token = require('../parser/token.js')
+const KarolineParser = require('../parser/karoline-parser.js')
+
+const Interpreter = class extends KarolineParser {
 
   constructor () {
     super()
-    this.parser = new Karol.Parser()
-    this.prepareParser()
     this.nativeScope = {}
-    this.context = new Karol.Context(new Karol.Token({
+    this.context = new Context(new Token({
       value: '<main>',
       position: {
         line: 0,
@@ -29,14 +31,14 @@ Karol.Interpreter = class extends Karol.KarolParser {
       block.push(parser.expression(0))
     }
     if (parser.token.value === '#end') {
-      throw new Karol.SyntaxError(`syntax error: unexpected end of script, expected ${endToken}`)
+      throw new SyntaxError(`syntax error: unexpected end of script, expected ${endToken}`)
     }
     parser.nextToken(endToken)
     return block
   }
 
   addNativeProcedure (procedure) {
-    this.nativeScope[procedure.name] = Karol.Value.createProcedure(procedure)
+    this.nativeScope[procedure.name] = Value.createProcedure(procedure)
   }
 
   addNativeValue (name, value) {
@@ -45,13 +47,13 @@ Karol.Interpreter = class extends Karol.KarolParser {
 
   createProcedure (name, block) {
     const {length} = block
-    const procedure = new Karol.Procedure({
+    const procedure = new Procedure({
       cb: this.evaluateBlock.bind(this, block),
       name,
       userDefined: true,
       scope: this.context.scope
     })
-    const value = Karol.Value.createProcedure(procedure)
+    const value = Value.createProcedure(procedure)
     this.context.set(name, value)
     return value
   }
@@ -71,7 +73,7 @@ Karol.Interpreter = class extends Karol.KarolParser {
   }
 
   throwTypeError (message, position) {
-    throw new Karol.TypeError(message, position, this.context.callStack)
+    throw new TypeError(message, position, this.context.callStack)
   }
 
   wait (ms) {
@@ -90,11 +92,11 @@ Karol.Interpreter = class extends Karol.KarolParser {
       this.emit('parse')
       result = await this.evaluateBlock(trees)
     } catch (e) {
-      if (e !== Karol.Interpreter.EXECUTION_STOPPED) {
+      if (e !== Interpreter.EXECUTION_STOPPED) {
         this.emit('error', e)
         result = e
       } else {
-        result = Karol.Value.createNull()
+        result = Value.createNull()
       }
     }
     this.cleanUp()
@@ -131,7 +133,7 @@ Karol.Interpreter = class extends Karol.KarolParser {
     if (procedure.scope) {
       this.context.overrideScope(procedure.scope)
     }
-    const result = (await procedure.execute(args)) || Karol.Value.createNull()
+    const result = (await procedure.execute(args)) || Value.createNull()
     if (procedure.scope) {
       this.context.restoreScope()
     }
@@ -141,7 +143,7 @@ Karol.Interpreter = class extends Karol.KarolParser {
 
   async evaluateBlock (block) {
     const {length} = block
-    let value = Karol.Value.createNull()
+    let value = Value.createNull()
     let i
     this.context.pushScope()
     for (i = 0; i < length; i += 1) {
@@ -152,7 +154,7 @@ Karol.Interpreter = class extends Karol.KarolParser {
       }
       if (this.stopped) {
         // break the promise chain
-        throw Karol.Interpreter.EXECUTION_STOPPED
+        throw Interpreter.EXECUTION_STOPPED
       }
       value = await this.evaluate(block[index], true)
       this.emit('statement')
@@ -162,18 +164,18 @@ Karol.Interpreter = class extends Karol.KarolParser {
   }
 
   async evaluate (tree, isStatement) {
-    if (tree.type === Karol.Token.TOKEN_TYPE_NUMBER) {
-      return new Karol.Number(tree.value)
+    if (tree.type === Token.TOKEN_TYPE_NUMBER) {
+      return new Number(tree.value)
     }
-    if (tree.type === Karol.Token.TOKEN_TYPE_STRING) {
-      return Karol.Value.createString(tree.value)
+    if (tree.type === Token.TOKEN_TYPE_STRING) {
+      return Value.createString(tree.value)
     }
     if (tree.isAssignment) {
       const result = await this.evaluate(tree.second)
       this.context.set(tree.first.value, result)
       return result
     }
-    if (tree.type === Karol.Token.TOKEN_TYPE_IDENTIFIER) {
+    if (tree.type === Token.TOKEN_TYPE_IDENTIFIER) {
       let value
       if (value = this.context.get(tree.value)) {
       } else if (this.nativeScope.hasOwnProperty(tree.value)) {
@@ -182,7 +184,7 @@ Karol.Interpreter = class extends Karol.KarolParser {
         this.throwTypeError(`undefined identifier ${tree.value}`)
       }
 
-      if (isStatement && value.type === Karol.Value.PROCEDURE) {
+      if (isStatement && value.type === Value.PROCEDURE) {
         return this.executeProcedure(value.value, [], tree)
       } else {
         return value
@@ -191,21 +193,21 @@ Karol.Interpreter = class extends Karol.KarolParser {
     if (tree.value === '==') {
       const first = await this.evaluate(tree.first)
       const second = await this.evaluate(tree.second)
-      return Karol.Value.createBoolean(first.type === second.type && first.value === second.value)
+      return Value.createBoolean(first.type === second.type && first.value === second.value)
     }
     if (tree.value === '+') {
-      if (tree.operatorType === Karol.ParserSymbol.OPERATOR_TYPE_BINARY) {
+      if (tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {
         const first = await this.evaluate(tree.first)
         const second = await this.evaluate(tree.second)
-        return first[Karol.Value.OPERATOR_PLUS_BINARY].execute(first, second)
+        return first[Value.OPERATOR_PLUS_BINARY].execute(first, second)
       } else {
         const first = await this.evaluate(tree.first)
-        return first[Karol.Value.OPERATOR_PLUS_UNARY].execute(first)
+        return first[Value.OPERATOR_PLUS_UNARY].execute(first)
       }
     }
-    if (tree.value === '(' && tree.operatorType === Karol.ParserSymbol.OPERATOR_TYPE_BINARY) {
+    if (tree.value === '(' && tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {
       let procedure
-      if (tree.first.type === Karol.Token.TOKEN_TYPE_IDENTIFIER) {
+      if (tree.first.type === Token.TOKEN_TYPE_IDENTIFIER) {
         if (procedure = this.context.get(tree.first.value)) {
         } else if (this.nativeScope.hasOwnProperty(tree.first.value)) {
           procedure = this.nativeScope[tree.first.value]
@@ -215,7 +217,7 @@ Karol.Interpreter = class extends Karol.KarolParser {
       } else {
         procedure = await this.evaluate(tree.first)
       }
-      if (procedure.type === Karol.Value.PROCEDURE) {
+      if (procedure.type === Value.PROCEDURE) {
         procedure = procedure.value
       } else {
         this.throwTypeError(`tried to call a value of type ${procedure.type}, expected a procedure`, tree.first.position)
@@ -232,8 +234,8 @@ Karol.Interpreter = class extends Karol.KarolParser {
       if (typeof tree.times !== 'undefined') {
         // repeat ... times structure
         const times = await this.evaluate(tree.times)
-        if (times.type !== Karol.Value.NUMBER) {
-          throw new Karol.TypeError(`repeat structure: expected ${Karol.Value.NUMBER}, got ${times.type}`)
+        if (times.type !== Value.NUMBER) {
+          throw new TypeError(`repeat structure: expected ${Value.NUMBER}, got ${times.type}`)
         }
         let i
         for (i = 0; i < times.value; i += 1) {
@@ -245,7 +247,7 @@ Karol.Interpreter = class extends Karol.KarolParser {
           await this.evaluateBlock(block)
         }
       }
-      return Karol.Value.createNull()
+      return Value.createNull()
     }
     if (tree.value === 'procedure') {
       const {first, block} = tree
@@ -257,4 +259,4 @@ Karol.Interpreter = class extends Karol.KarolParser {
 
 }
 
-Karol.Interpreter.EXECUTION_STOPPED = Symbol('execution stopped')
+Interpreter.EXECUTION_STOPPED = Symbol('execution stopped')

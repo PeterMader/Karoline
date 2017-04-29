@@ -1,10 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+  const Application = require('./application.js')
+  const Console = require('./console.js')
+  const {Interpreter} = require('../index.js')
+
   const canvas = document.getElementById('canvas')
   const editor = document.getElementById('editor')
-  const interpreter = new Karol.Interpreter()
-  const karolConsole = new Karol.Console(document.getElementById('console-output'), document.getElementById('console-input'))
-  const app = window.app = new Karol.Application(interpreter, canvas, karolConsole)
+  const interpreter = new Interpreter()
+  const karolConsole = new Console(document.getElementById('console-output'), document.getElementById('console-input'))
+  const app = window.app = new Application(interpreter, canvas, karolConsole)
   app.render()
 
   const runButton = document.getElementById('run')

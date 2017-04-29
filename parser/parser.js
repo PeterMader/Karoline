@@ -1,14 +1,19 @@
-Karol.Parser = class {
+const Tokenizer = require('./tokenizer.js')
+const ParserSymbol = require('./parser-symbol.js')
+const SyntaxError = require('../util/syntax-error.js')
+const Token = require('./token.js')
+
+const Parser = module.exports = class {
 
   constructor () {
-    this.tokenizer = new Karol.Tokenizer([])
+    this.tokenizer = new Tokenizer([])
     this.symbols = {}
     this.token = null
 
     this.tokens = []
     this.currentIndex = 0
 
-    this.registerSymbol(new Karol.ParserSymbol({
+    this.registerSymbol(new ParserSymbol({
       value: '#end',
       bindingPower: 0
     }))
@@ -21,19 +26,19 @@ Karol.Parser = class {
       return
     }
     if (expected && this.token.value !== expected) {
-      throw new Karol.SyntaxError(`Expected token "${expected}", got "${this.token.value}"`)
+      throw new SyntaxError(`Expected token "${expected}", got "${this.token.value}"`)
       this.token = this.symbols['#end']
       return
     }
-    if (token.type === Karol.Token.TOKEN_TYPE_KEY_WORD) {
+    if (token.type === Token.TOKEN_TYPE_KEY_WORD) {
       this.token = this.symbols[token.value]
       if (typeof this.token === 'undefined') {
-        throw new Karol.SyntaxError(`Undefined key word "${token.value}"`)
+        throw new SyntaxError(`Undefined key word "${token.value}"`)
         this.token = this.symbols['#end']
         return
       }
     } else {
-      this.token = new Karol.ParserSymbol(token)
+      this.token = new ParserSymbol(token)
     }
     this.currentIndex += 1
   }
@@ -60,7 +65,7 @@ Karol.Parser = class {
     }
 
     if (this.token.value === '#end') {
-      throw new Karol.SyntaxError(`Unexpected end of line, expected an expression.`)
+      throw new SyntaxError(`Unexpected end of line, expected an expression.`)
       return null
     }
 

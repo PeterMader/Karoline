@@ -1,25 +1,28 @@
-Karol.Number = class extends Karol.Value {
+const Value = require('./value.js')
+const Procedure = require('./procedure.js')
+
+const Number = module.exports = class extends Value {
 
   constructor (value) {
-    super(Karol.Value.NUMBER, value)
+    super(Value.NUMBER, value)
   }
 
 }
 
-Karol.Number.prototype[Karol.Value.OPERATOR_PLUS_UNARY] = new Karol.Procedure({
+Number.prototype[Value.OPERATOR_PLUS_UNARY] = new Procedure({
   cb: (self) => self,
   expectedArguments: [{
-    type: Karol.Value.NUMBER
+    type: Value.NUMBER
   }]
 })
 
-Karol.Number.prototype[Karol.Value.OPERATOR_PLUS_BINARY] = new Karol.Procedure({
+Number.prototype[Value.OPERATOR_PLUS_BINARY] = new Procedure({
   cb: ([self, other]) => {
-    if (other.type === Karol.Value.NUMBER) {
-      return new Karol.Number(self.value, other.value)
+    if (other.type === Value.NUMBER) {
+      return new Number(self.value, other.value)
     }
   },
   expectedArguments: [{
-    types: [Karol.Value.NUMBER, Karol.Value.STRING]
+    types: [Value.NUMBER, Value.STRING]
   }]
 })

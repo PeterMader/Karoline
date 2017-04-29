@@ -1,4 +1,6 @@
-Karol.PrefixOperator = class extends Karol.ParserSymbol {
+const ParserSymbol = require('./parser-symbol.js')
+
+const PrefixOperator = module.exports = class extends ParserSymbol {
 
   constructor (options) {
     super(options)
@@ -7,7 +9,7 @@ Karol.PrefixOperator = class extends Karol.ParserSymbol {
   defaultNullDenotation (self, parser) {
     const item = this.clone()
     item.first = parser.expression(this.bindingPower)
-    item.operatorType = Karol.ParserSymbol.OPERATOR_TYPE_UNARY
+    item.operatorType = ParserSymbol.OPERATOR_TYPE_UNARY
     return item
   }
 

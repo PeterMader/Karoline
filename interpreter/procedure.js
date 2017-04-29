@@ -1,4 +1,6 @@
-Karol.Procedure = class {
+const TypeError = require('../util/type-error.js')
+
+const Procedure = module.exports = class {
 
   constructor (options) {
     this.cb = options.cb
@@ -18,16 +20,16 @@ Karol.Procedure = class {
         continue
       }
       if (!real) {
-        throw new Karol.TypeError(`procedure ${this.name}: missing argument ${index}`)
+        throw new TypeError(`procedure ${this.name}: missing argument ${index}`)
       }
       if (Array.isArray(expected.types)) {
         if (expected.types.indexOf(real.type) < 0) {
           const types = expected.types.reduce((a, b) => a + ', ' + b, '')
-          throw new Karol.TypeError(`procedure ${this.name}: expected argument ${index} to be of types ${types}got type ${args[index].type}`)
+          throw new TypeError(`procedure ${this.name}: expected argument ${index} to be of types ${types}got type ${args[index].type}`)
         }
       }
-      if (expected.type !== real.type && expected.type !== Karol.Value.ANY) {
-        throw new Karol.TypeError(`procedure ${this.name}: expected argument ${index} to be of type ${expected.type}, got type ${args[index].type}`)
+      if (expected.type !== real.type && expected.type !== Value.ANY) {
+        throw new TypeError(`procedure ${this.name}: expected argument ${index} to be of type ${expected.type}, got type ${args[index].type}`)
       }
     }
     return await cb(args)
@@ -35,8 +37,8 @@ Karol.Procedure = class {
 
 }
 
-Karol.Procedure.FAIL = new Karol.Procedure({
+Procedure.FAIL = new Procedure({
   cb: () => {
-    throw new Karol.TypeError(`undefined action`)
+    throw new TypeError(`undefined action`)
   }
 })

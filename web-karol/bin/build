@@ -1,0 +1,2 @@
+#!/bin/sh
+../node_modules/.bin/browserify.cmd app.js -o dist/web-karol.js -t [ babelify --presets [ env ] ]

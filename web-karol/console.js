@@ -1,4 +1,6 @@
-Karol.Console = class extends Karol.EventEmitter {
+const {EventEmitter} = require('../index.js')
+
+const Console = module.exports = class extends EventEmitter {
 
   constructor (output, input) {
     super()

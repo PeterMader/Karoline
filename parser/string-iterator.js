@@ -1,4 +1,4 @@
-Karol.StringIterator = class {
+const StringIterator = module.exports = class {
 
   constructor (str) {
     this.string = typeof str === 'string' ? str : ''

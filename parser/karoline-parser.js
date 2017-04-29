@@ -1,8 +1,15 @@
-Karol.KarolParser = class extends Karol.EventEmitter {
+const EventEmitter = require('../util/event-emitter.js')
+const ParserSymbol = require('./parser-symbol.js')
+const PrefixOperator = require('./prefix-operator.js')
+const InfixOperator = require('./infix-operator.js')
+const Token = require('./token.js')
+const Parser = require('./parser.js')
+
+const KarolineParser = module.exports = class extends EventEmitter {
 
   constructor () {
     super()
-    this.parser = new Karol.Parser()
+    this.parser = new Parser()
     this.prepareParser()
   }
 
@@ -12,7 +19,7 @@ Karol.KarolParser = class extends Karol.EventEmitter {
     parser.tokenizer.addKeyWord('times')
     parser.tokenizer.addKeyWord('while')
     parser.tokenizer.addKeyWord('*repeat')
-    parser.registerSymbol(new Karol.PrefixOperator({
+    parser.registerSymbol(new PrefixOperator({
       value: 'repeat',
       bindingPower: 0,
       nullDenotation: (self) => {
@@ -28,24 +35,24 @@ Karol.KarolParser = class extends Karol.EventEmitter {
         return item
       }
     }))
-    parser.registerSymbol(new Karol.ParserSymbol({
+    parser.registerSymbol(new ParserSymbol({
       value: '*repeat'
     }))
-    parser.registerSymbol(new Karol.ParserSymbol({
+    parser.registerSymbol(new ParserSymbol({
       value: 'times'
     }))
-    parser.registerSymbol(new Karol.ParserSymbol({
+    parser.registerSymbol(new ParserSymbol({
       value: 'while'
     }))
 
     parser.tokenizer.addKeyWord('procedure')
     parser.tokenizer.addKeyWord('*procedure')
-    parser.registerSymbol(new Karol.PrefixOperator({
+    parser.registerSymbol(new PrefixOperator({
       value: 'procedure',
       nullDenotation: (self) => {
         const item = self.clone()
-        if (parser.token.type !== Karol.Token.TOKEN_TYPE_IDENTIFIER) {
-          throw new Karol.SyntaxError(`expected identifier as name for procedure, got ${parser.token.type} token`)
+        if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+          throw new SyntaxError(`expected identifier as name for procedure, got ${parser.token.type} token`)
         }
         item.first = parser.token
         parser.nextToken()
@@ -53,14 +60,14 @@ Karol.KarolParser = class extends Karol.EventEmitter {
         return item
       }
     }))
-    parser.registerSymbol(new Karol.ParserSymbol({
+    parser.registerSymbol(new ParserSymbol({
       value: '*procedure'
     }))
 
     parser.tokenizer.addKeyWord('(')
     parser.tokenizer.addKeyWord(')')
     parser.tokenizer.addKeyWord(',')
-    parser.registerSymbol(new Karol.InfixOperator({
+    parser.registerSymbol(new InfixOperator({
       value: '(',
       bindingPower: 80,
       nullDenotation: (self) => {
@@ -70,7 +77,7 @@ Karol.KarolParser = class extends Karol.EventEmitter {
       },
       leftDenotation: (self, left) => {
         const item = self.clone()
-        item.operatorType = Karol.ParserSymbol.OPERATOR_TYPE_BINARY
+        item.operatorType = ParserSymbol.OPERATOR_TYPE_BINARY
         item.first = left
         item.args = []
         if (parser.token.value === ')') {
@@ -84,7 +91,7 @@ Karol.KarolParser = class extends Karol.EventEmitter {
             break
           }
           if (parser.token.value !== ',') {
-            throw new Karol.SyntaxError(`expected ',' token, got ${parser.token.value}`)
+            throw new SyntaxError(`expected ',' token, got ${parser.token.value}`)
           }
           parser.nextToken()
         }
@@ -92,52 +99,52 @@ Karol.KarolParser = class extends Karol.EventEmitter {
         return item
       }
     }))
-    parser.registerSymbol(new Karol.ParserSymbol({
+    parser.registerSymbol(new ParserSymbol({
       value: ')'
     }))
-    parser.registerSymbol(new Karol.ParserSymbol({
+    parser.registerSymbol(new ParserSymbol({
       value: ','
     }))
 
     parser.tokenizer.addKeyWord('*')
-    parser.registerSymbol(new Karol.InfixOperator({
+    parser.registerSymbol(new InfixOperator({
       value: '*',
       bindingPower: 60,
     }))
 
     parser.tokenizer.addKeyWord('/')
-    parser.registerSymbol(new Karol.InfixOperator({
+    parser.registerSymbol(new InfixOperator({
       value: '/',
       bindingPower: 60,
     }))
 
     parser.tokenizer.addKeyWord('+')
-    parser.registerSymbol(new Karol.InfixOperator({
+    parser.registerSymbol(new InfixOperator({
       value: '+',
       bindingPower: 50,
-      nullDenotation: Karol.PrefixOperator.prototype.defaultNullDenotation
+      nullDenotation: PrefixOperator.prototype.defaultNullDenotation
     }))
 
     parser.tokenizer.addKeyWord('-')
-    parser.registerSymbol(new Karol.InfixOperator({
+    parser.registerSymbol(new InfixOperator({
       value: '-',
       bindingPower: 50,
-      nullDenotation: Karol.PrefixOperator.prototype.defaultNullDenotation
+      nullDenotation: PrefixOperator.prototype.defaultNullDenotation
     }))
 
     parser.tokenizer.addKeyWord('==')
-    parser.registerSymbol(new Karol.InfixOperator({
+    parser.registerSymbol(new InfixOperator({
       value: '==',
       bindingPower: 40
     }))
 
     parser.tokenizer.addKeyWord('=')
-    parser.registerSymbol(new Karol.AssignmentOperator({
+    parser.registerSymbol(new AssignmentOperator({
       value: '='
     }))
 
     parser.tokenizer.addKeyWord(';')
-    parser.registerSymbol(new Karol.ParserSymbol({
+    parser.registerSymbol(new ParserSymbol({
       value: ';',
       bindingPower: -1
     }))
