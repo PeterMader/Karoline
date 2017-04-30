@@ -1,8 +1,13 @@
 const Context = require('./context.js')
 const Token = require('../parser/token.js')
+const Value = require('./value.js')
+const Number = require('./number.js')
+const TypeError = require('../util/type-error.js')
+const ParserSymbol = require('../parser/parser-symbol.js')
+const Procedure = require('./procedure.js')
 const KarolineParser = require('../parser/karoline-parser.js')
 
-const Interpreter = class extends KarolineParser {
+const Interpreter = module.exports = class extends KarolineParser {
 
   constructor () {
     super()
@@ -167,14 +172,23 @@ const Interpreter = class extends KarolineParser {
     if (tree.type === Token.TOKEN_TYPE_NUMBER) {
       return new Number(tree.value)
     }
+
     if (tree.type === Token.TOKEN_TYPE_STRING) {
       return Value.createString(tree.value)
     }
+
     if (tree.isAssignment) {
       const result = await this.evaluate(tree.second)
+      const identifier = this.context.get(tree.first.value)
+      if (!identifier) {
+        this.throwTypeError(`trying to set a value to undeclared identifier "${tree.first.value}"`, tree.position)
+      } else if (identifier[Context.CONSTANT]) {
+        this.throwTypeError(`invalid assignment to const identifier "${tree.first.value}"`, tree.position)
+      }
       this.context.set(tree.first.value, result)
       return result
     }
+
     if (tree.type === Token.TOKEN_TYPE_IDENTIFIER) {
       let value
       if (value = this.context.get(tree.value)) {
@@ -190,21 +204,82 @@ const Interpreter = class extends KarolineParser {
         return value
       }
     }
+
+    if (tree.value === 'var') {
+      let index, value
+      const {identifiers} = tree
+      for (index in identifiers) {
+        const declaration = identifiers[index]
+        const {identifier} = declaration
+        if (this.context.scope.hasOwnProperty(identifier.value)) {
+          this.throwTypeError(`identifier ${identifier.value} has already been declared in this scope`, tree.position)
+        }
+        if (declaration.value) {
+          value = await this.evaluate(declaration.value)
+        } else {
+          value = Value.createNull()
+        }
+        this.context.scope[identifier.value] = value
+      }
+      return value
+    }
+
+    if (tree.value === 'const') {
+      let index, value
+      const {identifiers} = tree
+      for (index in identifiers) {
+        const declaration = identifiers[index]
+        const {identifier} = declaration
+        if (this.context.scope.hasOwnProperty(identifier.value)) {
+          this.throwTypeError(`identifier ${identifier.value} has already been declared in this scope`, tree.position)
+        }
+        value = await this.evaluate(declaration.value)
+        value[Context.CONSTANT] = true
+        this.context.scope[identifier.value] = value
+      }
+      return value
+    }
+
     if (tree.value === '==') {
       const first = await this.evaluate(tree.first)
       const second = await this.evaluate(tree.second)
-      return Value.createBoolean(first.type === second.type && first.value === second.value)
+      return first[Value.OPERATOR_EQUALITY].execute([first, second])
     }
+
     if (tree.value === '+') {
       if (tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {
         const first = await this.evaluate(tree.first)
         const second = await this.evaluate(tree.second)
-        return first[Value.OPERATOR_PLUS_BINARY].execute(first, second)
+        return first[Value.OPERATOR_PLUS_BINARY].execute([first, second])
       } else {
         const first = await this.evaluate(tree.first)
-        return first[Value.OPERATOR_PLUS_UNARY].execute(first)
+        return first[Value.OPERATOR_PLUS_UNARY].execute([first])
       }
     }
+
+    if (tree.value === '-') {
+      if (tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {
+        const first = await this.evaluate(tree.first)
+        const second = await this.evaluate(tree.second)
+        return first[Value.OPERATOR_MINUS_BINARY].execute([first, second])
+      } else {
+        const first = await this.evaluate(tree.first)
+        return first[Value.OPERATOR_MINUS_UNARY].execute([first])
+      }
+    }
+
+    if (tree.value === '*') {
+      const first = await this.evaluate(tree.first)
+      const second = await this.evaluate(tree.second)
+      return first[Value.OPERATOR_ASTERISK].execute([first, second])
+    }
+
+    if (tree.value === '/') {
+      const first = await this.evaluate(tree.first)
+      const second = await this.evaluate(tree.second)
+      return first[Value.OPERATOR_SLASH].execute([first, second])
+    }
+
     if (tree.value === '(' && tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {
       let procedure
       if (tree.first.type === Token.TOKEN_TYPE_IDENTIFIER) {
@@ -229,6 +304,7 @@ const Interpreter = class extends KarolineParser {
       }
       return this.executeProcedure(procedure, args, tree)
     }
+
     if (tree.value === 'repeat') {
       const {block} = tree
       if (typeof tree.times !== 'undefined') {
@@ -249,6 +325,7 @@ const Interpreter = class extends KarolineParser {
       }
       return Value.createNull()
     }
+
     if (tree.value === 'procedure') {
       const {first, block} = tree
       const name = first.value // first is an identifier and does not have to be evalated

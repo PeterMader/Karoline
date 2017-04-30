@@ -1,9 +1,11 @@
 const EventEmitter = require('../util/event-emitter.js')
+const AssignmentOperator = require('./assignment-operator.js')
 const ParserSymbol = require('./parser-symbol.js')
 const PrefixOperator = require('./prefix-operator.js')
 const InfixOperator = require('./infix-operator.js')
 const Token = require('./token.js')
 const Parser = require('./parser.js')
+const SyntaxError = require('../util/syntax-error.js')
 
 const KarolineParser = module.exports = class extends EventEmitter {
 
@@ -104,6 +106,64 @@ const KarolineParser = module.exports = class extends EventEmitter {
     }))
     parser.registerSymbol(new ParserSymbol({
       value: ','
+    }))
+
+    parser.tokenizer.addKeyWord('var')
+    parser.registerSymbol(new PrefixOperator({
+      value: 'var',
+      nullDenotation: (self) => {
+        const item = self.clone()
+        item.identifiers = []
+        if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+          throw new SyntaxError(`expected identifier, got ${parser.token.type} token`)
+        }
+        while (parser.token.type === Token.TOKEN_TYPE_IDENTIFIER) {
+          const identifier = parser.token
+          parser.nextToken()
+          if (parser.token.value === '=') {
+            parser.nextToken('=')
+            const value = parser.expression(0)
+            item.identifiers.push({
+              identifier,
+              value
+            })
+          } else {
+            item.identifiers.push({
+              identifier
+            })
+          }
+          if (parser.token.value !== ',') {
+            break
+          }
+        }
+        return item
+      }
+    }))
+
+    parser.tokenizer.addKeyWord('const')
+    parser.registerSymbol(new PrefixOperator({
+      value: 'const',
+      nullDenotation: (self) => {
+        const item = self.clone()
+        item.identifiers = []
+        if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+          throw new SyntaxError(`expected identifier, got ${parser.token.type} token`)
+        }
+        while (parser.token.type === Token.TOKEN_TYPE_IDENTIFIER) {
+          const identifier = parser.token
+          parser.nextToken()
+          parser.nextToken('=')
+          const value = parser.expression(0)
+          item.identifiers.push({
+            identifier,
+            value
+          })
+          if (parser.token.value !== ',') {
+            break
+          }
+        }
+        return item
+      }
     }))
 
     parser.tokenizer.addKeyWord('*')

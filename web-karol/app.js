@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const interpreter = new Interpreter()
   const karolConsole = new Console(document.getElementById('console-output'), document.getElementById('console-input'))
   const app = window.app = new Application(interpreter, canvas, karolConsole)
-  app.render()
+  app.world.render()
 
   const runButton = document.getElementById('run')
   runButton.addEventListener('click', () => {

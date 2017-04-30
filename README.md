@@ -29,3 +29,20 @@ repeat while not(wall)
   print(not(wall))
 *repeat
 ```
+
+Variables and constants:
+```
+procedure test
+  const a = 34
+  print(a)
+  a = a + 1
+  print(a)
+*procedure
+
+var a = 12
+print(a)
+a = 2
+print(a)
+test()
+print(a)
+```

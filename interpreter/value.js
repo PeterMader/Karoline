@@ -3,29 +3,29 @@ const Procedure = require('./procedure.js')
 const Value = module.exports = class {
 
   constructor (type, value) {
-    this.type = type
-    this.value = value
-  }
-
-  copyInto (other) {
-    other.type = this.type
-    other.value = this.value
+    this.type = type || Value.NULL
+    this.value = value || null
   }
 
   toString () {
     if (this.type === Value.NULL) {
+      // TODO: maybe create a null type
       return 'null'
     }
     if (this.type === Value.NUMBER) {
+      // TODO: replace this with the number type
       return this.value.toString()
     }
     if (this.type === Value.STRING) {
+      // TODO: replace this with the string type
       return this.value.toString()
     }
     if (this.type === Value.BOOLEAN) {
+      // TODO: replace this with the boolean type
       return this.value ? 'true' : 'false'
     }
     if (this.type === Value.PROCEDURE) {
+      // TODO: replace this with the procedure type
       return 'procedure ' + this.value.name
     }
   }
@@ -79,3 +79,26 @@ Value.prototype[Value.OPERATOR_PLUS_UNARY] = Procedure.FAIL
 
 Value.OPERATOR_PLUS_BINARY = Symbol('Operator plus binary')
 Value.prototype[Value.OPERATOR_PLUS_BINARY] = Procedure.FAIL
+
+Value.OPERATOR_MINUS_UNARY = Symbol('Operator minus unary')
+Value.prototype[Value.OPERATOR_MINUS_UNARY] = Procedure.FAIL
+
+Value.OPERATOR_MINUS_BINARY = Symbol('Operator minus binary')
+Value.prototype[Value.OPERATOR_MINUS_BINARY] = Procedure.FAIL
+
+Value.OPERATOR_ASTERISK = Symbol('Operator asterisk')
+Value.prototype[Value.OPERATOR_ASTERISK] = Procedure.FAIL
+
+Value.OPERATOR_SLASH = Symbol('Operator slash')
+Value.prototype[Value.OPERATOR_SLASH] = Procedure.FAIL
+
+Value.OPERATOR_EQUALITY = Symbol('Operator equality')
+Value.prototype[Value.OPERATOR_EQUALITY] = new Procedure({
+  name: 'Value::==',
+  cb: ([self, other]) => {
+    return self.type === other.type && self.value === other.value
+  },
+  expectedArguments: [{
+    type: Value.ANY
+  }]
+})

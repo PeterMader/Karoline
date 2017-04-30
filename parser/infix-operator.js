@@ -6,6 +6,11 @@ const InfixOperator = module.exports = class extends ParserSymbol {
     super(options)
   }
 
+  defaultNullDenotation (self, parser) {
+    console.log(self.value)
+    throw new SyntaxError(`undefined null denotation`)
+  }
+
   defaultLeftDenotation (self, first, parser) {
     const item = this.clone()
     item.first = first

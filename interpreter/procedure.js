@@ -11,6 +11,7 @@ const Procedure = module.exports = class {
   }
 
   async execute (args) {
+    const Value = require('./value.js')
     const {cb, expectedArguments} = this
     let index
     for (index in expectedArguments) {
@@ -24,11 +25,10 @@ const Procedure = module.exports = class {
       }
       if (Array.isArray(expected.types)) {
         if (expected.types.indexOf(real.type) < 0) {
-          const types = expected.types.reduce((a, b) => a + ', ' + b, '')
+          const types = expected.types.reduce((acc, b) => acc + ', ' + b, '')
           throw new TypeError(`procedure ${this.name}: expected argument ${index} to be of types ${types}got type ${args[index].type}`)
         }
-      }
-      if (expected.type !== real.type && expected.type !== Value.ANY) {
+      } else if (expected.type !== real.type && expected.type !== Value.ANY) {
         throw new TypeError(`procedure ${this.name}: expected argument ${index} to be of type ${expected.type}, got type ${args[index].type}`)
       }
     }

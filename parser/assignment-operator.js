@@ -1,5 +1,6 @@
 const SyntaxError = require('../util/syntax-error.js')
 const InfixOperator = require('./infix-operator.js')
+const ParserSymbol = require('./parser-symbol.js')
 const Token = require('./token.js')
 
 const AssignmentOperator = module.exports = class extends InfixOperator {

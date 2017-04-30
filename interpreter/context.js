@@ -34,7 +34,7 @@ const Context = module.exports = class {
   }
 
   get (name) {
-    let scope = this.scope
+    let {scope} = this
     do {
       if (scope.hasOwnProperty(name)) {
         return scope[name]
@@ -44,14 +44,16 @@ const Context = module.exports = class {
   }
 
   set (name, value) {
-    let old = this.get(name)
-    if (old) {
-      value.copyInto(old)
-    } else {
-      this.scope[name] = value
-    }
+    let {scope} = this
+    do {
+      if (scope.hasOwnProperty(name)) {
+        return scope[name] = value
+      }
+    } while (scope = scope[Context.PARENT_SCOPE])
+    this.scope[name] = value
   }
 
 }
 
 Context.PARENT_SCOPE = Symbol('Parent scope')
+Context.CONSTANT = Symbol('Constant identifier')

@@ -1,4 +1,4 @@
-const {Procedure, Value} = require('../index.js')
+const {Error, Procedure, Value} = require('../index.js')
 const {Robot, World} = require('karol.js')
 
 const Application = module.exports = class {
@@ -7,13 +7,13 @@ const Application = module.exports = class {
     this.interpreter = interpreter
     this.ctx = canvas.getContext('2d')
     this.karolConsole = karolConsole
-    this.world = new World()
+    this.world = new World(canvas)
     this.robot = new Robot(this.world)
     this.robot.x = 4
     this.robot.z = 3
     this.addStandardLibrary()
 
-    this.interpreter.on('statement', this.render.bind(this))
+    this.interpreter.on('statement', this.world.render.bind(this.world))
     this.interpreter.on('error', this.printError.bind(this))
   }
 
@@ -56,7 +56,7 @@ const Application = module.exports = class {
 
     interpreter.addNativeProcedure(new Procedure({
       name: 'deletemark',
-      cb: this.robot.deleteMark.bind(this.robot)
+      cb: this.robot.removeMark.bind(this.robot)
     }))
 
     interpreter.addNativeProcedure(new Procedure({

@@ -13,4 +13,8 @@ const PrefixOperator = module.exports = class extends ParserSymbol {
     return item
   }
 
+  defaultLeftDenotation (self, left, parser) {
+    throw new SyntaxError(`undefined left denotation`)
+  }
+
 }

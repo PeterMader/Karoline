@@ -1,4 +1,5 @@
 const Token = require('./token.js')
+const SyntaxError = require('../util/syntax-error.js')
 
 const ParserSymbol = module.exports = class extends Token {
 
@@ -32,7 +33,7 @@ const ParserSymbol = module.exports = class extends Token {
   }
 
   defaultLeftDenotation (self, left, parser) {
-    return this
+    throw new SyntaxError(`undefined left denotation`)
   }
 
 }

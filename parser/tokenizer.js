@@ -1,5 +1,6 @@
 const Token = require('./token.js')
 const SyntaxError = require('../util/syntax-error.js')
+const StringIterator = require('./string-iterator.js')
 
 const Tokenizer = module.exports = class {
 

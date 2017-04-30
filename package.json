@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/PeterMader/Karoline.git"
   },
-  "author": "",
+  "author": "Peter Mader",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/PeterMader/Karoline/issues"
@@ -21,5 +21,8 @@
     "babel-preset-env": "^1.4.0",
     "babelify": "^7.3.0",
     "browserify": "^14.3.0"
+  },
+  "dependencies": {
+    "karol.js": "0.0.3"
   }
 }
