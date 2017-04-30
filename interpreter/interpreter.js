@@ -94,7 +94,7 @@ const Interpreter = module.exports = class extends KarolineParser {
     let result
     try {
       const trees = this.parser.parse(source)
-      this.emit('parse')
+      this.emit('parse', trees)
       result = await this.evaluateBlock(trees)
     } catch (e) {
       if (e !== Interpreter.EXECUTION_STOPPED) {
@@ -240,10 +240,22 @@ const Interpreter = module.exports = class extends KarolineParser {
       return value
     }
 
-    if (tree.value === '==') {
+    if (Value.BINARY_OPERATORS.hasOwnProperty(tree.value)) {
       const first = await this.evaluate(tree.first)
       const second = await this.evaluate(tree.second)
-      return first[Value.OPERATOR_EQUALITY].execute([first, second])
+      return first[Value.BINARY_OPERATORS[tree.value]].execute([first, second])
+    }
+
+    if (tree.value === '||') {
+      const first = await this.evaluate(tree.first)
+      const second = await this.evaluate(tree.second)
+      return Value.createBoolean(first.castToBoolean().value || second.castToBoolean().value)
+    }
+
+    if (tree.value === '&&') {
+      const first = await this.evaluate(tree.first)
+      const second = await this.evaluate(tree.second)
+      return Value.createBoolean(first.castToBoolean().value && second.castToBoolean().value)
     }
 
     if (tree.value === '+') {
@@ -266,18 +278,6 @@ const Interpreter = module.exports = class extends KarolineParser {
         const first = await this.evaluate(tree.first)
         return first[Value.OPERATOR_MINUS_UNARY].execute([first])
       }
-    }
-
-    if (tree.value === '*') {
-      const first = await this.evaluate(tree.first)
-      const second = await this.evaluate(tree.second)
-      return first[Value.OPERATOR_ASTERISK].execute([first, second])
-    }
-
-    if (tree.value === '/') {
-      const first = await this.evaluate(tree.first)
-      const second = await this.evaluate(tree.second)
-      return first[Value.OPERATOR_SLASH].execute([first, second])
     }
 
     if (tree.value === '(' && tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {
@@ -303,6 +303,13 @@ const Interpreter = module.exports = class extends KarolineParser {
         args.push(await this.evaluate(tree.args[i]))
       }
       return this.executeProcedure(procedure, args, tree)
+    }
+
+    if (tree.value === 'if') {
+      const condition = await this.evaluate(tree.condition)
+      if (condition.castToBoolean().value) {
+        return this.evaluateBlock(tree.block)
+      }
     }
 
     if (tree.value === 'repeat') {

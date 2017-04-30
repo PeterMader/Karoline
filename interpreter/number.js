@@ -66,3 +66,23 @@ Number.prototype[Value.OPERATOR_SLASH] = new Procedure({
     type: Value.NUMBER
   }]
 })
+
+Number.prototype[Value.OPERATOR_LESS_THAN] = new Procedure({
+  name: 'Number::<',
+  cb: ([self, other]) => {
+    return new Number(self.value < other.value)
+  },
+  expectedArguments: [{
+    type: Value.NUMBER
+  }]
+})
+
+Number.prototype[Value.OPERATOR_GREATER_THAN] = new Procedure({
+  name: 'Number::<',
+  cb: ([self, other]) => {
+    return new Number(self.value > other.value)
+  },
+  expectedArguments: [{
+    type: Value.NUMBER
+  }]
+})

@@ -7,7 +7,6 @@ const InfixOperator = module.exports = class extends ParserSymbol {
   }
 
   defaultNullDenotation (self, parser) {
-    console.log(self.value)
     throw new SyntaxError(`undefined null denotation`)
   }
 

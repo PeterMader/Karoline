@@ -66,6 +66,27 @@ const KarolineParser = module.exports = class extends EventEmitter {
       value: '*procedure'
     }))
 
+    parser.tokenizer.addKeyWord('if')
+    parser.tokenizer.addKeyWord('*if')
+    parser.tokenizer.addKeyWord('then')
+    parser.registerSymbol(new PrefixOperator({
+      value: 'if',
+      nullDenotation: (self) => {
+        const item = self.clone()
+        item.condition = parser.expression(0)
+        parser.nextToken('then')
+        parser.nextToken()
+        item.block = this.processBlock('*if')
+        return item
+      }
+    }))
+    parser.registerSymbol(new ParserSymbol({
+      value: '*if'
+    }))
+    parser.registerSymbol(new ParserSymbol({
+      value: 'then'
+    }))
+
     parser.tokenizer.addKeyWord('(')
     parser.tokenizer.addKeyWord(')')
     parser.tokenizer.addKeyWord(',')
@@ -135,6 +156,7 @@ const KarolineParser = module.exports = class extends EventEmitter {
           if (parser.token.value !== ',') {
             break
           }
+          parser.nextToken()
         }
         return item
       }
@@ -161,9 +183,34 @@ const KarolineParser = module.exports = class extends EventEmitter {
           if (parser.token.value !== ',') {
             break
           }
+          parser.nextToken()
         }
         return item
       }
+    }))
+
+    parser.tokenizer.addKeyWord('&&')
+    parser.registerSymbol(new InfixOperator({
+      value: '&&',
+      bindingPower: 30,
+    }))
+
+    parser.tokenizer.addKeyWord('||')
+    parser.registerSymbol(new InfixOperator({
+      value: '||',
+      bindingPower: 28,
+    }))
+
+    parser.tokenizer.addKeyWord('<')
+    parser.registerSymbol(new InfixOperator({
+      value: '<',
+      bindingPower: 45,
+    }))
+
+    parser.tokenizer.addKeyWord('>')
+    parser.registerSymbol(new InfixOperator({
+      value: '>',
+      bindingPower: 45,
     }))
 
     parser.tokenizer.addKeyWord('*')

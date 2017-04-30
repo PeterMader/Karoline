@@ -102,3 +102,19 @@ Value.prototype[Value.OPERATOR_EQUALITY] = new Procedure({
     type: Value.ANY
   }]
 })
+
+Value.OPERATOR_LESS_THAN = Symbol('Operator less than')
+Value.prototype[Value.OPERATOR_LESS_THAN] = Procedure.FAIL
+
+Value.OPERATOR_GREATER_THAN = Symbol('Operator greater than')
+Value.prototype[Value.OPERATOR_GREATER_THAN] = Procedure.FAIL
+
+Value.BINARY_OPERATORS = {
+  '+': Value.OPERATOR_PLUS_BINARY,
+  '+': Value.OPERATOR_MINUS_BINARY,
+  '*': Value.OPERATOR_ASTERISK,
+  '/': Value.OPERATOR_SLASH,
+  '==': Value.OPERATOR_EQUALITY,
+  '<': Value.OPERATOR_LESS_THAN,
+  '>': Value.OPERATOR_GREATER_THAN
+}

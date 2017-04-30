@@ -1,16 +1,12 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-'use strict';
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-(function (factory) {
-  module.exports = factory();
-  if ((typeof window === 'undefined' ? 'undefined' : _typeof(window)) === 'object') {
-    window.Karoline = module.exports;
+((factory) => {
+  module.exports = factory()
+  if (typeof window === 'object') {
+    window.Karoline = module.exports
   }
-})(function () {
-  require('babel-core/register');
-  require('babel-polyfill');
+})(() => {
+  require('babel-core/register')
+  require('babel-polyfill')
 
   return {
     Interpreter: require('./interpreter/interpreter.js'),
@@ -21,1207 +17,675 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     Error: require('./util/error.js'),
     SyntaxError: require('./util/syntax-error.js'),
     TypeError: require('./util/type-error.js')
-  };
-});
+  }
+})
 
 },{"./interpreter/interpreter.js":3,"./interpreter/number.js":4,"./interpreter/procedure.js":5,"./interpreter/value.js":6,"./util/error.js":318,"./util/event-emitter.js":319,"./util/syntax-error.js":320,"./util/type-error.js":321,"babel-core/register":7,"babel-polyfill":8}],2:[function(require,module,exports){
-'use strict';
+const Context = module.exports = class {
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Context = module.exports = function () {
-  function _class(main) {
-    _classCallCheck(this, _class);
-
-    this.scope = {};
-    this.scopes = [this.scope];
-    this.callStack = [main];
+  constructor (main) {
+    this.scope = {}
+    this.scopes = [this.scope]
+    this.callStack = [main]
   }
 
-  _createClass(_class, [{
-    key: 'overrideScope',
-    value: function overrideScope(scope) {
-      this.scopes.push(scope);
-      this.scope = scope;
+  overrideScope (scope) {
+    this.scopes.push(scope)
+    this.scope = scope
+  }
+
+  restoreScope () {
+    if (this.scopes.length > 1) {
+      this.scope = this.scopes.pop()
     }
-  }, {
-    key: 'restoreScope',
-    value: function restoreScope() {
-      if (this.scopes.length > 1) {
-        this.scope = this.scopes.pop();
+  }
+
+  pushScope () {
+    this.scope = {
+      [Context.PARENT_SCOPE]: this.scope
+    }
+  }
+
+  popScope () {
+    this.scope = this.scope[Context.PARENT_SCOPE]
+  }
+
+  clearCallStack () {
+    while (this.callStack.length > 1) {
+      this.callStack.pop()
+    }
+  }
+
+  get (name) {
+    let {scope} = this
+    do {
+      if (scope.hasOwnProperty(name)) {
+        return scope[name]
       }
-    }
-  }, {
-    key: 'pushScope',
-    value: function pushScope() {
-      this.scope = _defineProperty({}, Context.PARENT_SCOPE, this.scope);
-    }
-  }, {
-    key: 'popScope',
-    value: function popScope() {
-      this.scope = this.scope[Context.PARENT_SCOPE];
-    }
-  }, {
-    key: 'clearCallStack',
-    value: function clearCallStack() {
-      while (this.callStack.length > 1) {
-        this.callStack.pop();
+    } while (scope = scope[Context.PARENT_SCOPE])
+    return null
+  }
+
+  set (name, value) {
+    let {scope} = this
+    do {
+      if (scope.hasOwnProperty(name)) {
+        return scope[name] = value
       }
-    }
-  }, {
-    key: 'get',
-    value: function get(name) {
-      var scope = this.scope;
+    } while (scope = scope[Context.PARENT_SCOPE])
+    this.scope[name] = value
+  }
 
-      do {
-        if (scope.hasOwnProperty(name)) {
-          return scope[name];
-        }
-      } while (scope = scope[Context.PARENT_SCOPE]);
-      return null;
-    }
-  }, {
-    key: 'set',
-    value: function set(name, value) {
-      var scope = this.scope;
+}
 
-      do {
-        if (scope.hasOwnProperty(name)) {
-          return scope[name] = value;
-        }
-      } while (scope = scope[Context.PARENT_SCOPE]);
-      this.scope[name] = value;
-    }
-  }]);
-
-  return _class;
-}();
-
-Context.PARENT_SCOPE = Symbol('Parent scope');
-Context.CONSTANT = Symbol('Constant identifier');
+Context.PARENT_SCOPE = Symbol('Parent scope')
+Context.CONSTANT = Symbol('Constant identifier')
 
 },{}],3:[function(require,module,exports){
-'use strict';
+const Context = require('./context.js')
+const Token = require('../parser/token.js')
+const Value = require('./value.js')
+const Number = require('./number.js')
+const TypeError = require('../util/type-error.js')
+const ParserSymbol = require('../parser/parser-symbol.js')
+const Procedure = require('./procedure.js')
+const KarolineParser = require('../parser/karoline-parser.js')
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const Interpreter = module.exports = class extends KarolineParser {
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Context = require('./context.js');
-var Token = require('../parser/token.js');
-var Value = require('./value.js');
-var Number = require('./number.js');
-var TypeError = require('../util/type-error.js');
-var ParserSymbol = require('../parser/parser-symbol.js');
-var Procedure = require('./procedure.js');
-var KarolineParser = require('../parser/karoline-parser.js');
-
-var Interpreter = module.exports = function (_KarolineParser) {
-  _inherits(_class, _KarolineParser);
-
-  function _class() {
-    _classCallCheck(this, _class);
-
-    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this));
-
-    _this.nativeScope = {};
-    _this.context = new Context(new Token({
+  constructor () {
+    super()
+    this.nativeScope = {}
+    this.context = new Context(new Token({
       value: '<main>',
       position: {
         line: 0,
         column: 0
       }
-    }));
+    }))
 
-    _this.speed = 500;
-    _this.running = false;
-    _this.stopped = true;
-    return _this;
+    this.speed = 500
+    this.running = false
+    this.stopped = true
   }
 
-  _createClass(_class, [{
-    key: 'setExecutionContext',
-    value: function setExecutionContext(context) {
-      this.context = context;
+  setExecutionContext (context) {
+    this.context = context
+  }
+
+  processBlock (endToken) {
+    const {parser} = this
+    const block = []
+    while (parser.token.value !== endToken && parser.token.value !== '#end') {
+      block.push(parser.expression(0))
     }
-  }, {
-    key: 'processBlock',
-    value: function processBlock(endToken) {
-      var parser = this.parser;
-
-      var block = [];
-      while (parser.token.value !== endToken && parser.token.value !== '#end') {
-        block.push(parser.expression(0));
-      }
-      if (parser.token.value === '#end') {
-        throw new SyntaxError('syntax error: unexpected end of script, expected ' + endToken);
-      }
-      parser.nextToken(endToken);
-      return block;
+    if (parser.token.value === '#end') {
+      throw new SyntaxError(`syntax error: unexpected end of script, expected ${endToken}`)
     }
-  }, {
-    key: 'addNativeProcedure',
-    value: function addNativeProcedure(procedure) {
-      this.nativeScope[procedure.name] = Value.createProcedure(procedure);
-    }
-  }, {
-    key: 'addNativeValue',
-    value: function addNativeValue(name, value) {
-      this.nativeScope[name] = value;
-    }
-  }, {
-    key: 'createProcedure',
-    value: function createProcedure(name, block) {
-      var length = block.length;
+    parser.nextToken(endToken)
+    return block
+  }
 
-      var procedure = new Procedure({
-        cb: this.evaluateBlock.bind(this, block),
-        name: name,
-        userDefined: true,
-        scope: this.context.scope
-      });
-      var value = Value.createProcedure(procedure);
-      this.context.set(name, value);
-      return value;
-    }
-  }, {
-    key: 'cleanUp',
-    value: function cleanUp() {
-      var procedures = this.procedures;
+  addNativeProcedure (procedure) {
+    this.nativeScope[procedure.name] = Value.createProcedure(procedure)
+  }
 
-      var index = void 0;
-      for (index in procedures) {
-        if (procedures[index].userDefined) {
-          delete procedures[index];
-        }
-      }
+  addNativeValue (name, value) {
+    this.nativeScope[name] = value
+  }
 
-      this.context.clearCallStack();
-      this.running = false;
-      this.stopped = true;
-    }
-  }, {
-    key: 'throwTypeError',
-    value: function throwTypeError(message, position) {
-      throw new TypeError(message, position, this.context.callStack);
-    }
-  }, {
-    key: 'wait',
-    value: function wait(ms) {
-      return new Promise(function (resolve) {
-        setTimeout(resolve, ms);
-      });
-    }
-  }, {
-    key: 'run',
-    value: function () {
-      var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(source) {
-        var result, trees;
-        return regeneratorRuntime.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                this.stopped = false;
-                this.running = true;
-                this.emit('run');
-                result = void 0;
-                _context.prev = 4;
-                trees = this.parser.parse(source);
+  createProcedure (name, block) {
+    const {length} = block
+    const procedure = new Procedure({
+      cb: this.evaluateBlock.bind(this, block),
+      name,
+      userDefined: true,
+      scope: this.context.scope
+    })
+    const value = Value.createProcedure(procedure)
+    this.context.set(name, value)
+    return value
+  }
 
-                this.emit('parse');
-                _context.next = 9;
-                return this.evaluateBlock(trees);
-
-              case 9:
-                result = _context.sent;
-                _context.next = 15;
-                break;
-
-              case 12:
-                _context.prev = 12;
-                _context.t0 = _context['catch'](4);
-
-                if (_context.t0 !== Interpreter.EXECUTION_STOPPED) {
-                  this.emit('error', _context.t0);
-                  result = _context.t0;
-                } else {
-                  result = Value.createNull();
-                }
-
-              case 15:
-                this.cleanUp();
-                this.emit('finish');
-                return _context.abrupt('return', result);
-
-              case 18:
-              case 'end':
-                return _context.stop();
-            }
-          }
-        }, _callee, this, [[4, 12]]);
-      }));
-
-      function run(_x) {
-        return _ref.apply(this, arguments);
-      }
-
-      return run;
-    }()
-  }, {
-    key: 'pause',
-    value: function pause() {
-      if (this.running) {
-        this.running = false;
-        this.emit('pause');
+  cleanUp () {
+    const {procedures} = this
+    let index
+    for (index in procedures) {
+      if (procedures[index].userDefined) {
+        delete procedures[index]
       }
     }
-  }, {
-    key: 'unpause',
-    value: function unpause() {
+
+    this.context.clearCallStack()
+    this.running = false
+    this.stopped = true
+  }
+
+  throwTypeError (message, position) {
+    throw new TypeError(message, position, this.context.callStack)
+  }
+
+  wait (ms) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms)
+    })
+  }
+
+  async run (source) {
+    this.stopped = false
+    this.running = true
+    this.emit('run')
+    let result
+    try {
+      const trees = this.parser.parse(source)
+      this.emit('parse', trees)
+      result = await this.evaluateBlock(trees)
+    } catch (e) {
+      if (e !== Interpreter.EXECUTION_STOPPED) {
+        this.emit('error', e)
+        result = e
+      } else {
+        result = Value.createNull()
+      }
+    }
+    this.cleanUp()
+    this.emit('finish')
+    return result
+  }
+
+  pause () {
+    if (this.running) {
+      this.running = false
+      this.emit('pause')
+    }
+  }
+
+  unpause () {
+    if (!this.running && !this.stopped) {
+      this.running = true
+      this.emit('unpause')
+    }
+  }
+
+  stop () {
+    if (!this.stopped) {
+      if (!this.running) {
+        this.emit('unpause')
+      }
+      this.stopped = true
+      this.emit('stop')
+    }
+  }
+
+  async executeProcedure (procedure, args, caller) {
+    this.context.callStack.push(caller)
+    if (procedure.scope) {
+      this.context.overrideScope(procedure.scope)
+    }
+    const result = (await procedure.execute(args)) || Value.createNull()
+    if (procedure.scope) {
+      this.context.restoreScope()
+    }
+    this.context.callStack.pop()
+    return result
+  }
+
+  async evaluateBlock (block) {
+    const {length} = block
+    let value = Value.createNull()
+    let i
+    this.context.pushScope()
+    for (i = 0; i < length; i += 1) {
+      const index = i
+      await this.wait(this.speed)
       if (!this.running && !this.stopped) {
-        this.running = true;
-        this.emit('unpause');
+        await this.awaitEvent('unpause')
+      }
+      if (this.stopped) {
+        // break the promise chain
+        throw Interpreter.EXECUTION_STOPPED
+      }
+      value = await this.evaluate(block[index], true)
+      this.emit('statement')
+    }
+    this.context.popScope()
+    return value
+  }
+
+  async evaluate (tree, isStatement) {
+    if (tree.type === Token.TOKEN_TYPE_NUMBER) {
+      return new Number(tree.value)
+    }
+
+    if (tree.type === Token.TOKEN_TYPE_STRING) {
+      return Value.createString(tree.value)
+    }
+
+    if (tree.isAssignment) {
+      const result = await this.evaluate(tree.second)
+      const identifier = this.context.get(tree.first.value)
+      if (!identifier) {
+        this.throwTypeError(`trying to set a value to undeclared identifier "${tree.first.value}"`, tree.position)
+      } else if (identifier[Context.CONSTANT]) {
+        this.throwTypeError(`invalid assignment to const identifier "${tree.first.value}"`, tree.position)
+      }
+      this.context.set(tree.first.value, result)
+      return result
+    }
+
+    if (tree.type === Token.TOKEN_TYPE_IDENTIFIER) {
+      let value
+      if (value = this.context.get(tree.value)) {
+      } else if (this.nativeScope.hasOwnProperty(tree.value)) {
+        value = this.nativeScope[tree.value]
+      } else {
+        this.throwTypeError(`undefined identifier ${tree.value}`)
+      }
+
+      if (isStatement && value.type === Value.PROCEDURE) {
+        return this.executeProcedure(value.value, [], tree)
+      } else {
+        return value
       }
     }
-  }, {
-    key: 'stop',
-    value: function stop() {
-      if (!this.stopped) {
-        if (!this.running) {
-          this.emit('unpause');
+
+    if (tree.value === 'var') {
+      let index, value
+      const {identifiers} = tree
+      for (index in identifiers) {
+        const declaration = identifiers[index]
+        const {identifier} = declaration
+        if (this.context.scope.hasOwnProperty(identifier.value)) {
+          this.throwTypeError(`identifier ${identifier.value} has already been declared in this scope`, tree.position)
         }
-        this.stopped = true;
-        this.emit('stop');
+        if (declaration.value) {
+          value = await this.evaluate(declaration.value)
+        } else {
+          value = Value.createNull()
+        }
+        this.context.scope[identifier.value] = value
+      }
+      return value
+    }
+
+    if (tree.value === 'const') {
+      let index, value
+      const {identifiers} = tree
+      for (index in identifiers) {
+        const declaration = identifiers[index]
+        const {identifier} = declaration
+        if (this.context.scope.hasOwnProperty(identifier.value)) {
+          this.throwTypeError(`identifier ${identifier.value} has already been declared in this scope`, tree.position)
+        }
+        value = await this.evaluate(declaration.value)
+        value[Context.CONSTANT] = true
+        this.context.scope[identifier.value] = value
+      }
+      return value
+    }
+
+    if (Value.BINARY_OPERATORS.hasOwnProperty(tree.value)) {
+      const first = await this.evaluate(tree.first)
+      const second = await this.evaluate(tree.second)
+      return first[Value.BINARY_OPERATORS[tree.value]].execute([first, second])
+    }
+
+    if (tree.value === '||') {
+      const first = await this.evaluate(tree.first)
+      const second = await this.evaluate(tree.second)
+      return Value.createBoolean(first.castToBoolean().value || second.castToBoolean().value)
+    }
+
+    if (tree.value === '&&') {
+      const first = await this.evaluate(tree.first)
+      const second = await this.evaluate(tree.second)
+      return Value.createBoolean(first.castToBoolean().value && second.castToBoolean().value)
+    }
+
+    if (tree.value === '+') {
+      if (tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {
+        const first = await this.evaluate(tree.first)
+        const second = await this.evaluate(tree.second)
+        return first[Value.OPERATOR_PLUS_BINARY].execute([first, second])
+      } else {
+        const first = await this.evaluate(tree.first)
+        return first[Value.OPERATOR_PLUS_UNARY].execute([first])
       }
     }
-  }, {
-    key: 'executeProcedure',
-    value: function () {
-      var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(procedure, args, caller) {
-        var result;
-        return regeneratorRuntime.wrap(function _callee2$(_context2) {
-          while (1) {
-            switch (_context2.prev = _context2.next) {
-              case 0:
-                this.context.callStack.push(caller);
-                if (procedure.scope) {
-                  this.context.overrideScope(procedure.scope);
-                }
-                _context2.next = 4;
-                return procedure.execute(args);
 
-              case 4:
-                _context2.t0 = _context2.sent;
-
-                if (_context2.t0) {
-                  _context2.next = 7;
-                  break;
-                }
-
-                _context2.t0 = Value.createNull();
-
-              case 7:
-                result = _context2.t0;
-
-                if (procedure.scope) {
-                  this.context.restoreScope();
-                }
-                this.context.callStack.pop();
-                return _context2.abrupt('return', result);
-
-              case 11:
-              case 'end':
-                return _context2.stop();
-            }
-          }
-        }, _callee2, this);
-      }));
-
-      function executeProcedure(_x2, _x3, _x4) {
-        return _ref2.apply(this, arguments);
+    if (tree.value === '-') {
+      if (tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {
+        const first = await this.evaluate(tree.first)
+        const second = await this.evaluate(tree.second)
+        return first[Value.OPERATOR_MINUS_BINARY].execute([first, second])
+      } else {
+        const first = await this.evaluate(tree.first)
+        return first[Value.OPERATOR_MINUS_UNARY].execute([first])
       }
+    }
 
-      return executeProcedure;
-    }()
-  }, {
-    key: 'evaluateBlock',
-    value: function () {
-      var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(block) {
-        var length, value, i, index;
-        return regeneratorRuntime.wrap(function _callee3$(_context3) {
-          while (1) {
-            switch (_context3.prev = _context3.next) {
-              case 0:
-                length = block.length;
-                value = Value.createNull();
-                i = void 0;
-
-                this.context.pushScope();
-                i = 0;
-
-              case 5:
-                if (!(i < length)) {
-                  _context3.next = 21;
-                  break;
-                }
-
-                index = i;
-                _context3.next = 9;
-                return this.wait(this.speed);
-
-              case 9:
-                if (!(!this.running && !this.stopped)) {
-                  _context3.next = 12;
-                  break;
-                }
-
-                _context3.next = 12;
-                return this.awaitEvent('unpause');
-
-              case 12:
-                if (!this.stopped) {
-                  _context3.next = 14;
-                  break;
-                }
-
-                throw Interpreter.EXECUTION_STOPPED;
-
-              case 14:
-                _context3.next = 16;
-                return this.evaluate(block[index], true);
-
-              case 16:
-                value = _context3.sent;
-
-                this.emit('statement');
-
-              case 18:
-                i += 1;
-                _context3.next = 5;
-                break;
-
-              case 21:
-                this.context.popScope();
-                return _context3.abrupt('return', value);
-
-              case 23:
-              case 'end':
-                return _context3.stop();
-            }
-          }
-        }, _callee3, this);
-      }));
-
-      function evaluateBlock(_x5) {
-        return _ref3.apply(this, arguments);
+    if (tree.value === '(' && tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {
+      let procedure
+      if (tree.first.type === Token.TOKEN_TYPE_IDENTIFIER) {
+        if (procedure = this.context.get(tree.first.value)) {
+        } else if (this.nativeScope.hasOwnProperty(tree.first.value)) {
+          procedure = this.nativeScope[tree.first.value]
+        } else {
+          this.throwTypeError(`undefined identifier ${tree.first.value}`)
+        }
+      } else {
+        procedure = await this.evaluate(tree.first)
       }
-
-      return evaluateBlock;
-    }()
-  }, {
-    key: 'evaluate',
-    value: function () {
-      var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(tree, isStatement) {
-        var result, identifier, value, index, _value, identifiers, declaration, _identifier, _index, _value2, _identifiers, _declaration, _identifier2, first, second, _first, _second, _first2, _first3, _second2, _first4, _first5, _second3, _first6, _second4, procedure, args, i, block, times, _i, _first7, _block, name;
-
-        return regeneratorRuntime.wrap(function _callee4$(_context4) {
-          while (1) {
-            switch (_context4.prev = _context4.next) {
-              case 0:
-                if (!(tree.type === Token.TOKEN_TYPE_NUMBER)) {
-                  _context4.next = 2;
-                  break;
-                }
-
-                return _context4.abrupt('return', new Number(tree.value));
-
-              case 2:
-                if (!(tree.type === Token.TOKEN_TYPE_STRING)) {
-                  _context4.next = 4;
-                  break;
-                }
-
-                return _context4.abrupt('return', Value.createString(tree.value));
-
-              case 4:
-                if (!tree.isAssignment) {
-                  _context4.next = 12;
-                  break;
-                }
-
-                _context4.next = 7;
-                return this.evaluate(tree.second);
-
-              case 7:
-                result = _context4.sent;
-                identifier = this.context.get(tree.first.value);
-
-                if (!identifier) {
-                  this.throwTypeError('trying to set a value to undeclared identifier "' + tree.first.value + '"', tree.position);
-                } else if (identifier[Context.CONSTANT]) {
-                  this.throwTypeError('invalid assignment to const identifier "' + tree.first.value + '"', tree.position);
-                }
-                this.context.set(tree.first.value, result);
-                return _context4.abrupt('return', result);
-
-              case 12:
-                if (!(tree.type === Token.TOKEN_TYPE_IDENTIFIER)) {
-                  _context4.next = 20;
-                  break;
-                }
-
-                value = void 0;
-
-                if (value = this.context.get(tree.value)) {} else if (this.nativeScope.hasOwnProperty(tree.value)) {
-                  value = this.nativeScope[tree.value];
-                } else {
-                  this.throwTypeError('undefined identifier ' + tree.value);
-                }
-
-                if (!(isStatement && value.type === Value.PROCEDURE)) {
-                  _context4.next = 19;
-                  break;
-                }
-
-                return _context4.abrupt('return', this.executeProcedure(value.value, [], tree));
-
-              case 19:
-                return _context4.abrupt('return', value);
-
-              case 20:
-                if (!(tree.value === 'var')) {
-                  _context4.next = 40;
-                  break;
-                }
-
-                index = void 0, _value = void 0;
-                identifiers = tree.identifiers;
-                _context4.t0 = regeneratorRuntime.keys(identifiers);
-
-              case 24:
-                if ((_context4.t1 = _context4.t0()).done) {
-                  _context4.next = 39;
-                  break;
-                }
-
-                index = _context4.t1.value;
-                declaration = identifiers[index];
-                _identifier = declaration.identifier;
-
-                if (this.context.scope.hasOwnProperty(_identifier.value)) {
-                  this.throwTypeError('identifier ' + _identifier.value + ' has already been declared in this scope', tree.position);
-                }
-
-                if (!declaration.value) {
-                  _context4.next = 35;
-                  break;
-                }
-
-                _context4.next = 32;
-                return this.evaluate(declaration.value);
-
-              case 32:
-                _value = _context4.sent;
-                _context4.next = 36;
-                break;
-
-              case 35:
-                _value = Value.createNull();
-
-              case 36:
-                this.context.scope[_identifier.value] = _value;
-                _context4.next = 24;
-                break;
-
-              case 39:
-                return _context4.abrupt('return', _value);
-
-              case 40:
-                if (!(tree.value === 'const')) {
-                  _context4.next = 57;
-                  break;
-                }
-
-                _index = void 0, _value2 = void 0;
-                _identifiers = tree.identifiers;
-                _context4.t2 = regeneratorRuntime.keys(_identifiers);
-
-              case 44:
-                if ((_context4.t3 = _context4.t2()).done) {
-                  _context4.next = 56;
-                  break;
-                }
-
-                _index = _context4.t3.value;
-                _declaration = _identifiers[_index];
-                _identifier2 = _declaration.identifier;
-
-                if (this.context.scope.hasOwnProperty(_identifier2.value)) {
-                  this.throwTypeError('identifier ' + _identifier2.value + ' has already been declared in this scope', tree.position);
-                }
-                _context4.next = 51;
-                return this.evaluate(_declaration.value);
-
-              case 51:
-                _value2 = _context4.sent;
-
-                _value2[Context.CONSTANT] = true;
-                this.context.scope[_identifier2.value] = _value2;
-                _context4.next = 44;
-                break;
-
-              case 56:
-                return _context4.abrupt('return', _value2);
-
-              case 57:
-                if (!(tree.value === '==')) {
-                  _context4.next = 65;
-                  break;
-                }
-
-                _context4.next = 60;
-                return this.evaluate(tree.first);
-
-              case 60:
-                first = _context4.sent;
-                _context4.next = 63;
-                return this.evaluate(tree.second);
-
-              case 63:
-                second = _context4.sent;
-                return _context4.abrupt('return', first[Value.OPERATOR_EQUALITY].execute([first, second]));
-
-              case 65:
-                if (!(tree.value === '+')) {
-                  _context4.next = 80;
-                  break;
-                }
-
-                if (!(tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY)) {
-                  _context4.next = 76;
-                  break;
-                }
-
-                _context4.next = 69;
-                return this.evaluate(tree.first);
-
-              case 69:
-                _first = _context4.sent;
-                _context4.next = 72;
-                return this.evaluate(tree.second);
-
-              case 72:
-                _second = _context4.sent;
-                return _context4.abrupt('return', _first[Value.OPERATOR_PLUS_BINARY].execute([_first, _second]));
-
-              case 76:
-                _context4.next = 78;
-                return this.evaluate(tree.first);
-
-              case 78:
-                _first2 = _context4.sent;
-                return _context4.abrupt('return', _first2[Value.OPERATOR_PLUS_UNARY].execute([_first2]));
-
-              case 80:
-                if (!(tree.value === '-')) {
-                  _context4.next = 95;
-                  break;
-                }
-
-                if (!(tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY)) {
-                  _context4.next = 91;
-                  break;
-                }
-
-                _context4.next = 84;
-                return this.evaluate(tree.first);
-
-              case 84:
-                _first3 = _context4.sent;
-                _context4.next = 87;
-                return this.evaluate(tree.second);
-
-              case 87:
-                _second2 = _context4.sent;
-                return _context4.abrupt('return', _first3[Value.OPERATOR_MINUS_BINARY].execute([_first3, _second2]));
-
-              case 91:
-                _context4.next = 93;
-                return this.evaluate(tree.first);
-
-              case 93:
-                _first4 = _context4.sent;
-                return _context4.abrupt('return', _first4[Value.OPERATOR_MINUS_UNARY].execute([_first4]));
-
-              case 95:
-                if (!(tree.value === '*')) {
-                  _context4.next = 103;
-                  break;
-                }
-
-                _context4.next = 98;
-                return this.evaluate(tree.first);
-
-              case 98:
-                _first5 = _context4.sent;
-                _context4.next = 101;
-                return this.evaluate(tree.second);
-
-              case 101:
-                _second3 = _context4.sent;
-                return _context4.abrupt('return', _first5[Value.OPERATOR_ASTERISK].execute([_first5, _second3]));
-
-              case 103:
-                if (!(tree.value === '/')) {
-                  _context4.next = 111;
-                  break;
-                }
-
-                _context4.next = 106;
-                return this.evaluate(tree.first);
-
-              case 106:
-                _first6 = _context4.sent;
-                _context4.next = 109;
-                return this.evaluate(tree.second);
-
-              case 109:
-                _second4 = _context4.sent;
-                return _context4.abrupt('return', _first6[Value.OPERATOR_SLASH].execute([_first6, _second4]));
-
-              case 111:
-                if (!(tree.value === '(' && tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY)) {
-                  _context4.next = 134;
-                  break;
-                }
-
-                procedure = void 0;
-
-                if (!(tree.first.type === Token.TOKEN_TYPE_IDENTIFIER)) {
-                  _context4.next = 117;
-                  break;
-                }
-
-                if (procedure = this.context.get(tree.first.value)) {} else if (this.nativeScope.hasOwnProperty(tree.first.value)) {
-                  procedure = this.nativeScope[tree.first.value];
-                } else {
-                  this.throwTypeError('undefined identifier ' + tree.first.value);
-                }
-                _context4.next = 120;
-                break;
-
-              case 117:
-                _context4.next = 119;
-                return this.evaluate(tree.first);
-
-              case 119:
-                procedure = _context4.sent;
-
-              case 120:
-                if (procedure.type === Value.PROCEDURE) {
-                  procedure = procedure.value;
-                } else {
-                  this.throwTypeError('tried to call a value of type ' + procedure.type + ', expected a procedure', tree.first.position);
-                }
-                args = [];
-                i = void 0;
-                i = 0;
-
-              case 124:
-                if (!(i < tree.args.length)) {
-                  _context4.next = 133;
-                  break;
-                }
-
-                _context4.t4 = args;
-                _context4.next = 128;
-                return this.evaluate(tree.args[i]);
-
-              case 128:
-                _context4.t5 = _context4.sent;
-
-                _context4.t4.push.call(_context4.t4, _context4.t5);
-
-              case 130:
-                i += 1;
-                _context4.next = 124;
-                break;
-
-              case 133:
-                return _context4.abrupt('return', this.executeProcedure(procedure, args, tree));
-
-              case 134:
-                if (!(tree.value === 'repeat')) {
-                  _context4.next = 160;
-                  break;
-                }
-
-                block = tree.block;
-
-                if (!(typeof tree.times !== 'undefined')) {
-                  _context4.next = 152;
-                  break;
-                }
-
-                _context4.next = 139;
-                return this.evaluate(tree.times);
-
-              case 139:
-                times = _context4.sent;
-
-                if (!(times.type !== Value.NUMBER)) {
-                  _context4.next = 142;
-                  break;
-                }
-
-                throw new TypeError('repeat structure: expected ' + Value.NUMBER + ', got ' + times.type);
-
-              case 142:
-                _i = void 0;
-                _i = 0;
-
-              case 144:
-                if (!(_i < times.value)) {
-                  _context4.next = 150;
-                  break;
-                }
-
-                _context4.next = 147;
-                return this.evaluateBlock(block);
-
-              case 147:
-                _i += 1;
-                _context4.next = 144;
-                break;
-
-              case 150:
-                _context4.next = 159;
-                break;
-
-              case 152:
-                _context4.next = 154;
-                return this.evaluate(tree.condition);
-
-              case 154:
-                if (!_context4.sent.castToBoolean().value) {
-                  _context4.next = 159;
-                  break;
-                }
-
-                _context4.next = 157;
-                return this.evaluateBlock(block);
-
-              case 157:
-                _context4.next = 152;
-                break;
-
-              case 159:
-                return _context4.abrupt('return', Value.createNull());
-
-              case 160:
-                if (!(tree.value === 'procedure')) {
-                  _context4.next = 164;
-                  break;
-                }
-
-                _first7 = tree.first, _block = tree.block;
-                name = _first7.value; // first is an identifier and does not have to be evalated
-
-                return _context4.abrupt('return', this.createProcedure(name, _block));
-
-              case 164:
-                this.throwTypeError('unexpected symbol ' + tree.value, tree.position);
-
-              case 165:
-              case 'end':
-                return _context4.stop();
-            }
-          }
-        }, _callee4, this);
-      }));
-
-      function evaluate(_x6, _x7) {
-        return _ref4.apply(this, arguments);
+      if (procedure.type === Value.PROCEDURE) {
+        procedure = procedure.value
+      } else {
+        this.throwTypeError(`tried to call a value of type ${procedure.type}, expected a procedure`, tree.first.position)
       }
+      const args = []
+      let i
+      for (i = 0; i < tree.args.length; i += 1) {
+        args.push(await this.evaluate(tree.args[i]))
+      }
+      return this.executeProcedure(procedure, args, tree)
+    }
 
-      return evaluate;
-    }()
-  }]);
+    if (tree.value === 'if') {
+      const condition = await this.evaluate(tree.condition)
+      if (condition.castToBoolean().value) {
+        return this.evaluateBlock(tree.block)
+      }
+    }
 
-  return _class;
-}(KarolineParser);
+    if (tree.value === 'repeat') {
+      const {block} = tree
+      if (typeof tree.times !== 'undefined') {
+        // repeat ... times structure
+        const times = await this.evaluate(tree.times)
+        if (times.type !== Value.NUMBER) {
+          throw new TypeError(`repeat structure: expected ${Value.NUMBER}, got ${times.type}`)
+        }
+        let i
+        for (i = 0; i < times.value; i += 1) {
+          await this.evaluateBlock(block)
+        }
+      } else  {
+        // repeat while ... structure
+        while ((await this.evaluate(tree.condition)).castToBoolean().value) {
+          await this.evaluateBlock(block)
+        }
+      }
+      return Value.createNull()
+    }
 
-Interpreter.EXECUTION_STOPPED = Symbol('execution stopped');
+    if (tree.value === 'procedure') {
+      const {first, block} = tree
+      const name = first.value // first is an identifier and does not have to be evalated
+      return this.createProcedure(name, block)
+    }
+    this.throwTypeError(`unexpected symbol ${tree.value}`, tree.position)
+  }
+
+}
+
+Interpreter.EXECUTION_STOPPED = Symbol('execution stopped')
 
 },{"../parser/karoline-parser.js":311,"../parser/parser-symbol.js":312,"../parser/token.js":316,"../util/type-error.js":321,"./context.js":2,"./number.js":4,"./procedure.js":5,"./value.js":6}],4:[function(require,module,exports){
-'use strict';
+const Value = require('./value.js')
+const Procedure = require('./procedure.js')
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+const Number = module.exports = class extends Value {
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Value = require('./value.js');
-var Procedure = require('./procedure.js');
-
-var Number = module.exports = function (_Value) {
-  _inherits(_class, _Value);
-
-  function _class(value) {
-    _classCallCheck(this, _class);
-
-    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, Value.NUMBER, value));
+  constructor (value) {
+    super(Value.NUMBER, value)
   }
 
-  return _class;
-}(Value);
+}
 
 Number.prototype[Value.OPERATOR_PLUS_UNARY] = new Procedure({
   name: 'Number::unary+',
-  cb: function cb(self) {
-    return self;
-  },
+  cb: (self) => self,
   expectedArguments: [{
     type: Value.NUMBER
   }]
-});
+})
 
 Number.prototype[Value.OPERATOR_PLUS_BINARY] = new Procedure({
   name: 'Number::binary+',
-  cb: function cb(_ref) {
-    var _ref2 = _slicedToArray(_ref, 2),
-        self = _ref2[0],
-        other = _ref2[1];
-
+  cb: ([self, other]) => {
     if (other.type === Value.NUMBER) {
-      return new Number(self.value + other.value);
+      return new Number(self.value + other.value)
     }
   },
   expectedArguments: [{
     types: [Value.NUMBER, Value.STRING]
   }]
-});
+})
 
 Number.prototype[Value.OPERATOR_MINUS_UNARY] = new Procedure({
   name: 'Number::unary-',
-  cb: function cb(self) {
-    return new Number(-self.value);
-  },
+  cb: (self) => new Number(-self.value),
   expectedArguments: [{
     type: Value.NUMBER
   }]
-});
+})
 
 Number.prototype[Value.OPERATOR_MINUS_BINARY] = new Procedure({
   name: 'Number::binary-',
-  cb: function cb(_ref3) {
-    var _ref4 = _slicedToArray(_ref3, 2),
-        self = _ref4[0],
-        other = _ref4[1];
-
-    return new Number(self.value - other.value);
+  cb: ([self, other]) => {
+    return new Number(self.value - other.value)
   },
   expectedArguments: [{
     type: Value.NUMBER
   }]
-});
+})
 
 Number.prototype[Value.OPERATOR_ASTERISK] = new Procedure({
   name: 'Number::*',
-  cb: function cb(_ref5) {
-    var _ref6 = _slicedToArray(_ref5, 2),
-        self = _ref6[0],
-        other = _ref6[1];
-
-    return new Number(self.value * other.value);
+  cb: ([self, other]) => {
+    return new Number(self.value * other.value)
   },
   expectedArguments: [{
     type: Value.NUMBER
   }]
-});
+})
 
 Number.prototype[Value.OPERATOR_SLASH] = new Procedure({
   name: 'Number::/',
-  cb: function cb(_ref7) {
-    var _ref8 = _slicedToArray(_ref7, 2),
-        self = _ref8[0],
-        other = _ref8[1];
-
-    return new Number(self.value / other.value);
+  cb: ([self, other]) => {
+    return new Number(self.value / other.value)
   },
   expectedArguments: [{
     type: Value.NUMBER
   }]
-});
+})
+
+Number.prototype[Value.OPERATOR_LESS_THAN] = new Procedure({
+  name: 'Number::<',
+  cb: ([self, other]) => {
+    return new Number(self.value < other.value)
+  },
+  expectedArguments: [{
+    type: Value.NUMBER
+  }]
+})
+
+Number.prototype[Value.OPERATOR_GREATER_THAN] = new Procedure({
+  name: 'Number::<',
+  cb: ([self, other]) => {
+    return new Number(self.value > other.value)
+  },
+  expectedArguments: [{
+    type: Value.NUMBER
+  }]
+})
 
 },{"./procedure.js":5,"./value.js":6}],5:[function(require,module,exports){
-'use strict';
+const TypeError = require('../util/type-error.js')
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const Procedure = module.exports = class {
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var TypeError = require('../util/type-error.js');
-
-var Procedure = module.exports = function () {
-  function _class(options) {
-    _classCallCheck(this, _class);
-
-    this.cb = options.cb;
-    this.expectedArguments = Array.isArray(options.expectedArguments) ? options.expectedArguments : [];
-    this.userDefined = !!options.userDefined;
-    this.name = options.name || '<unnamed procedure>';
-    this.scope = options.scope || null;
+  constructor (options) {
+    this.cb = options.cb
+    this.expectedArguments = Array.isArray(options.expectedArguments) ? options.expectedArguments : []
+    this.userDefined = !!options.userDefined
+    this.name = options.name || '<unnamed procedure>'
+    this.scope = options.scope || null
   }
 
-  _createClass(_class, [{
-    key: 'execute',
-    value: function () {
-      var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(args) {
-        var Value, cb, expectedArguments, index, expected, real, types;
-        return regeneratorRuntime.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                Value = require('./value.js');
-                cb = this.cb, expectedArguments = this.expectedArguments;
-                index = void 0;
-                _context.t0 = regeneratorRuntime.keys(expectedArguments);
-
-              case 4:
-                if ((_context.t1 = _context.t0()).done) {
-                  _context.next = 22;
-                  break;
-                }
-
-                index = _context.t1.value;
-                expected = expectedArguments[index];
-                real = args[index];
-
-                if (!expected.optional) {
-                  _context.next = 10;
-                  break;
-                }
-
-                return _context.abrupt('continue', 4);
-
-              case 10:
-                if (real) {
-                  _context.next = 12;
-                  break;
-                }
-
-                throw new TypeError('procedure ' + this.name + ': missing argument ' + index);
-
-              case 12:
-                if (!Array.isArray(expected.types)) {
-                  _context.next = 18;
-                  break;
-                }
-
-                if (!(expected.types.indexOf(real.type) < 0)) {
-                  _context.next = 16;
-                  break;
-                }
-
-                types = expected.types.reduce(function (acc, b) {
-                  return acc + ', ' + b;
-                }, '');
-                throw new TypeError('procedure ' + this.name + ': expected argument ' + index + ' to be of types ' + types + 'got type ' + args[index].type);
-
-              case 16:
-                _context.next = 20;
-                break;
-
-              case 18:
-                if (!(expected.type !== real.type && expected.type !== Value.ANY)) {
-                  _context.next = 20;
-                  break;
-                }
-
-                throw new TypeError('procedure ' + this.name + ': expected argument ' + index + ' to be of type ' + expected.type + ', got type ' + args[index].type);
-
-              case 20:
-                _context.next = 4;
-                break;
-
-              case 22:
-                _context.next = 24;
-                return cb(args);
-
-              case 24:
-                return _context.abrupt('return', _context.sent);
-
-              case 25:
-              case 'end':
-                return _context.stop();
-            }
-          }
-        }, _callee, this);
-      }));
-
-      function execute(_x) {
-        return _ref.apply(this, arguments);
+  async execute (args) {
+    const Value = require('./value.js')
+    const {cb, expectedArguments} = this
+    let index
+    for (index in expectedArguments) {
+      const expected = expectedArguments[index]
+      const real = args[index]
+      if (expected.optional) {
+        continue
       }
+      if (!real) {
+        throw new TypeError(`procedure ${this.name}: missing argument ${index}`)
+      }
+      if (Array.isArray(expected.types)) {
+        if (expected.types.indexOf(real.type) < 0) {
+          const types = expected.types.reduce((acc, b) => acc + ', ' + b, '')
+          throw new TypeError(`procedure ${this.name}: expected argument ${index} to be of types ${types}got type ${args[index].type}`)
+        }
+      } else if (expected.type !== real.type && expected.type !== Value.ANY) {
+        throw new TypeError(`procedure ${this.name}: expected argument ${index} to be of type ${expected.type}, got type ${args[index].type}`)
+      }
+    }
+    return await cb(args)
+  }
 
-      return execute;
-    }()
-  }]);
-
-  return _class;
-}();
+}
 
 Procedure.FAIL = new Procedure({
-  cb: function cb() {
-    throw new TypeError('undefined action');
+  cb: () => {
+    throw new TypeError(`undefined action`)
   }
-});
+})
 
 },{"../util/type-error.js":321,"./value.js":6}],6:[function(require,module,exports){
-'use strict';
+const Procedure = require('./procedure.js')
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+const Value = module.exports = class {
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Procedure = require('./procedure.js');
-
-var Value = module.exports = function () {
-  function _class(type, value) {
-    _classCallCheck(this, _class);
-
-    this.type = type || Value.NULL;
-    this.value = value || null;
+  constructor (type, value) {
+    this.type = type || Value.NULL
+    this.value = value || null
   }
 
-  _createClass(_class, [{
-    key: 'toString',
-    value: function toString() {
-      if (this.type === Value.NULL) {
-        // TODO: maybe create a null type
-        return 'null';
-      }
-      if (this.type === Value.NUMBER) {
-        // TODO: replace this with the number type
-        return this.value.toString();
-      }
-      if (this.type === Value.STRING) {
-        // TODO: replace this with the string type
-        return this.value.toString();
-      }
-      if (this.type === Value.BOOLEAN) {
-        // TODO: replace this with the boolean type
-        return this.value ? 'true' : 'false';
-      }
-      if (this.type === Value.PROCEDURE) {
-        // TODO: replace this with the procedure type
-        return 'procedure ' + this.value.name;
-      }
+  toString () {
+    if (this.type === Value.NULL) {
+      // TODO: maybe create a null type
+      return 'null'
     }
-  }, {
-    key: 'castToBoolean',
-    value: function castToBoolean() {
-      if (this.value === false || this.value === '' || this.value === 0 || this.value === null) {
-        return Value.createFalse();
-      }
-      return Value.createTrue();
+    if (this.type === Value.NUMBER) {
+      // TODO: replace this with the number type
+      return this.value.toString()
     }
-  }], [{
-    key: 'createNull',
-    value: function createNull() {
-      return new Value(Value.NULL, null);
+    if (this.type === Value.STRING) {
+      // TODO: replace this with the string type
+      return this.value.toString()
     }
-  }, {
-    key: 'createNumber',
-    value: function createNumber(number) {
-      return new Value(Value.NUMBER, Number(number));
+    if (this.type === Value.BOOLEAN) {
+      // TODO: replace this with the boolean type
+      return this.value ? 'true' : 'false'
     }
-  }, {
-    key: 'createString',
-    value: function createString(string) {
-      return new Value(Value.STRING, String(string));
+    if (this.type === Value.PROCEDURE) {
+      // TODO: replace this with the procedure type
+      return 'procedure ' + this.value.name
     }
-  }, {
-    key: 'createBoolean',
-    value: function createBoolean(value) {
-      return new Value(Value.BOOLEAN, !!value);
+  }
+
+  castToBoolean () {
+    if (this.value === false || this.value === '' || this.value === 0 || this.value === null) {
+      return Value.createFalse()
     }
-  }, {
-    key: 'createTrue',
-    value: function createTrue() {
-      return new Value(Value.BOOLEAN, true);
-    }
-  }, {
-    key: 'createFalse',
-    value: function createFalse() {
-      return new Value(Value.BOOLEAN, false);
-    }
-  }, {
-    key: 'createProcedure',
-    value: function createProcedure(procedure) {
-      return new Value(Value.PROCEDURE, procedure);
-    }
-  }]);
+    return Value.createTrue()
+  }
 
-  return _class;
-}();
+  static createNull () {
+    return new Value(Value.NULL, null)
+  }
 
-Value.NUMBER = 'Number';
-Value.STRING = 'String';
-Value.BOOLEAN = 'Boolean';
-Value.PROCEDURE = 'Procedure';
-Value.NULL = 'Null';
-Value.ANY = 'Any';
+  static createNumber (number) {
+    return new Value(Value.NUMBER, Number(number))
+  }
 
-Value.OPERATOR_PLUS_UNARY = Symbol('Operator plus unary');
-Value.prototype[Value.OPERATOR_PLUS_UNARY] = Procedure.FAIL;
+  static createString (string) {
+    return new Value(Value.STRING, String(string))
+  }
 
-Value.OPERATOR_PLUS_BINARY = Symbol('Operator plus binary');
-Value.prototype[Value.OPERATOR_PLUS_BINARY] = Procedure.FAIL;
+  static createBoolean (value) {
+    return new Value(Value.BOOLEAN, !!value)
+  }
 
-Value.OPERATOR_MINUS_UNARY = Symbol('Operator minus unary');
-Value.prototype[Value.OPERATOR_MINUS_UNARY] = Procedure.FAIL;
+  static createTrue () {
+    return new Value(Value.BOOLEAN, true)
+  }
 
-Value.OPERATOR_MINUS_BINARY = Symbol('Operator minus binary');
-Value.prototype[Value.OPERATOR_MINUS_BINARY] = Procedure.FAIL;
+  static createFalse () {
+    return new Value(Value.BOOLEAN, false)
+  }
 
-Value.OPERATOR_ASTERISK = Symbol('Operator asterisk');
-Value.prototype[Value.OPERATOR_ASTERISK] = Procedure.FAIL;
+  static createProcedure (procedure) {
+    return new Value(Value.PROCEDURE, procedure)
+  }
 
-Value.OPERATOR_SLASH = Symbol('Operator slash');
-Value.prototype[Value.OPERATOR_SLASH] = Procedure.FAIL;
+}
 
-Value.OPERATOR_EQUALITY = Symbol('Operator equality');
+Value.NUMBER = 'Number'
+Value.STRING = 'String'
+Value.BOOLEAN = 'Boolean'
+Value.PROCEDURE = 'Procedure'
+Value.NULL = 'Null'
+Value.ANY = 'Any'
+
+Value.OPERATOR_PLUS_UNARY = Symbol('Operator plus unary')
+Value.prototype[Value.OPERATOR_PLUS_UNARY] = Procedure.FAIL
+
+Value.OPERATOR_PLUS_BINARY = Symbol('Operator plus binary')
+Value.prototype[Value.OPERATOR_PLUS_BINARY] = Procedure.FAIL
+
+Value.OPERATOR_MINUS_UNARY = Symbol('Operator minus unary')
+Value.prototype[Value.OPERATOR_MINUS_UNARY] = Procedure.FAIL
+
+Value.OPERATOR_MINUS_BINARY = Symbol('Operator minus binary')
+Value.prototype[Value.OPERATOR_MINUS_BINARY] = Procedure.FAIL
+
+Value.OPERATOR_ASTERISK = Symbol('Operator asterisk')
+Value.prototype[Value.OPERATOR_ASTERISK] = Procedure.FAIL
+
+Value.OPERATOR_SLASH = Symbol('Operator slash')
+Value.prototype[Value.OPERATOR_SLASH] = Procedure.FAIL
+
+Value.OPERATOR_EQUALITY = Symbol('Operator equality')
 Value.prototype[Value.OPERATOR_EQUALITY] = new Procedure({
   name: 'Value::==',
-  cb: function cb(_ref) {
-    var _ref2 = _slicedToArray(_ref, 2),
-        self = _ref2[0],
-        other = _ref2[1];
-
-    return self.type === other.type && self.value === other.value;
+  cb: ([self, other]) => {
+    return self.type === other.type && self.value === other.value
   },
   expectedArguments: [{
     type: Value.ANY
   }]
-});
+})
+
+Value.OPERATOR_LESS_THAN = Symbol('Operator less than')
+Value.prototype[Value.OPERATOR_LESS_THAN] = Procedure.FAIL
+
+Value.OPERATOR_GREATER_THAN = Symbol('Operator greater than')
+Value.prototype[Value.OPERATOR_GREATER_THAN] = Procedure.FAIL
+
+Value.BINARY_OPERATORS = {
+  '+': Value.OPERATOR_PLUS_BINARY,
+  '+': Value.OPERATOR_MINUS_BINARY,
+  '*': Value.OPERATOR_ASTERISK,
+  '/': Value.OPERATOR_SLASH,
+  '==': Value.OPERATOR_EQUALITY,
+  '<': Value.OPERATOR_LESS_THAN,
+  '>': Value.OPERATOR_GREATER_THAN
+}
 
 },{"./procedure.js":5}],7:[function(require,module,exports){
 /* eslint max-len: 0 */
@@ -8372,1379 +7836,1097 @@ const World = module.exports = class {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],309:[function(require,module,exports){
-'use strict';
+const SyntaxError = require('../util/syntax-error.js')
+const InfixOperator = require('./infix-operator.js')
+const ParserSymbol = require('./parser-symbol.js')
+const Token = require('./token.js')
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const AssignmentOperator = module.exports = class extends InfixOperator {
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+  constructor (options) {
+    super(options)
 
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var SyntaxError = require('../util/syntax-error.js');
-var InfixOperator = require('./infix-operator.js');
-var ParserSymbol = require('./parser-symbol.js');
-var Token = require('./token.js');
-
-var AssignmentOperator = module.exports = function (_InfixOperator) {
-  _inherits(_class, _InfixOperator);
-
-  function _class(options) {
-    _classCallCheck(this, _class);
-
-    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, options));
-
-    _this.isAssignment = true;
-    _this.bindingPower = 10;
-    return _this;
+    this.isAssignment = true
+    this.bindingPower = 10
   }
 
-  _createClass(_class, [{
-    key: 'defaultLeftDenotation',
-    value: function defaultLeftDenotation(self, first, parser) {
-      if (first.type !== Token.TOKEN_TYPE_IDENTIFIER) {
-        throw new SyntaxError('invalid assignment left-hand side: expected identifier, got ' + first.type);
-      }
-      var item = self.clone();
-      item.first = first;
-      item.isAssignment = true;
-      item.second = parser.expression(self.bindingPower);
-      item.operatorType = ParserSymbol.OPERATOR_TYPE_BINARY;
-      return item;
+  defaultLeftDenotation (self, first, parser) {
+    if (first.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+      throw new SyntaxError(`invalid assignment left-hand side: expected identifier, got ${first.type}`)
     }
-  }]);
+    const item = self.clone()
+    item.first = first
+    item.isAssignment = true
+    item.second = parser.expression(self.bindingPower)
+    item.operatorType = ParserSymbol.OPERATOR_TYPE_BINARY
+    return item
+  }
 
-  return _class;
-}(InfixOperator);
+}
 
 },{"../util/syntax-error.js":320,"./infix-operator.js":310,"./parser-symbol.js":312,"./token.js":316}],310:[function(require,module,exports){
-'use strict';
+const ParserSymbol = require('./parser-symbol.js')
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const InfixOperator = module.exports = class extends ParserSymbol {
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var ParserSymbol = require('./parser-symbol.js');
-
-var InfixOperator = module.exports = function (_ParserSymbol) {
-  _inherits(_class, _ParserSymbol);
-
-  function _class(options) {
-    _classCallCheck(this, _class);
-
-    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, options));
+  constructor (options) {
+    super(options)
   }
 
-  _createClass(_class, [{
-    key: 'defaultNullDenotation',
-    value: function defaultNullDenotation(self, parser) {
-      console.log(self.value);
-      throw new SyntaxError('undefined null denotation');
-    }
-  }, {
-    key: 'defaultLeftDenotation',
-    value: function defaultLeftDenotation(self, first, parser) {
-      var item = this.clone();
-      item.first = first;
-      item.second = parser.expression(this.bindingPower);
-      item.operatorType = ParserSymbol.OPERATOR_TYPE_BINARY;
-      return item;
-    }
-  }]);
+  defaultNullDenotation (self, parser) {
+    throw new SyntaxError(`undefined null denotation`)
+  }
 
-  return _class;
-}(ParserSymbol);
+  defaultLeftDenotation (self, first, parser) {
+    const item = this.clone()
+    item.first = first
+    item.second = parser.expression(this.bindingPower)
+    item.operatorType = ParserSymbol.OPERATOR_TYPE_BINARY
+    return item
+  }
+
+}
 
 },{"./parser-symbol.js":312}],311:[function(require,module,exports){
-'use strict';
+const EventEmitter = require('../util/event-emitter.js')
+const AssignmentOperator = require('./assignment-operator.js')
+const ParserSymbol = require('./parser-symbol.js')
+const PrefixOperator = require('./prefix-operator.js')
+const InfixOperator = require('./infix-operator.js')
+const Token = require('./token.js')
+const Parser = require('./parser.js')
+const SyntaxError = require('../util/syntax-error.js')
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const KarolineParser = module.exports = class extends EventEmitter {
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var EventEmitter = require('../util/event-emitter.js');
-var AssignmentOperator = require('./assignment-operator.js');
-var ParserSymbol = require('./parser-symbol.js');
-var PrefixOperator = require('./prefix-operator.js');
-var InfixOperator = require('./infix-operator.js');
-var Token = require('./token.js');
-var Parser = require('./parser.js');
-var SyntaxError = require('../util/syntax-error.js');
-
-var KarolineParser = module.exports = function (_EventEmitter) {
-  _inherits(_class, _EventEmitter);
-
-  function _class() {
-    _classCallCheck(this, _class);
-
-    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this));
-
-    _this.parser = new Parser();
-    _this.prepareParser();
-    return _this;
+  constructor () {
+    super()
+    this.parser = new Parser()
+    this.prepareParser()
   }
 
-  _createClass(_class, [{
-    key: 'prepareParser',
-    value: function prepareParser() {
-      var _this2 = this;
-
-      var parser = this.parser;
-
-      parser.tokenizer.addKeyWord('repeat');
-      parser.tokenizer.addKeyWord('times');
-      parser.tokenizer.addKeyWord('while');
-      parser.tokenizer.addKeyWord('*repeat');
-      parser.registerSymbol(new PrefixOperator({
-        value: 'repeat',
-        bindingPower: 0,
-        nullDenotation: function nullDenotation(self) {
-          var item = self.clone();
-          var next = parser.expression(0);
-          if (next.value === 'while') {
-            item.condition = parser.expression(0);
-          } else {
-            item.times = next;
-            parser.nextToken('times');
-          }
-          item.block = _this2.processBlock('*repeat');
-          return item;
+  prepareParser () {
+    const {parser} = this
+    parser.tokenizer.addKeyWord('repeat')
+    parser.tokenizer.addKeyWord('times')
+    parser.tokenizer.addKeyWord('while')
+    parser.tokenizer.addKeyWord('*repeat')
+    parser.registerSymbol(new PrefixOperator({
+      value: 'repeat',
+      bindingPower: 0,
+      nullDenotation: (self) => {
+        const item = self.clone()
+        const next = parser.expression(0)
+        if (next.value === 'while') {
+          item.condition = parser.expression(0)
+        } else {
+          item.times = next
+          parser.nextToken('times')
         }
-      }));
-      parser.registerSymbol(new ParserSymbol({
-        value: '*repeat'
-      }));
-      parser.registerSymbol(new ParserSymbol({
-        value: 'times'
-      }));
-      parser.registerSymbol(new ParserSymbol({
-        value: 'while'
-      }));
+        item.block = this.processBlock('*repeat')
+        return item
+      }
+    }))
+    parser.registerSymbol(new ParserSymbol({
+      value: '*repeat'
+    }))
+    parser.registerSymbol(new ParserSymbol({
+      value: 'times'
+    }))
+    parser.registerSymbol(new ParserSymbol({
+      value: 'while'
+    }))
 
-      parser.tokenizer.addKeyWord('procedure');
-      parser.tokenizer.addKeyWord('*procedure');
-      parser.registerSymbol(new PrefixOperator({
-        value: 'procedure',
-        nullDenotation: function nullDenotation(self) {
-          var item = self.clone();
-          if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
-            throw new SyntaxError('expected identifier as name for procedure, got ' + parser.token.type + ' token');
-          }
-          item.first = parser.token;
-          parser.nextToken();
-          item.block = _this2.processBlock('*procedure');
-          return item;
+    parser.tokenizer.addKeyWord('procedure')
+    parser.tokenizer.addKeyWord('*procedure')
+    parser.registerSymbol(new PrefixOperator({
+      value: 'procedure',
+      nullDenotation: (self) => {
+        const item = self.clone()
+        if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+          throw new SyntaxError(`expected identifier as name for procedure, got ${parser.token.type} token`)
         }
-      }));
-      parser.registerSymbol(new ParserSymbol({
-        value: '*procedure'
-      }));
+        item.first = parser.token
+        parser.nextToken()
+        item.block = this.processBlock('*procedure')
+        return item
+      }
+    }))
+    parser.registerSymbol(new ParserSymbol({
+      value: '*procedure'
+    }))
 
-      parser.tokenizer.addKeyWord('(');
-      parser.tokenizer.addKeyWord(')');
-      parser.tokenizer.addKeyWord(',');
-      parser.registerSymbol(new InfixOperator({
-        value: '(',
-        bindingPower: 80,
-        nullDenotation: function nullDenotation(self) {
-          var item = parser.expression(0);
-          parser.nextToken(')');
-          return item;
-        },
-        leftDenotation: function leftDenotation(self, left) {
-          var item = self.clone();
-          item.operatorType = ParserSymbol.OPERATOR_TYPE_BINARY;
-          item.first = left;
-          item.args = [];
+    parser.tokenizer.addKeyWord('if')
+    parser.tokenizer.addKeyWord('*if')
+    parser.tokenizer.addKeyWord('then')
+    parser.registerSymbol(new PrefixOperator({
+      value: 'if',
+      nullDenotation: (self) => {
+        const item = self.clone()
+        item.condition = parser.expression(0)
+        parser.nextToken('then')
+        parser.nextToken()
+        item.block = this.processBlock('*if')
+        return item
+      }
+    }))
+    parser.registerSymbol(new ParserSymbol({
+      value: '*if'
+    }))
+    parser.registerSymbol(new ParserSymbol({
+      value: 'then'
+    }))
+
+    parser.tokenizer.addKeyWord('(')
+    parser.tokenizer.addKeyWord(')')
+    parser.tokenizer.addKeyWord(',')
+    parser.registerSymbol(new InfixOperator({
+      value: '(',
+      bindingPower: 80,
+      nullDenotation: (self) => {
+        const item = parser.expression(0)
+        parser.nextToken(')')
+        return item
+      },
+      leftDenotation: (self, left) => {
+        const item = self.clone()
+        item.operatorType = ParserSymbol.OPERATOR_TYPE_BINARY
+        item.first = left
+        item.args = []
+        if (parser.token.value === ')') {
+          parser.nextToken()
+          return item
+        }
+        while (true) {
+          // parse the new argument
+          item.args.push(parser.expression(0))
           if (parser.token.value === ')') {
-            parser.nextToken();
-            return item;
+            break
           }
-          while (true) {
-            // parse the new argument
-            item.args.push(parser.expression(0));
-            if (parser.token.value === ')') {
-              break;
-            }
-            if (parser.token.value !== ',') {
-              throw new SyntaxError('expected \',\' token, got ' + parser.token.value);
-            }
-            parser.nextToken();
+          if (parser.token.value !== ',') {
+            throw new SyntaxError(`expected ',' token, got ${parser.token.value}`)
           }
-          parser.nextToken();
-          return item;
+          parser.nextToken()
         }
-      }));
-      parser.registerSymbol(new ParserSymbol({
-        value: ')'
-      }));
-      parser.registerSymbol(new ParserSymbol({
-        value: ','
-      }));
+        parser.nextToken()
+        return item
+      }
+    }))
+    parser.registerSymbol(new ParserSymbol({
+      value: ')'
+    }))
+    parser.registerSymbol(new ParserSymbol({
+      value: ','
+    }))
 
-      parser.tokenizer.addKeyWord('var');
-      parser.registerSymbol(new PrefixOperator({
-        value: 'var',
-        nullDenotation: function nullDenotation(self) {
-          var item = self.clone();
-          item.identifiers = [];
-          if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
-            throw new SyntaxError('expected identifier, got ' + parser.token.type + ' token');
-          }
-          while (parser.token.type === Token.TOKEN_TYPE_IDENTIFIER) {
-            var identifier = parser.token;
-            parser.nextToken();
-            if (parser.token.value === '=') {
-              parser.nextToken('=');
-              var value = parser.expression(0);
-              item.identifiers.push({
-                identifier: identifier,
-                value: value
-              });
-            } else {
-              item.identifiers.push({
-                identifier: identifier
-              });
-            }
-            if (parser.token.value !== ',') {
-              break;
-            }
-          }
-          return item;
+    parser.tokenizer.addKeyWord('var')
+    parser.registerSymbol(new PrefixOperator({
+      value: 'var',
+      nullDenotation: (self) => {
+        const item = self.clone()
+        item.identifiers = []
+        if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+          throw new SyntaxError(`expected identifier, got ${parser.token.type} token`)
         }
-      }));
-
-      parser.tokenizer.addKeyWord('const');
-      parser.registerSymbol(new PrefixOperator({
-        value: 'const',
-        nullDenotation: function nullDenotation(self) {
-          var item = self.clone();
-          item.identifiers = [];
-          if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
-            throw new SyntaxError('expected identifier, got ' + parser.token.type + ' token');
-          }
-          while (parser.token.type === Token.TOKEN_TYPE_IDENTIFIER) {
-            var identifier = parser.token;
-            parser.nextToken();
-            parser.nextToken('=');
-            var value = parser.expression(0);
+        while (parser.token.type === Token.TOKEN_TYPE_IDENTIFIER) {
+          const identifier = parser.token
+          parser.nextToken()
+          if (parser.token.value === '=') {
+            parser.nextToken('=')
+            const value = parser.expression(0)
             item.identifiers.push({
-              identifier: identifier,
-              value: value
-            });
-            if (parser.token.value !== ',') {
-              break;
-            }
+              identifier,
+              value
+            })
+          } else {
+            item.identifiers.push({
+              identifier
+            })
           }
-          return item;
+          if (parser.token.value !== ',') {
+            break
+          }
+          parser.nextToken()
         }
-      }));
+        return item
+      }
+    }))
 
-      parser.tokenizer.addKeyWord('*');
-      parser.registerSymbol(new InfixOperator({
-        value: '*',
-        bindingPower: 60
-      }));
+    parser.tokenizer.addKeyWord('const')
+    parser.registerSymbol(new PrefixOperator({
+      value: 'const',
+      nullDenotation: (self) => {
+        const item = self.clone()
+        item.identifiers = []
+        if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+          throw new SyntaxError(`expected identifier, got ${parser.token.type} token`)
+        }
+        while (parser.token.type === Token.TOKEN_TYPE_IDENTIFIER) {
+          const identifier = parser.token
+          parser.nextToken()
+          parser.nextToken('=')
+          const value = parser.expression(0)
+          item.identifiers.push({
+            identifier,
+            value
+          })
+          if (parser.token.value !== ',') {
+            break
+          }
+          parser.nextToken()
+        }
+        return item
+      }
+    }))
 
-      parser.tokenizer.addKeyWord('/');
-      parser.registerSymbol(new InfixOperator({
-        value: '/',
-        bindingPower: 60
-      }));
+    parser.tokenizer.addKeyWord('&&')
+    parser.registerSymbol(new InfixOperator({
+      value: '&&',
+      bindingPower: 30,
+    }))
 
-      parser.tokenizer.addKeyWord('+');
-      parser.registerSymbol(new InfixOperator({
-        value: '+',
-        bindingPower: 50,
-        nullDenotation: PrefixOperator.prototype.defaultNullDenotation
-      }));
+    parser.tokenizer.addKeyWord('||')
+    parser.registerSymbol(new InfixOperator({
+      value: '||',
+      bindingPower: 28,
+    }))
 
-      parser.tokenizer.addKeyWord('-');
-      parser.registerSymbol(new InfixOperator({
-        value: '-',
-        bindingPower: 50,
-        nullDenotation: PrefixOperator.prototype.defaultNullDenotation
-      }));
+    parser.tokenizer.addKeyWord('<')
+    parser.registerSymbol(new InfixOperator({
+      value: '<',
+      bindingPower: 45,
+    }))
 
-      parser.tokenizer.addKeyWord('==');
-      parser.registerSymbol(new InfixOperator({
-        value: '==',
-        bindingPower: 40
-      }));
+    parser.tokenizer.addKeyWord('>')
+    parser.registerSymbol(new InfixOperator({
+      value: '>',
+      bindingPower: 45,
+    }))
 
-      parser.tokenizer.addKeyWord('=');
-      parser.registerSymbol(new AssignmentOperator({
-        value: '='
-      }));
+    parser.tokenizer.addKeyWord('*')
+    parser.registerSymbol(new InfixOperator({
+      value: '*',
+      bindingPower: 60,
+    }))
 
-      parser.tokenizer.addKeyWord(';');
-      parser.registerSymbol(new ParserSymbol({
-        value: ';',
-        bindingPower: -1
-      }));
-    }
-  }]);
+    parser.tokenizer.addKeyWord('/')
+    parser.registerSymbol(new InfixOperator({
+      value: '/',
+      bindingPower: 60,
+    }))
 
-  return _class;
-}(EventEmitter);
+    parser.tokenizer.addKeyWord('+')
+    parser.registerSymbol(new InfixOperator({
+      value: '+',
+      bindingPower: 50,
+      nullDenotation: PrefixOperator.prototype.defaultNullDenotation
+    }))
+
+    parser.tokenizer.addKeyWord('-')
+    parser.registerSymbol(new InfixOperator({
+      value: '-',
+      bindingPower: 50,
+      nullDenotation: PrefixOperator.prototype.defaultNullDenotation
+    }))
+
+    parser.tokenizer.addKeyWord('==')
+    parser.registerSymbol(new InfixOperator({
+      value: '==',
+      bindingPower: 40
+    }))
+
+    parser.tokenizer.addKeyWord('=')
+    parser.registerSymbol(new AssignmentOperator({
+      value: '='
+    }))
+
+    parser.tokenizer.addKeyWord(';')
+    parser.registerSymbol(new ParserSymbol({
+      value: ';',
+      bindingPower: -1
+    }))
+  }
+
+}
 
 },{"../util/event-emitter.js":319,"../util/syntax-error.js":320,"./assignment-operator.js":309,"./infix-operator.js":310,"./parser-symbol.js":312,"./parser.js":313,"./prefix-operator.js":314,"./token.js":316}],312:[function(require,module,exports){
-'use strict';
+const Token = require('./token.js')
+const SyntaxError = require('../util/syntax-error.js')
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const ParserSymbol = module.exports = class extends Token {
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+  constructor (options) {
+    super(options)
+    this.bindingPower = options.bindingPower || 0
+    this.operatorType = ParserSymbol.OPERATOR_TYPE_UNARY
 
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Token = require('./token.js');
-var SyntaxError = require('../util/syntax-error.js');
-
-var ParserSymbol = module.exports = function (_Token) {
-  _inherits(_class, _Token);
-
-  function _class(options) {
-    _classCallCheck(this, _class);
-
-    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, options));
-
-    _this.bindingPower = options.bindingPower || 0;
-    _this.operatorType = ParserSymbol.OPERATOR_TYPE_UNARY;
-
-    _this._nullDenotation = typeof options.nullDenotation === 'function' ? options.nullDenotation : _this.defaultNullDenotation;
-    _this._leftDenotation = typeof options.leftDenotation === 'function' ? options.leftDenotation : _this.defaultLeftDenotation;
-    return _this;
+    this._nullDenotation = typeof options.nullDenotation === 'function' ? options.nullDenotation : this.defaultNullDenotation
+    this._leftDenotation = typeof options.leftDenotation === 'function' ? options.leftDenotation : this.defaultLeftDenotation
   }
 
-  _createClass(_class, [{
-    key: 'clone',
-    value: function clone() {
-      return new ParserSymbol(this);
-    }
-  }, {
-    key: 'nullDenotation',
-    value: function nullDenotation(self, parser) {
-      var item = this._nullDenotation(self, parser);
-      item.position = self.position;
-      return item;
-    }
-  }, {
-    key: 'leftDenotation',
-    value: function leftDenotation(self, left, parser) {
-      var item = this._leftDenotation(self, left, parser);
-      item.position = self.position;
-      return item;
-    }
-  }, {
-    key: 'defaultNullDenotation',
-    value: function defaultNullDenotation(self, parser) {
-      return this;
-    }
-  }, {
-    key: 'defaultLeftDenotation',
-    value: function defaultLeftDenotation(self, left, parser) {
-      throw new SyntaxError('undefined left denotation');
-    }
-  }]);
+  clone () {
+    return new ParserSymbol(this)
+  }
 
-  return _class;
-}(Token);
+  nullDenotation (self, parser) {
+    const item = this._nullDenotation(self, parser)
+    item.position = self.position
+    return item
+  }
 
-ParserSymbol.OPERATOR_TYPE_UNARY = 'OPERATOR_TYPE_UNARY';
-ParserSymbol.OPERATOR_TYPE_BINARY = 'OPERATOR_TYPE_BINARY';
+  leftDenotation (self, left, parser) {
+    const item = this._leftDenotation(self, left, parser)
+    item.position = self.position
+    return item
+  }
+
+  defaultNullDenotation (self, parser) {
+    return this
+  }
+
+  defaultLeftDenotation (self, left, parser) {
+    throw new SyntaxError(`undefined left denotation`)
+  }
+
+}
+
+ParserSymbol.OPERATOR_TYPE_UNARY = 'OPERATOR_TYPE_UNARY'
+ParserSymbol.OPERATOR_TYPE_BINARY = 'OPERATOR_TYPE_BINARY'
 
 },{"../util/syntax-error.js":320,"./token.js":316}],313:[function(require,module,exports){
-'use strict';
+const Tokenizer = require('./tokenizer.js')
+const ParserSymbol = require('./parser-symbol.js')
+const SyntaxError = require('../util/syntax-error.js')
+const Token = require('./token.js')
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const Parser = module.exports = class {
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+  constructor () {
+    this.tokenizer = new Tokenizer([])
+    this.symbols = {}
+    this.token = null
 
-var Tokenizer = require('./tokenizer.js');
-var ParserSymbol = require('./parser-symbol.js');
-var SyntaxError = require('../util/syntax-error.js');
-var Token = require('./token.js');
-
-var Parser = module.exports = function () {
-  function _class() {
-    _classCallCheck(this, _class);
-
-    this.tokenizer = new Tokenizer([]);
-    this.symbols = {};
-    this.token = null;
-
-    this.tokens = [];
-    this.currentIndex = 0;
+    this.tokens = []
+    this.currentIndex = 0
 
     this.registerSymbol(new ParserSymbol({
       value: '#end',
       bindingPower: 0
-    }));
+    }))
   }
 
-  _createClass(_class, [{
-    key: 'nextToken',
-    value: function nextToken(expected) {
-      var token = this.tokens[this.currentIndex];
-      if (typeof token === 'undefined') {
-        this.token = this.symbols['#end'];
-        return;
-      }
-      if (expected && this.token.value !== expected) {
-        throw new SyntaxError('Expected token "' + expected + '", got "' + this.token.value + '"');
-        this.token = this.symbols['#end'];
-        return;
-      }
-      if (token.type === Token.TOKEN_TYPE_KEY_WORD) {
-        this.token = this.symbols[token.value];
-        if (typeof this.token === 'undefined') {
-          throw new SyntaxError('Undefined key word "' + token.value + '"');
-          this.token = this.symbols['#end'];
-          return;
-        }
-      } else {
-        this.token = new ParserSymbol(token);
-      }
-      this.currentIndex += 1;
+  nextToken (expected) {
+    const token = this.tokens[this.currentIndex]
+    if (expected && this.token.value !== expected) {
+      throw new SyntaxError(`Expected token "${expected}", got "${this.token.value}"`)
+      this.token = this.symbols['#end']
+      return
     }
-  }, {
-    key: 'registerSymbol',
-    value: function registerSymbol(symbol) {
-      this.symbols[symbol.value] = symbol;
+    if (typeof token === 'undefined') {
+      this.token = this.symbols['#end']
+      return
     }
-  }, {
-    key: 'parse',
-    value: function parse(string) {
-      this.currentIndex = 0;
-      this.tokens = this.tokenizer.tokenize(string);
-      this.nextToken();
-      var expressions = [];
-      while (this.token.value !== '#end') {
-        expressions.push(this.expression(0));
+    if (token.type === Token.TOKEN_TYPE_KEY_WORD) {
+      this.token = this.symbols[token.value]
+      if (typeof this.token === 'undefined') {
+        throw new SyntaxError(`Undefined key word "${token.value}"`)
+        this.token = this.symbols['#end']
+        return
       }
-      return expressions;
+    } else {
+      this.token = new ParserSymbol(token)
     }
-  }, {
-    key: 'expression',
-    value: function expression(rightBindingPower) {
-      // skip all semicolons
-      while (this.token.value === ';') {
-        this.nextToken();
-      }
+    this.currentIndex += 1
+  }
 
-      if (this.token.value === '#end') {
-        throw new SyntaxError('Unexpected end of line, expected an expression.');
-        return null;
-      }
+  registerSymbol (symbol) {
+    this.symbols[symbol.value] = symbol
+  }
 
-      var oldToken = this.token;
-      this.nextToken();
-      var left = oldToken.nullDenotation(oldToken, this);
-      while (rightBindingPower < this.token.bindingPower) {
-        oldToken = this.token;
-        this.nextToken();
-        left = oldToken.leftDenotation(oldToken, left, this);
-      }
-      return left;
+  parse (string) {
+    this.currentIndex = 0
+    this.tokens = this.tokenizer.tokenize(string)
+    this.nextToken()
+    const expressions = []
+    while (this.token.value !== '#end') {
+      expressions.push(this.expression(0))
     }
-  }]);
+    return expressions
+  }
 
-  return _class;
-}();
+  expression (rightBindingPower) {
+    // skip all semicolons
+    while (this.token.value === ';') {
+      this.nextToken()
+    }
+
+    if (this.token.value === '#end') {
+      throw new SyntaxError(`Unexpected end of line, expected an expression.`)
+      return null
+    }
+
+    let oldToken = this.token
+    this.nextToken()
+    let left = oldToken.nullDenotation(oldToken, this)
+    while (rightBindingPower < this.token.bindingPower) {
+      oldToken = this.token
+      this.nextToken()
+      left = oldToken.leftDenotation(oldToken, left, this)
+    }
+    return left
+  }
+
+}
 
 },{"../util/syntax-error.js":320,"./parser-symbol.js":312,"./token.js":316,"./tokenizer.js":317}],314:[function(require,module,exports){
-'use strict';
+const ParserSymbol = require('./parser-symbol.js')
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const PrefixOperator = module.exports = class extends ParserSymbol {
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var ParserSymbol = require('./parser-symbol.js');
-
-var PrefixOperator = module.exports = function (_ParserSymbol) {
-  _inherits(_class, _ParserSymbol);
-
-  function _class(options) {
-    _classCallCheck(this, _class);
-
-    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, options));
+  constructor (options) {
+    super(options)
   }
 
-  _createClass(_class, [{
-    key: 'defaultNullDenotation',
-    value: function defaultNullDenotation(self, parser) {
-      var item = this.clone();
-      item.first = parser.expression(this.bindingPower);
-      item.operatorType = ParserSymbol.OPERATOR_TYPE_UNARY;
-      return item;
-    }
-  }, {
-    key: 'defaultLeftDenotation',
-    value: function defaultLeftDenotation(self, left, parser) {
-      throw new SyntaxError('undefined left denotation');
-    }
-  }]);
+  defaultNullDenotation (self, parser) {
+    const item = this.clone()
+    item.first = parser.expression(this.bindingPower)
+    item.operatorType = ParserSymbol.OPERATOR_TYPE_UNARY
+    return item
+  }
 
-  return _class;
-}(ParserSymbol);
+  defaultLeftDenotation (self, left, parser) {
+    throw new SyntaxError(`undefined left denotation`)
+  }
+
+}
 
 },{"./parser-symbol.js":312}],315:[function(require,module,exports){
-'use strict';
+const StringIterator = module.exports = class {
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var StringIterator = module.exports = function () {
-  function _class(str) {
-    _classCallCheck(this, _class);
-
-    this.string = typeof str === 'string' ? str : '';
-    this.currentIndex = 0;
-    this.backIndex = 0;
-    this.line = 0;
-    this.column = 0;
-    this.char = '';
-    this.wasNewLine = false;
+  constructor (str) {
+    this.string = typeof str === 'string' ? str : ''
+    this.currentIndex = 0
+    this.backIndex = 0
+    this.line = 0
+    this.column = 0
+    this.char = ''
+    this.wasNewLine = false
   }
 
-  _createClass(_class, [{
-    key: 'hadNewLine',
-    value: function hadNewLine() {
-      var nl = this.wasNewLine;
-      this.wasNewLine = false;
-      return nl;
-    }
-  }, {
-    key: 'hasNext',
-    value: function hasNext() {
-      return !!this.getCurrentChar();
-    }
-  }, {
-    key: 'getCurrentPosition',
-    value: function getCurrentPosition() {
-      return {
-        line: this.line,
-        column: this.column
-      };
-    }
-  }, {
-    key: 'getCurrentChar',
-    value: function getCurrentChar() {
-      return this.char = this.string.charAt(this.currentIndex);
-    }
-  }, {
-    key: 'next',
-    value: function next() {
-      this.getCurrentChar();
-      this.currentIndex += 1;
-      if (this.backIndex > 0) {
-        this.backIndex -= 1;
-      } else {
-        this.column += 1;
-        if (this.char === '\n') {
-          this.wasNewLine = true;
-          this.line += 1;
-          this.column = 0;
-        }
-      }
-      return this.char;
-    }
-  }, {
-    key: 'back',
-    value: function back() {
-      this.currentIndex -= 1;
-      this.backIndex += 1;
-      return this.getCurrentChar();
-    }
-  }]);
+  hadNewLine () {
+    const nl = this.wasNewLine
+    this.wasNewLine = false
+    return nl
+  }
 
-  return _class;
-}();
+  hasNext () {
+    return !!this.getCurrentChar()
+  }
+
+  getCurrentPosition () {
+    return {
+      line: this.line,
+      column: this.column
+    }
+  }
+
+  getCurrentChar () {
+    return this.char = this.string.charAt(this.currentIndex)
+  }
+
+  next () {
+    this.getCurrentChar()
+    this.currentIndex += 1
+    if (this.backIndex > 0) {
+      this.backIndex -= 1
+    } else {
+      this.column += 1
+      if (this.char === '\n') {
+        this.wasNewLine = true
+        this.line += 1
+        this.column = 0
+      }
+    }
+    return this.char
+  }
+
+  back () {
+    this.currentIndex -= 1
+    this.backIndex += 1
+    return this.getCurrentChar()
+  }
+
+}
 
 },{}],316:[function(require,module,exports){
-'use strict';
+const Token = module.exports = class {
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Token = module.exports = function () {
-  function _class(options) {
-    _classCallCheck(this, _class);
-
-    this.type = options.type || '';
-    this.value = options.value || '';
+  constructor (options) {
+    this.type = options.type || ''
+    this.value = options.value || ''
     this.position = options.position || {
       line: 0,
       column: 0
-    };
+    }
   }
 
-  return _class;
-}();
+}
 
-Token.TOKEN_TYPE_IDENTIFIER = 'TOKEN_TYPE_IDENTIFIER';
-Token.TOKEN_TYPE_KEY_WORD = 'TOKEN_TYPE_KEY_WORD';
-Token.TOKEN_TYPE_STRING = 'TOKEN_TYPE_STRING';
-Token.TOKEN_TYPE_NUMBER = 'TOKEN_TYPE_NUMBER';
+Token.TOKEN_TYPE_IDENTIFIER = 'TOKEN_TYPE_IDENTIFIER'
+Token.TOKEN_TYPE_KEY_WORD = 'TOKEN_TYPE_KEY_WORD'
+Token.TOKEN_TYPE_STRING = 'TOKEN_TYPE_STRING'
+Token.TOKEN_TYPE_NUMBER = 'TOKEN_TYPE_NUMBER'
 
 },{}],317:[function(require,module,exports){
-'use strict';
+const Token = require('./token.js')
+const SyntaxError = require('../util/syntax-error.js')
+const StringIterator = require('./string-iterator.js')
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const Tokenizer = module.exports = class {
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Token = require('./token.js');
-var SyntaxError = require('../util/syntax-error.js');
-var StringIterator = require('./string-iterator.js');
-
-var Tokenizer = module.exports = function () {
-  function _class(keyWords) {
-    _classCallCheck(this, _class);
-
-    this.iter = null;
-    this.keyWords = Array.isArray(keyWords) ? keyWords : [];
+  constructor (keyWords) {
+    this.iter = null
+    this.keyWords = Array.isArray(keyWords) ? keyWords : []
   }
 
-  _createClass(_class, [{
-    key: 'addKeyWord',
-    value: function addKeyWord(keyWord) {
-      if (keyWord) {
-        this.keyWords.push(keyWord.toString());
+  addKeyWord (keyWord) {
+    if (keyWord) {
+      this.keyWords.push(keyWord.toString())
+    }
+  }
+
+  keyWordStartsWith (str) {
+    const length = str.length
+    return this.keyWords.some((item) => {
+      return item.slice(0, length) === str
+    })
+  }
+
+  isAlpha (char) {
+    return /^[a-zA-ZäöüÄÖÜß]+$/i.test(char)
+  }
+
+  isNumeric (char) {
+    return /^[0-9]+$/i.test(char)
+  }
+
+  isAlphaNumeric (char) {
+    return /^[a-zA-Z0-9äöüÄÖÜß]+$/i.test(char)
+  }
+
+  stringToken (quote) {
+    const {iter} = this
+    let str = ''
+    let ch = ''
+    let escape = false
+    while (ch = iter.next()) {
+      if (!ch) {
+        throw new SyntaxError(`Unterminated string literal`, iter.getCurrentPosition())
+      }
+      if (escape) {
+        escape = false
+        if (ch === 'b') {
+          ch = '\b'
+        }
+        if (ch === 'f') {
+          ch = '\f'
+        }
+        if (ch === 'n') {
+          ch = '\n'
+        }
+        if (ch === 'r') {
+          ch = '\r'
+        }
+        if (ch === 't') {
+          ch = '\t'
+        }
+        str += ch
+        continue
+      }
+      if (ch === '\\') {
+        escape = true
+        continue
+      }
+      if (ch === quote) {
+        break
+      }
+      str += ch
+    }
+    return this.createToken(Token.TOKEN_TYPE_STRING, str, iter.getCurrentPosition())
+  }
+
+  identifierToken (start) {
+    const {iter} = this
+    let name = start
+    let ch = ''
+    while (ch = iter.next()) {
+      if (this.isAlphaNumeric(ch)) {
+        name += ch
+      } else {
+        break
       }
     }
-  }, {
-    key: 'keyWordStartsWith',
-    value: function keyWordStartsWith(str) {
-      var length = str.length;
-      return this.keyWords.some(function (item) {
-        return item.slice(0, length) === str;
-      });
-    }
-  }, {
-    key: 'isAlpha',
-    value: function isAlpha(char) {
-      return (/^[a-zA-ZäöüÄÖÜß]+$/i.test(char)
-      );
-    }
-  }, {
-    key: 'isNumeric',
-    value: function isNumeric(char) {
-      return (/^[0-9]+$/i.test(char)
-      );
-    }
-  }, {
-    key: 'isAlphaNumeric',
-    value: function isAlphaNumeric(char) {
-      return (/^[a-zA-Z0-9äöüÄÖÜß]+$/i.test(char)
-      );
-    }
-  }, {
-    key: 'stringToken',
-    value: function stringToken(quote) {
-      var iter = this.iter;
+    return this.createToken(Token.TOKEN_TYPE_IDENTIFIER, name, iter.getCurrentPosition())
+  }
 
-      var str = '';
-      var ch = '';
-      var escape = false;
-      while (ch = iter.next()) {
-        if (!ch) {
-          throw new SyntaxError('Unterminated string literal', iter.getCurrentPosition());
-        }
-        if (escape) {
-          escape = false;
-          if (ch === 'b') {
-            ch = '\b';
-          }
-          if (ch === 'f') {
-            ch = '\f';
-          }
-          if (ch === 'n') {
-            ch = '\n';
-          }
-          if (ch === 'r') {
-            ch = '\r';
-          }
-          if (ch === 't') {
-            ch = '\t';
-          }
-          str += ch;
-          continue;
-        }
-        if (ch === '\\') {
-          escape = true;
-          continue;
-        }
-        if (ch === quote) {
-          break;
-        }
-        str += ch;
+  numberToken (start) {
+    const {iter} = this
+    let number = start
+    let ch = ''
+    while (ch = iter.next()) {
+      if (this.isNumeric(ch)) {
+        number += ch
+      } else {
+        break
       }
-      return this.createToken(Token.TOKEN_TYPE_STRING, str, iter.getCurrentPosition());
     }
-  }, {
-    key: 'identifierToken',
-    value: function identifierToken(start) {
-      var iter = this.iter;
+    return this.createToken(Token.TOKEN_TYPE_NUMBER, Number(number), iter.getCurrentPosition())
+  }
 
-      var name = start;
-      var ch = '';
-      while (ch = iter.next()) {
-        if (this.isAlphaNumeric(ch)) {
-          name += ch;
+  keyWordToken (start) {
+    const {iter} = this
+    let name = start
+    let ch = ''
+    while (ch = iter.next()) {
+      if (this.keyWordStartsWith(name + ch)) {
+        name += ch
+      } else {
+        if (this.keyWords.indexOf(name) > -1) {
+          break
+        } else if (this.isAlpha(name[0]) && this.isAlphaNumeric(name + ch)) {
+          return this.identifierToken(name + ch)
         } else {
-          break;
+          throw new SyntaxError(`unknown token ${name + ch}`)
         }
       }
-      return this.createToken(Token.TOKEN_TYPE_IDENTIFIER, name, iter.getCurrentPosition());
     }
-  }, {
-    key: 'numberToken',
-    value: function numberToken(start) {
-      var iter = this.iter;
+    return this.createToken(Token.TOKEN_TYPE_KEY_WORD, name, iter.getCurrentPosition())
+  }
 
-      var number = start;
-      var ch = '';
-      while (ch = iter.next()) {
-        if (this.isNumeric(ch)) {
-          number += ch;
-        } else {
-          break;
-        }
+  createToken (type, value, position) {
+    position.column -= value.length // TODO: doesn't work properly
+    return new Token({
+      type,
+      value,
+      position
+    })
+  }
+
+  tokenize (string) {
+    const iter = this.iter = new StringIterator(string)
+    const tokens = []
+    let ch = ''
+
+    while (ch = iter.next()) {
+      if (!ch.trim()) {
+        continue
       }
-      return this.createToken(Token.TOKEN_TYPE_NUMBER, Number(number), iter.getCurrentPosition());
-    }
-  }, {
-    key: 'keyWordToken',
-    value: function keyWordToken(start) {
-      var iter = this.iter;
-
-      var name = start;
-      var ch = '';
-      while (ch = iter.next()) {
-        if (this.keyWordStartsWith(name + ch)) {
-          name += ch;
-        } else {
-          if (this.keyWords.indexOf(name) > -1) {
-            break;
-          } else if (this.isAlpha(name[0]) && this.isAlphaNumeric(name + ch)) {
-            return this.identifierToken(name + ch);
-          } else {
-            throw new SyntaxError('unknown token ' + (name + ch));
-          }
-        }
+      if (this.keyWordStartsWith(ch)) {
+        // key word
+        tokens.push(this.keyWordToken(ch))
+        iter.back()
+      } else if (ch === '\'' || ch === '"') {
+        // string literal
+        tokens.push(this.stringToken(ch))
+      } else if (this.isNumeric(ch)) {
+        // number literal
+        tokens.push(this.numberToken(ch))
+        iter.back()
+      } else if (this.isAlphaNumeric(ch)) {
+        // identifier
+        tokens.push(this.identifierToken(ch))
+        iter.back()
+      } else {
+        throw new SyntaxError(`illegal character "${ch}"`, iter.getCurrentPosition())
       }
-      return this.createToken(Token.TOKEN_TYPE_KEY_WORD, name, iter.getCurrentPosition());
     }
-  }, {
-    key: 'createToken',
-    value: function createToken(type, value, position) {
-      position.column -= value.length; // TODO: doesn't work properly
-      return new Token({
-        type: type,
-        value: value,
-        position: position
-      });
-    }
-  }, {
-    key: 'tokenize',
-    value: function tokenize(string) {
-      var iter = this.iter = new StringIterator(string);
-      var tokens = [];
-      var ch = '';
 
-      while (ch = iter.next()) {
-        if (!ch.trim()) {
-          continue;
-        }
-        if (this.keyWordStartsWith(ch)) {
-          // key word
-          tokens.push(this.keyWordToken(ch));
-          iter.back();
-        } else if (ch === '\'' || ch === '"') {
-          // string literal
-          tokens.push(this.stringToken(ch));
-        } else if (this.isNumeric(ch)) {
-          // number literal
-          tokens.push(this.numberToken(ch));
-          iter.back();
-        } else if (this.isAlphaNumeric(ch)) {
-          // identifier
-          tokens.push(this.identifierToken(ch));
-          iter.back();
-        } else {
-          throw new SyntaxError('illegal character "' + ch + '"', iter.getCurrentPosition());
-        }
-      }
+    return tokens
+  }
 
-      return tokens;
-    }
-  }]);
-
-  return _class;
-}();
+}
 
 },{"../util/syntax-error.js":320,"./string-iterator.js":315,"./token.js":316}],318:[function(require,module,exports){
-'use strict';
+const Error = module.exports = class {
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Error = module.exports = function () {
-  function _class(message, position, stack) {
-    _classCallCheck(this, _class);
-
-    this.message = message;
+  constructor (message, position, stack) {
+    this.message = message
     this.position = position || {
       line: 0,
       column: 0
-    };
-    this.stack = stack || [];
+    }
+    this.stack = stack || []
   }
 
-  _createClass(_class, [{
-    key: 'toString',
-    value: function toString() {
-      return 'Error: ' + this.message;
-    }
-  }]);
+  toString () {
+    return 'Error: ' + this.message
+  }
 
-  return _class;
-}();
+}
 
 },{}],319:[function(require,module,exports){
-'use strict';
+const EventEmitter = module.exports = class {
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var EventEmitter = module.exports = function () {
-  function _class() {
-    _classCallCheck(this, _class);
-
-    this._events = {};
+  constructor () {
+    this._events = {}
   }
 
-  _createClass(_class, [{
-    key: 'on',
-    value: function on(channel) {
-      for (var _len = arguments.length, listeners = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-        listeners[_key - 1] = arguments[_key];
-      }
-
-      var filtered = listeners.filter(function (cb) {
-        return typeof cb === 'function';
-      });
-      if (Array.isArray(this._events[channel])) {
-        this._events[channel] = this._events[channel].concat(filtered);
-      } else {
-        this._events[channel] = filtered;
-      }
-      return this;
+  on (channel, ...listeners) {
+    const filtered = listeners.filter((cb) => typeof cb === 'function')
+    if (Array.isArray(this._events[channel])) {
+      this._events[channel] = this._events[channel].concat(filtered)
+    } else {
+      this._events[channel] = filtered
     }
-  }, {
-    key: 'listen',
-    value: function listen(channels) {
-      if (Array.isArray(channels)) {
-        var index = void 0;
+    return this
+  }
 
-        for (var _len2 = arguments.length, listeners = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-          listeners[_key2 - 1] = arguments[_key2];
-        }
-
-        for (index in channels) {
-          this.on.apply(this, [channels[index]].concat(listeners));
-        }
+  listen (channels, ...listeners) {
+    if (Array.isArray(channels)) {
+      let index
+      for (index in channels) {
+        this.on(channels[index], ...listeners)
       }
-      return this;
     }
-  }, {
-    key: 'listenOnce',
-    value: function listenOnce(channels) {
-      if (Array.isArray(channels)) {
-        var index = void 0;
+    return this
+  }
 
-        for (var _len3 = arguments.length, listeners = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-          listeners[_key3 - 1] = arguments[_key3];
-        }
-
-        for (index in channels) {
-          this.once.apply(this, [channels[index]].concat(listeners));
-        }
+  listenOnce (channels, ...listeners) {
+    if (Array.isArray(channels)) {
+      let index
+      for (index in channels) {
+        this.once(channels[index], ...listeners)
       }
-      return this;
     }
-  }, {
-    key: 'awaitEvent',
-    value: function awaitEvent(channel) {
-      var _this = this;
+    return this
+  }
 
-      return new Promise(function (resolve, reject) {
-        _this.once(channel, resolve);
-      });
-    }
-  }, {
-    key: 'once',
-    value: function once(channel) {
-      var _this2 = this;
+  awaitEvent (channel) {
+    return new Promise((resolve, reject) => {
+      this.once(channel, resolve)
+    })
+  }
 
-      for (var _len4 = arguments.length, listeners = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
-        listeners[_key4 - 1] = arguments[_key4];
+  once (channel, ...listeners) {
+    const filtered = listeners.filter((cb) => typeof cb === 'function').map((cb) => {
+      const listener = (...args) => {
+        this.remove(channel, listener)
+        cb.apply(null, args)
       }
-
-      var filtered = listeners.filter(function (cb) {
-        return typeof cb === 'function';
-      }).map(function (cb) {
-        var listener = function listener() {
-          for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-            args[_key5] = arguments[_key5];
-          }
-
-          _this2.remove(channel, listener);
-          cb.apply(null, args);
-        };
-        return listener;
-      });
-      if (Array.isArray(this._events[channel])) {
-        this._events[channel] = this._events[channel].concat(filtered);
-      } else {
-        this._events[channel] = filtered;
-      }
-      return this;
+      return listener
+    })
+    if (Array.isArray(this._events[channel])) {
+      this._events[channel] = this._events[channel].concat(filtered)
+    } else {
+      this._events[channel] = filtered
     }
-  }, {
-    key: 'emit',
-    value: function emit(channel) {
-      if (Array.isArray(this._events[channel])) {
-        var _listeners = this._events[channel];
-        var index = void 0;
+    return this
+  }
 
-        for (var _len6 = arguments.length, args = Array(_len6 > 1 ? _len6 - 1 : 0), _key6 = 1; _key6 < _len6; _key6++) {
-          args[_key6 - 1] = arguments[_key6];
-        }
+  emit (channel, ...args) {
+    if (Array.isArray(this._events[channel])) {
+      const listeners = this._events[channel]
+      let index
+      for (index in listeners) {
+        listeners[index].apply(null, args)
+      }
+    }
+    return this
+  }
 
-        for (index in _listeners) {
-          _listeners[index].apply(null, args);
+  remove (channel, ...listeners) {
+    const listenersToRemove = Array.slice(arguments, 1).filter((cb) => typeof cb === 'function')
+    if (Array.isArray(this._events[channel])) {
+      const listeners = this._events[channel]
+      let index
+      for (index in listenersToRemove) {
+        const listener = listenersToRemove[index]
+        const removeIndex = listeners.indexOf(listener)
+        if (removeIndex > -1) {
+          this._events[channel].splice(removeIndex, 1)
         }
       }
-      return this;
     }
-  }, {
-    key: 'remove',
-    value: function remove(channel) {
-      for (var _len7 = arguments.length, listeners = Array(_len7 > 1 ? _len7 - 1 : 0), _key7 = 1; _key7 < _len7; _key7++) {
-        listeners[_key7 - 1] = arguments[_key7];
-      }
+    return this
+  }
 
-      var listenersToRemove = Array.slice(arguments, 1).filter(function (cb) {
-        return typeof cb === 'function';
-      });
-      if (Array.isArray(this._events[channel])) {
-        var _listeners2 = this._events[channel];
-        var index = void 0;
-        for (index in listenersToRemove) {
-          var listener = listenersToRemove[index];
-          var removeIndex = _listeners2.indexOf(listener);
-          if (removeIndex > -1) {
-            this._events[channel].splice(removeIndex, 1);
-          }
-        }
-      }
-      return this;
+  removeAll (channel) {
+    if (Array.isArray(this._events[channel])) {
+      delete this._events[channel]
     }
-  }, {
-    key: 'removeAll',
-    value: function removeAll(channel) {
-      if (Array.isArray(this._events[channel])) {
-        delete this._events[channel];
-      }
-      return this;
-    }
-  }]);
+    return this
+  }
 
-  return _class;
-}();
+}
 
 },{}],320:[function(require,module,exports){
-'use strict';
+const Error = require('./error.js')
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const SyntaxError = module.exports = class extends Error {
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Error = require('./error.js');
-
-var SyntaxError = module.exports = function (_Error) {
-  _inherits(_class, _Error);
-
-  function _class() {
-    _classCallCheck(this, _class);
-
-    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
+  toString () {
+    return 'Syntax error: ' + this.message
   }
 
-  _createClass(_class, [{
-    key: 'toString',
-    value: function toString() {
-      return 'Syntax error: ' + this.message;
-    }
-  }]);
-
-  return _class;
-}(Error);
+}
 
 },{"./error.js":318}],321:[function(require,module,exports){
-'use strict';
+const Error = require('./error.js')
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const TypeError = module.exports = class extends Error {
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Error = require('./error.js');
-
-var TypeError = module.exports = function (_Error) {
-  _inherits(_class, _Error);
-
-  function _class() {
-    _classCallCheck(this, _class);
-
-    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
+  toString () {
+    return 'Type error: ' + this.message
   }
 
-  _createClass(_class, [{
-    key: 'toString',
-    value: function toString() {
-      return 'Type error: ' + this.message;
-    }
-  }]);
-
-  return _class;
-}(Error);
+}
 
 },{"./error.js":318}],322:[function(require,module,exports){
-'use strict';
+document.addEventListener('DOMContentLoaded', () => {
 
-document.addEventListener('DOMContentLoaded', function () {
+  const Application = require('./application.js')
+  const Console = require('./console.js')
+  const {Interpreter} = require('../index.js')
 
-  var Application = require('./application.js');
-  var Console = require('./console.js');
+  const canvas = document.getElementById('canvas')
+  const editor = document.getElementById('editor')
+  const interpreter = new Interpreter()
+  const karolConsole = new Console(document.getElementById('console-output'), document.getElementById('console-input'))
+  const app = window.app = new Application(interpreter, canvas, karolConsole)
+  app.world.render()
 
-  var _require = require('../index.js'),
-      Interpreter = _require.Interpreter;
-
-  var canvas = document.getElementById('canvas');
-  var editor = document.getElementById('editor');
-  var interpreter = new Interpreter();
-  var karolConsole = new Console(document.getElementById('console-output'), document.getElementById('console-input'));
-  var app = window.app = new Application(interpreter, canvas, karolConsole);
-  app.world.render();
-
-  var runButton = document.getElementById('run');
-  runButton.addEventListener('click', function () {
+  const runButton = document.getElementById('run')
+  runButton.addEventListener('click', () => {
     if (interpreter.stopped) {
-      interpreter.run(editor.value).then(console.log).catch(console.error);
+      interpreter.run(editor.value).then(console.log).catch(console.error)
     } else if (!interpreter.running) {
-      interpreter.unpause();
+      interpreter.unpause()
     }
-  });
-  runButton.disabled = false;
+  })
+  runButton.disabled = false
 
-  interpreter.on('run', function () {
-    runButton.disabled = true;
-    pauseButton.disabled = false;
-    stopButton.disabled = false;
-  });
-  interpreter.on('unpause', function () {
-    runButton.disabled = true;
-    pauseButton.disabled = false;
-    stopButton.disabled = false;
-  });
+  interpreter.on('run', () => {
+    runButton.disabled = true
+    pauseButton.disabled = false
+    stopButton.disabled = false
+  })
+  interpreter.on('unpause', () => {
+    runButton.disabled = true
+    pauseButton.disabled = false
+    stopButton.disabled = false
+  })
 
-  var pauseButton = document.getElementById('pause');
-  pauseButton.addEventListener('click', function () {
-    interpreter.pause(); // can do that safely because interpreter won't do anything if it isn't running
-  });
-  pauseButton.disabled = true;
+  const pauseButton = document.getElementById('pause')
+  pauseButton.addEventListener('click', () => {
+    interpreter.pause() // can do that safely because interpreter won't do anything if it isn't running
+  })
+  pauseButton.disabled = true
 
-  interpreter.on('pause', function () {
-    runButton.disabled = false;
-    pauseButton.disabled = true;
-    stopButton.disabled = false;
-  });
+  interpreter.on('pause', () => {
+    runButton.disabled = false
+    pauseButton.disabled = true
+    stopButton.disabled = false
+  })
 
-  var stopButton = document.getElementById('stop');
-  stopButton.addEventListener('click', function () {
-    interpreter.stop();
-  });
-  stopButton.disabled = true;
+  const stopButton = document.getElementById('stop')
+  stopButton.addEventListener('click', () => {
+    interpreter.stop()
+  })
+  stopButton.disabled = true
 
-  interpreter.listen(['finish', 'stop'], function () {
-    runButton.disabled = false;
-    pauseButton.disabled = true;
-    stopButton.disabled = true;
-  });
-});
+  interpreter.listen(['finish', 'stop'], () => {
+    runButton.disabled = false
+    pauseButton.disabled = true
+    stopButton.disabled = true
+  })
+
+})
 
 },{"../index.js":1,"./application.js":323,"./console.js":324}],323:[function(require,module,exports){
-'use strict';
+const {Error, Procedure, Value} = require('../index.js')
+const {Robot, World} = require('karol.js')
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const Application = module.exports = class {
 
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+  constructor (interpreter, canvas, karolConsole) {
+    this.interpreter = interpreter
+    this.ctx = canvas.getContext('2d')
+    this.karolConsole = karolConsole
+    this.world = new World(canvas)
+    this.robot = new Robot(this.world)
+    this.robot.x = 4
+    this.robot.z = 3
+    this.addStandardLibrary()
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var _require = require('../index.js'),
-    Error = _require.Error,
-    Procedure = _require.Procedure,
-    Value = _require.Value;
-
-var _require2 = require('karol.js'),
-    Robot = _require2.Robot,
-    World = _require2.World;
-
-var Application = module.exports = function () {
-  function _class(interpreter, canvas, karolConsole) {
-    _classCallCheck(this, _class);
-
-    this.interpreter = interpreter;
-    this.ctx = canvas.getContext('2d');
-    this.karolConsole = karolConsole;
-    this.world = new World(canvas);
-    this.robot = new Robot(this.world);
-    this.robot.x = 4;
-    this.robot.z = 3;
-    this.addStandardLibrary();
-
-    this.interpreter.on('statement', this.world.render.bind(this.world));
-    this.interpreter.on('error', this.printError.bind(this));
+    this.interpreter.on('statement', this.world.render.bind(this.world))
+    this.interpreter.on('error', this.printError.bind(this))
   }
 
-  _createClass(_class, [{
-    key: 'addStandardLibrary',
-    value: function addStandardLibrary() {
-      var _this = this;
+  addStandardLibrary () {
+    const {interpreter} = this
 
-      var interpreter = this.interpreter;
+    interpreter.addNativeProcedure(new Procedure({
+      name: 'step',
+      cb: (args) => this.robot.step(args[0] ? args[0].value : 1),
+      expectedArguments: [{
+        type: Value.NUMBER,
+        optional: true
+      }]
+    }))
 
+    interpreter.addNativeProcedure(new Procedure({
+      name: 'turnleft',
+      cb: this.robot.turnLeft.bind(this.robot, undefined)
+    }))
 
-      interpreter.addNativeProcedure(new Procedure({
-        name: 'step',
-        cb: function cb(args) {
-          return _this.robot.step(args[0] ? args[0].value : 1);
-        },
-        expectedArguments: [{
-          type: Value.NUMBER,
-          optional: true
-        }]
-      }));
+    interpreter.addNativeProcedure(new Procedure({
+      name: 'turnright',
+      cb: this.robot.turnRight.bind(this.robot, undefined)
+    }))
 
-      interpreter.addNativeProcedure(new Procedure({
-        name: 'turnleft',
-        cb: this.robot.turnLeft.bind(this.robot, undefined)
-      }));
+    interpreter.addNativeProcedure(new Procedure({
+      name: 'laydown',
+      cb: this.robot.layDown.bind(this.robot, undefined)
+    }))
 
-      interpreter.addNativeProcedure(new Procedure({
-        name: 'turnright',
-        cb: this.robot.turnRight.bind(this.robot, undefined)
-      }));
+    interpreter.addNativeProcedure(new Procedure({
+      name: 'pickup',
+      cb: this.robot.pickUp.bind(this.robot, undefined)
+    }))
 
-      interpreter.addNativeProcedure(new Procedure({
-        name: 'laydown',
-        cb: this.robot.layDown.bind(this.robot, undefined)
-      }));
+    interpreter.addNativeProcedure(new Procedure({
+      name: 'setmark',
+      cb: this.robot.setMark.bind(this.robot)
+    }))
 
-      interpreter.addNativeProcedure(new Procedure({
-        name: 'pickup',
-        cb: this.robot.pickUp.bind(this.robot, undefined)
-      }));
+    interpreter.addNativeProcedure(new Procedure({
+      name: 'deletemark',
+      cb: this.robot.removeMark.bind(this.robot)
+    }))
 
-      interpreter.addNativeProcedure(new Procedure({
-        name: 'setmark',
-        cb: this.robot.setMark.bind(this.robot)
-      }));
-
-      interpreter.addNativeProcedure(new Procedure({
-        name: 'deletemark',
-        cb: this.robot.removeMark.bind(this.robot)
-      }));
-
-      interpreter.addNativeProcedure(new Procedure({
-        name: 'wall',
-        cb: function cb() {
-          var position = _this.robot.getPositionBefore();
-          return Value.createBoolean(!_this.world.getTileAt(position.x, position.z));
-        }
-      }));
-
-      interpreter.addNativeProcedure(new Procedure({
-        name: 'not',
-        cb: function cb(args) {
-          return Value.createBoolean(!args[0].castToBoolean().value);
-        },
-        expectedArguments: [{
-          type: Value.ANY
-        }]
-      }));
-
-      interpreter.addNativeProcedure(new Procedure({
-        name: 'fast',
-        cb: function cb() {
-          interpreter.speed = 200;
-        }
-      }));
-
-      interpreter.addNativeProcedure(new Procedure({
-        name: 'slow',
-        cb: function cb() {
-          interpreter.speed = 600;
-        }
-      }));
-
-      interpreter.addNativeProcedure(new Procedure({
-        name: 'print',
-        cb: function cb(args) {
-          var _karolConsole;
-
-          (_karolConsole = _this.karolConsole).log.apply(_karolConsole, _toConsumableArray(args));
-        }
-      }));
-
-      interpreter.addNativeProcedure(new Procedure({
-        name: 'wait',
-        cb: function cb(args) {
-          var time = args[0].value;
-          return new Promise(function (resolve, reject) {
-            setTimeout(resolve, time);
-          });
-        },
-        expectedArguments: [{
-          type: Value.NUMBER
-        }]
-      }));
-    }
-  }, {
-    key: 'printError',
-    value: function printError(error) {
-      if (error instanceof window.Error) {
-        this.karolConsole.error(new Error('Interpreter error in file ' + error.fileName + ': ' + error.message, {
-          line: error.lineNumber,
-          column: error.columnNumber
-        }));
-      } else {
-        this.karolConsole.error(error);
+    interpreter.addNativeProcedure(new Procedure({
+      name: 'wall',
+      cb: () => {
+        const position = this.robot.getPositionBefore()
+        return Value.createBoolean(!this.world.getTileAt(position.x, position.z))
       }
-    }
-  }]);
+    }))
 
-  return _class;
-}();
+    interpreter.addNativeProcedure(new Procedure({
+      name: 'not',
+      cb: (args) => {
+        return Value.createBoolean(!args[0].castToBoolean().value)
+      },
+      expectedArguments: [{
+        type: Value.ANY
+      }]
+    }))
+
+    interpreter.addNativeProcedure(new Procedure({
+      name: 'fast',
+      cb: () => {
+        interpreter.speed = 200
+      }
+    }))
+
+    interpreter.addNativeProcedure(new Procedure({
+      name: 'slow',
+      cb: () => {
+        interpreter.speed = 600
+      }
+    }))
+
+    interpreter.addNativeProcedure(new Procedure({
+      name: 'print',
+      cb: (args) => {
+        this.karolConsole.log(...args)
+      }
+    }))
+
+    interpreter.addNativeProcedure(new Procedure({
+      name: 'wait',
+      cb: (args) => {
+        const time = args[0].value
+        return new Promise((resolve, reject) => {
+          setTimeout(resolve, time)
+        })
+      },
+      expectedArguments: [{
+        type: Value.NUMBER
+      }]
+    }))
+  }
+
+  printError (error) {
+    if (error instanceof window.Error) {
+      this.karolConsole.error(new Error(`Interpreter error in file ${error.fileName}: ` + error.message, {
+        line: error.lineNumber,
+        column: error.columnNumber
+      }))
+    } else {
+      this.karolConsole.error(error)
+    }
+  }
+
+}
 
 },{"../index.js":1,"karol.js":304}],324:[function(require,module,exports){
-'use strict';
+const {EventEmitter} = require('../index.js')
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const Console = module.exports = class extends EventEmitter {
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _require = require('../index.js'),
-    EventEmitter = _require.EventEmitter;
-
-var Console = module.exports = function (_EventEmitter) {
-  _inherits(_class, _EventEmitter);
-
-  function _class(output, input) {
-    _classCallCheck(this, _class);
-
-    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this));
-
-    _this.output = output;
-    _this.input = input;
-    return _this;
+  constructor (output, input) {
+    super()
+    this.output = output
+    this.input = input
   }
 
-  _createClass(_class, [{
-    key: 'createMessage',
-    value: function createMessage(string) {
-      var element = document.createElement('div');
-      element.classList.add('console-message');
-      var time = document.createElement('span');
-      time.textContent = new Date().toTimeString();
-      element.appendChild(time);
-      var content = document.createElement('span');
-      content.textContent = string;
-      element.appendChild(content);
-      this.output.appendChild(element);
-      return element;
-    }
-  }, {
-    key: 'log',
-    value: function log() {
-      var index = void 0;
-      var str = '';
-      var args = Array.from(arguments);
-      for (index in args) {
-        str += args[index].toString() + ' ';
-      }
-      var element = this.createMessage(str.slice(0, -1));
-      element.classList.add('console-log-message');
-      this.output.scrollTo(0, this.output.scrollHeight);
-    }
-  }, {
-    key: 'error',
-    value: function error(err) {
-      var element = this.createMessage(err.position.line + ':' + err.position.column + ': ' + err.toString());
-      var stack = err.stack.slice().reverse();
-      var index = void 0;
-      for (index in stack) {
-        var stackItem = stack[index];
-        var item = document.createElement('div');
-        item.classList.add('console-error-stack-item');
-        item.textContent = stackItem.position.line + ':' + stackItem.position.column + ': ' + stackItem.value;
-        element.appendChild(item);
-      }
-      element.classList.add('console-error-message');
-      this.output.scrollTo(0, this.output.scrollHeight);
-    }
-  }, {
-    key: 'info',
-    value: function info(str) {
-      var element = this.createMessage(str.toString());
-      element.classList.add('console-info-message');
-      this.output.scrollTo(0, this.output.scrollHeight);
-    }
-  }]);
+  createMessage (string) {
+    const element = document.createElement('div')
+    element.classList.add('console-message')
+    const time = document.createElement('span')
+    time.textContent = (new Date()).toTimeString()
+    element.appendChild(time)
+    const content = document.createElement('span')
+    content.textContent = string
+    element.appendChild(content)
+    this.output.appendChild(element)
+    return element
+  }
 
-  return _class;
-}(EventEmitter);
+  log () {
+    let index
+    let str = ''
+    const args = Array.from(arguments)
+    for (index in args) {
+      str += args[index].toString() + ' '
+    }
+    const element = this.createMessage(str.slice(0, -1))
+    element.classList.add('console-log-message')
+    this.output.scrollTo(0, this.output.scrollHeight)
+  }
+
+  error (err) {
+    const element = this.createMessage(`${err.position.line}:${err.position.column}: ${err.toString()}`)
+    const stack = err.stack.slice().reverse()
+    let index
+    for (index in stack) {
+      const stackItem = stack[index]
+      const item = document.createElement('div')
+      item.classList.add('console-error-stack-item')
+      item.textContent = `${stackItem.position.line}:${stackItem.position.column}: ${stackItem.value}`
+      element.appendChild(item)
+    }
+    element.classList.add('console-error-message')
+    this.output.scrollTo(0, this.output.scrollHeight)
+  }
+
+  info (str) {
+    const element = this.createMessage(str.toString())
+    element.classList.add('console-info-message')
+    this.output.scrollTo(0, this.output.scrollHeight)
+  }
+
+}
 
 },{"../index.js":1}]},{},[322]);

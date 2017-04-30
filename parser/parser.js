@@ -21,12 +21,12 @@ const Parser = module.exports = class {
 
   nextToken (expected) {
     const token = this.tokens[this.currentIndex]
-    if (typeof token === 'undefined') {
+    if (expected && this.token.value !== expected) {
+      throw new SyntaxError(`Expected token "${expected}", got "${this.token.value}"`)
       this.token = this.symbols['#end']
       return
     }
-    if (expected && this.token.value !== expected) {
-      throw new SyntaxError(`Expected token "${expected}", got "${this.token.value}"`)
+    if (typeof token === 'undefined') {
       this.token = this.symbols['#end']
       return
     }
