@@ -1,11 +1,7 @@
 const Procedure = require('./procedure.js')
+const TypeError = require('../util/type-error.js')
 
 const Value = module.exports = class {
-
-  constructor (type, value) {
-    this.type = type || Value.NULL
-    this.value = value || null
-  }
 
   toString () {
     if (this.type === Value.NULL) {
@@ -30,19 +26,12 @@ const Value = module.exports = class {
     }
   }
 
-  castToBoolean () {
-    if (this.value === false || this.value === '' || this.value === 0 || this.value === null) {
-      return Value.createFalse()
-    }
-    return Value.createTrue()
-  }
-
   static createNull () {
     return new Value(Value.NULL, null)
   }
 
-  static createNumber (number) {
-    return new Value(Value.NUMBER, Number(number))
+  static createKarolineNumber (number) {
+    return new Value(Value.NUMBER, KarolineNumber(number))
   }
 
   static createString (string) {
@@ -67,54 +56,16 @@ const Value = module.exports = class {
 
 }
 
-Value.NUMBER = 'Number'
+Value.NUMBER = 'KarolineNumber'
 Value.STRING = 'String'
 Value.BOOLEAN = 'Boolean'
 Value.PROCEDURE = 'Procedure'
 Value.NULL = 'Null'
 Value.ANY = 'Any'
 
-Value.OPERATOR_PLUS_UNARY = Symbol('Operator plus unary')
-Value.prototype[Value.OPERATOR_PLUS_UNARY] = Procedure.FAIL
+Value.SUPER_CLASS_KEY = Symbol('Super class key')
+Value.prototype[Value.SUPER_CLASS_KEY] = null
 
-Value.OPERATOR_PLUS_BINARY = Symbol('Operator plus binary')
-Value.prototype[Value.OPERATOR_PLUS_BINARY] = Procedure.FAIL
-
-Value.OPERATOR_MINUS_UNARY = Symbol('Operator minus unary')
-Value.prototype[Value.OPERATOR_MINUS_UNARY] = Procedure.FAIL
-
-Value.OPERATOR_MINUS_BINARY = Symbol('Operator minus binary')
-Value.prototype[Value.OPERATOR_MINUS_BINARY] = Procedure.FAIL
-
-Value.OPERATOR_ASTERISK = Symbol('Operator asterisk')
-Value.prototype[Value.OPERATOR_ASTERISK] = Procedure.FAIL
-
-Value.OPERATOR_SLASH = Symbol('Operator slash')
-Value.prototype[Value.OPERATOR_SLASH] = Procedure.FAIL
-
-Value.OPERATOR_EQUALITY = Symbol('Operator equality')
-Value.prototype[Value.OPERATOR_EQUALITY] = new Procedure({
-  name: 'Value::==',
-  cb: ([self, other]) => {
-    return self.type === other.type && self.value === other.value
-  },
-  expectedArguments: [{
-    type: Value.ANY
-  }]
-})
-
-Value.OPERATOR_LESS_THAN = Symbol('Operator less than')
-Value.prototype[Value.OPERATOR_LESS_THAN] = Procedure.FAIL
-
-Value.OPERATOR_GREATER_THAN = Symbol('Operator greater than')
-Value.prototype[Value.OPERATOR_GREATER_THAN] = Procedure.FAIL
-
-Value.BINARY_OPERATORS = {
-  '+': Value.OPERATOR_PLUS_BINARY,
-  '+': Value.OPERATOR_MINUS_BINARY,
-  '*': Value.OPERATOR_ASTERISK,
-  '/': Value.OPERATOR_SLASH,
-  '==': Value.OPERATOR_EQUALITY,
-  '<': Value.OPERATOR_LESS_THAN,
-  '>': Value.OPERATOR_GREATER_THAN
-}
+Value.TO_NUMBER = Symbol('to number')
+Value.TO_STRING = Symbol('to string')
+Value.TO_BOOLEAN = Symbol('to boolean')

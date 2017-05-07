@@ -1,4 +1,4 @@
-const {Error, Procedure, Value} = require('../index.js')
+const {Error, Procedure, KarolineNumber, Class, Value} = require('../index.js')
 const {Robot, World} = require('karol.js')
 
 const Application = module.exports = class {
@@ -19,6 +19,10 @@ const Application = module.exports = class {
 
   addStandardLibrary () {
     const {interpreter} = this
+
+    interpreter.addNativeValue('true', Value.createTrue())
+    interpreter.addNativeValue('false', Value.createFalse())
+    interpreter.addNativeValue('Number', Class.fromNativeClass(KarolineNumber))
 
     interpreter.addNativeProcedure(new Procedure({
       name: 'step',
@@ -93,8 +97,14 @@ const Application = module.exports = class {
 
     interpreter.addNativeProcedure(new Procedure({
       name: 'print',
-      cb: (args) => {
-        this.karolConsole.log(...args)
+      cb: async (args) => {
+        const strings = []
+        let index
+        for (index in args) {
+          const arg = args[index]
+          strings.push(await arg[Value.TO_STRING].execute([arg]))
+        }
+        this.karolConsole.log(...strings)
       }
     }))
 
@@ -115,8 +125,8 @@ const Application = module.exports = class {
   printError (error) {
     if (error instanceof window.Error) {
       this.karolConsole.error(new Error(`Interpreter error in file ${error.fileName}: ` + error.message, {
-        line: error.lineNumber,
-        column: error.columnNumber
+        line: error.lineKarolineNumber,
+        column: error.columnKarolineNumber
       }))
     } else {
       this.karolConsole.error(error)

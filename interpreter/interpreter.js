@@ -1,7 +1,12 @@
 const Context = require('./context.js')
 const Token = require('../parser/token.js')
 const Value = require('./value.js')
-const Number = require('./number.js')
+const KarolineObject = require('./karoline-object.js')
+const KarolineNumber = require('./karoline-number.js')
+const KarolineString = require('./karoline-string.js')
+const KarolineBoolean = require('./karoline-boolean.js')
+const KarolineProcedure = require('./karoline-procedure.js')
+const Class = require('./class.js')
 const TypeError = require('../util/type-error.js')
 const ParserSymbol = require('../parser/parser-symbol.js')
 const Procedure = require('./procedure.js')
@@ -29,21 +34,8 @@ const Interpreter = module.exports = class extends KarolineParser {
     this.context = context
   }
 
-  processBlock (endToken) {
-    const {parser} = this
-    const block = []
-    while (parser.token.value !== endToken && parser.token.value !== '#end') {
-      block.push(parser.expression(0))
-    }
-    if (parser.token.value === '#end') {
-      throw new SyntaxError(`syntax error: unexpected end of script, expected ${endToken}`)
-    }
-    parser.nextToken(endToken)
-    return block
-  }
-
   addNativeProcedure (procedure) {
-    this.nativeScope[procedure.name] = Value.createProcedure(procedure)
+    this.nativeScope[procedure.name] = new KarolineProcedure([procedure])
   }
 
   addNativeValue (name, value) {
@@ -58,7 +50,7 @@ const Interpreter = module.exports = class extends KarolineParser {
       userDefined: true,
       scope: this.context.scope
     })
-    const value = Value.createProcedure(procedure)
+    const value = new KarolineProcedure([procedure])
     this.context.set(name, value)
     return value
   }
@@ -98,10 +90,11 @@ const Interpreter = module.exports = class extends KarolineParser {
       result = await this.evaluateBlock(trees)
     } catch (e) {
       if (e !== Interpreter.EXECUTION_STOPPED) {
+        console.error(e)
         this.emit('error', e)
         result = e
       } else {
-        result = Value.createNull()
+        result = new KarolineObject()
       }
     }
     this.cleanUp()
@@ -138,7 +131,17 @@ const Interpreter = module.exports = class extends KarolineParser {
     if (procedure.scope) {
       this.context.overrideScope(procedure.scope)
     }
-    const result = (await procedure.execute(args)) || Value.createNull()
+
+    let result
+    try {
+      result = (await procedure.execute(args)) || new KarolineObject()
+    } catch (e) {
+      if (e[Interpreter.RETURN]) {
+        result = e
+      } else {
+        throw e
+      }
+    }
     if (procedure.scope) {
       this.context.restoreScope()
     }
@@ -148,7 +151,7 @@ const Interpreter = module.exports = class extends KarolineParser {
 
   async evaluateBlock (block) {
     const {length} = block
-    let value = Value.createNull()
+    let value = new KarolineObject()
     let i
     this.context.pushScope()
     for (i = 0; i < length; i += 1) {
@@ -170,22 +173,31 @@ const Interpreter = module.exports = class extends KarolineParser {
 
   async evaluate (tree, isStatement) {
     if (tree.type === Token.TOKEN_TYPE_NUMBER) {
-      return new Number(tree.value)
+      return new KarolineNumber(tree.value)
     }
 
     if (tree.type === Token.TOKEN_TYPE_STRING) {
-      return Value.createString(tree.value)
+      return new KarolineString(tree.value)
     }
 
     if (tree.isAssignment) {
       const result = await this.evaluate(tree.second)
-      const identifier = this.context.get(tree.first.value)
-      if (!identifier) {
-        this.throwTypeError(`trying to set a value to undeclared identifier "${tree.first.value}"`, tree.position)
-      } else if (identifier[Context.CONSTANT]) {
-        this.throwTypeError(`invalid assignment to const identifier "${tree.first.value}"`, tree.position)
+      if (tree.first.type === Token.TOKEN_TYPE_IDENTIFIER) {
+        const identifier = this.context.get(tree.first.value)
+        if (!identifier) {
+          this.throwTypeError(`trying to set a value to undeclared identifier "${tree.first.value}"`, tree.position)
+        } else if (identifier[Context.CONSTANT]) {
+          this.throwTypeError(`invalid assignment to const identifier "${tree.first.value}"`, tree.position)
+        }
+        this.context.set(tree.first.value, result)
+      } else if (tree.first.value === '.') {
+        const first = await this.evaluate(tree.first.first)
+        first.setProperty(tree.first.second.value, result)
+      } else {
+        const first = await this.evaluate(tree.first.first)
+        const second = await this.evaluate(tree.first.second)
+        first.setProperty(second.toString(), result)
       }
-      this.context.set(tree.first.value, result)
       return result
     }
 
@@ -198,11 +210,46 @@ const Interpreter = module.exports = class extends KarolineParser {
         this.throwTypeError(`undefined identifier ${tree.value}`)
       }
 
-      if (isStatement && value.type === Value.PROCEDURE) {
+      if (isStatement && value.class === KarolineProcedure) {
+        // procedure call without arguments
         return this.executeProcedure(value.value, [], tree)
-      } else {
-        return value
       }
+      return value
+    }
+
+    if (tree.value === 'return') {
+      const result = await this.evaluate(tree.first)
+      result[Interpreter.RETURN] = true
+      throw result
+    }
+
+    if (tree.value === 'new') {
+      let cls, args = []
+      if (tree.first.value === '(') {
+        cls = await this.evaluate(tree.first.first)
+        let i
+        for (i = 0; i < tree.first.args.length; i += 1) {
+          args.push(await this.evaluate(tree.first.args[i]))
+        }
+      } else {
+        cls = await this.evaluate(tree.first)
+      }
+      if (cls.class !== Class) {
+        this.throwTypeError(`expected class`, tree)
+      }
+      const instance = await cls.createInstance(args)
+      return instance
+    }
+
+    if (tree.value === '[') {
+      const first = await this.evaluate(tree.first)
+      const second = await this.evaluate(tree.second)
+      return first.getProperty(second.toString())
+    }
+
+    if (tree.value === '.') {
+      const first = await this.evaluate(tree.first)
+      return first.getProperty(tree.second.value)
     }
 
     if (tree.value === 'var') {
@@ -217,7 +264,7 @@ const Interpreter = module.exports = class extends KarolineParser {
         if (declaration.value) {
           value = await this.evaluate(declaration.value)
         } else {
-          value = Value.createNull()
+          value = new KarolineObject()
         }
         this.context.scope[identifier.value] = value
       }
@@ -235,52 +282,44 @@ const Interpreter = module.exports = class extends KarolineParser {
         }
         value = await this.evaluate(declaration.value)
         value[Context.CONSTANT] = true
+        console.log(value)
         this.context.scope[identifier.value] = value
       }
       return value
     }
 
-    if (Value.BINARY_OPERATORS.hasOwnProperty(tree.value)) {
+    if (tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY && KarolineObject.BINARY_OPERATORS.hasOwnProperty(tree.value)) {
       const first = await this.evaluate(tree.first)
       const second = await this.evaluate(tree.second)
-      return first[Value.BINARY_OPERATORS[tree.value]].execute([first, second])
+      return first[KarolineObject.BINARY_OPERATORS[tree.value]].execute([first, second])
     }
 
     if (tree.value === '||') {
       const first = await this.evaluate(tree.first)
       const second = await this.evaluate(tree.second)
-      return Value.createBoolean(first.castToBoolean().value || second.castToBoolean().value)
+      return new KarolineBoolean(first.castToBoolean().value || second.castToBoolean().value)
     }
 
     if (tree.value === '&&') {
       const first = await this.evaluate(tree.first)
       const second = await this.evaluate(tree.second)
-      return Value.createBoolean(first.castToBoolean().value && second.castToBoolean().value)
+      return new KarolineBoolean(first.castToBoolean().value && second.castToBoolean().value)
     }
 
     if (tree.value === '+') {
-      if (tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {
-        const first = await this.evaluate(tree.first)
-        const second = await this.evaluate(tree.second)
-        return first[Value.OPERATOR_PLUS_BINARY].execute([first, second])
-      } else {
-        const first = await this.evaluate(tree.first)
-        return first[Value.OPERATOR_PLUS_UNARY].execute([first])
-      }
+      // unary +
+      const first = await this.evaluate(tree.first)
+      return first[KarolineObject.OPERATOR_PLUS_UNARY].execute([first])
     }
 
     if (tree.value === '-') {
-      if (tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {
-        const first = await this.evaluate(tree.first)
-        const second = await this.evaluate(tree.second)
-        return first[Value.OPERATOR_MINUS_BINARY].execute([first, second])
-      } else {
-        const first = await this.evaluate(tree.first)
-        return first[Value.OPERATOR_MINUS_UNARY].execute([first])
-      }
+      // unary -
+      const first = await this.evaluate(tree.first)
+      return first[KarolineObject.OPERATOR_MINUS_UNARY].execute([first])
     }
 
     if (tree.value === '(' && tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {
+      // procedure call with arguments
       let procedure
       if (tree.first.type === Token.TOKEN_TYPE_IDENTIFIER) {
         if (procedure = this.context.get(tree.first.value)) {
@@ -292,7 +331,7 @@ const Interpreter = module.exports = class extends KarolineParser {
       } else {
         procedure = await this.evaluate(tree.first)
       }
-      if (procedure.type === Value.PROCEDURE) {
+      if (procedure.class === KarolineProcedure) {
         procedure = procedure.value
       } else {
         this.throwTypeError(`tried to call a value of type ${procedure.type}, expected a procedure`, tree.first.position)
@@ -308,7 +347,9 @@ const Interpreter = module.exports = class extends KarolineParser {
     if (tree.value === 'if') {
       const condition = await this.evaluate(tree.condition)
       if (condition.castToBoolean().value) {
-        return this.evaluateBlock(tree.block)
+        return this.evaluateBlock(tree.ifBlock)
+      } else if (tree.elseBlock) {
+        return this.evaluateBlock(tree.elseBlock)
       }
     }
 
@@ -317,7 +358,7 @@ const Interpreter = module.exports = class extends KarolineParser {
       if (typeof tree.times !== 'undefined') {
         // repeat ... times structure
         const times = await this.evaluate(tree.times)
-        if (times.type !== Value.NUMBER) {
+        if (times.class !== KarolineNumber) {
           throw new TypeError(`repeat structure: expected ${Value.NUMBER}, got ${times.type}`)
         }
         let i
@@ -330,7 +371,7 @@ const Interpreter = module.exports = class extends KarolineParser {
           await this.evaluateBlock(block)
         }
       }
-      return Value.createNull()
+      return new KarolineObject()
     }
 
     if (tree.value === 'procedure') {
@@ -344,3 +385,4 @@ const Interpreter = module.exports = class extends KarolineParser {
 }
 
 Interpreter.EXECUTION_STOPPED = Symbol('execution stopped')
+Interpreter.RETURN = Symbol('return')

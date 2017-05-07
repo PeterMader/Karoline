@@ -15,6 +15,19 @@ const KarolineParser = module.exports = class extends EventEmitter {
     this.prepareParser()
   }
 
+  processBlock (...endTokens) {
+    const {parser} = this
+    const block = []
+    while (endTokens.indexOf(parser.token.value) === -1) {
+      block.push(parser.expression(0))
+      if (parser.token.value === '#end') {
+        throw new SyntaxError(`syntax error: unexpected end of script, expected one of these tokens: ${endTokens.join(', ')}`)
+      }
+    }
+
+    return block
+  }
+
   prepareParser () {
     const {parser} = this
     parser.tokenizer.addKeyWord('repeat')
@@ -34,6 +47,7 @@ const KarolineParser = module.exports = class extends EventEmitter {
           parser.nextToken('times')
         }
         item.block = this.processBlock('*repeat')
+        parser.nextToken()
         return item
       }
     }))
@@ -59,6 +73,7 @@ const KarolineParser = module.exports = class extends EventEmitter {
         item.first = parser.token
         parser.nextToken()
         item.block = this.processBlock('*procedure')
+        parser.nextToken()
         return item
       }
     }))
@@ -66,17 +81,19 @@ const KarolineParser = module.exports = class extends EventEmitter {
       value: '*procedure'
     }))
 
-    parser.tokenizer.addKeyWord('if')
-    parser.tokenizer.addKeyWord('*if')
-    parser.tokenizer.addKeyWord('then')
+    parser.tokenizer.addKeyWords(['if', '*if', 'else', 'then'])
     parser.registerSymbol(new PrefixOperator({
       value: 'if',
       nullDenotation: (self) => {
         const item = self.clone()
         item.condition = parser.expression(0)
         parser.nextToken('then')
+        item.ifBlock = this.processBlock('*if', 'else')
+        if (parser.token.value === 'else') {
+          parser.nextToken()
+          item.elseBlock = this.processBlock('*if')
+        }
         parser.nextToken()
-        item.block = this.processBlock('*if')
         return item
       }
     }))
@@ -86,10 +103,11 @@ const KarolineParser = module.exports = class extends EventEmitter {
     parser.registerSymbol(new ParserSymbol({
       value: 'then'
     }))
+    parser.registerSymbol(new ParserSymbol({
+      value: 'else'
+    }))
 
-    parser.tokenizer.addKeyWord('(')
-    parser.tokenizer.addKeyWord(')')
-    parser.tokenizer.addKeyWord(',')
+    parser.tokenizer.addKeyWords('(),'.split(''))
     parser.registerSymbol(new InfixOperator({
       value: '(',
       bindingPower: 80,
@@ -185,6 +203,49 @@ const KarolineParser = module.exports = class extends EventEmitter {
           }
           parser.nextToken()
         }
+        return item
+      }
+    }))
+
+    parser.tokenizer.addKeyWords(['[', ']'])
+    parser.registerSymbol(new InfixOperator({
+      value: '[',
+      bindingPower: 75,
+      leftDenotation: (self, left) => {
+        const item = self.clone()
+        item.first = left
+        item.second = parser.expression(0)
+        parser.nextToken(']')
+        return item
+      }
+    }))
+    parser.registerSymbol(new ParserSymbol({
+      value: ']'
+    }))
+
+    parser.tokenizer.addKeyWord('return')
+    parser.registerSymbol(new PrefixOperator({
+      value: 'return'
+    }))
+
+    parser.tokenizer.addKeyWord('new')
+    parser.registerSymbol(new PrefixOperator({
+      value: 'new',
+      bindingPower: 70
+    }))
+
+    parser.tokenizer.addKeyWord('.')
+    parser.registerSymbol(new InfixOperator({
+      value: '.',
+      bindingPower: 75,
+      leftDenotation: (self, left) => {
+        const item = self.clone()
+        item.first = left
+        if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+          throw new SyntaxError(`expected identifier after "." operator`)
+        }
+        item.second = parser.token
+        parser.nextToken()
         return item
       }
     }))

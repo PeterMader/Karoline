@@ -13,7 +13,7 @@ const AssignmentOperator = module.exports = class extends InfixOperator {
   }
 
   defaultLeftDenotation (self, first, parser) {
-    if (first.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+    if (first.type !== Token.TOKEN_TYPE_IDENTIFIER && first.value !== '.' && first.value !== '[') {
       throw new SyntaxError(`invalid assignment left-hand side: expected identifier, got ${first.type}`)
     }
     const item = self.clone()

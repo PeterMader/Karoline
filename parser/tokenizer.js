@@ -15,6 +15,10 @@ const Tokenizer = module.exports = class {
     }
   }
 
+  addKeyWords (keyWords) {
+    this.keyWords = this.keyWords.concat(keyWords)
+  }
+
   keyWordStartsWith (str) {
     const length = str.length
     return this.keyWords.some((item) => {

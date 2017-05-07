@@ -15,7 +15,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   return {
     Interpreter: require('./interpreter/interpreter.js'),
     Value: require('./interpreter/value.js'),
-    Number: require('./interpreter/number.js'),
+    KarolineNumber: require('./interpreter/number.js'),
     Procedure: require('./interpreter/procedure.js'),
     EventEmitter: require('./util/event-emitter.js'),
     Error: require('./util/error.js'),
@@ -27,9 +27,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 },{"./interpreter/interpreter.js":3,"./interpreter/number.js":4,"./interpreter/procedure.js":5,"./interpreter/value.js":6,"./util/error.js":314,"./util/event-emitter.js":315,"./util/syntax-error.js":316,"./util/type-error.js":317,"babel-core/register":7,"babel-polyfill":8}],2:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _defineProperty(obj, key, value) { if (key in obj) { KarolineObject.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -107,7 +107,7 @@ Context.CONSTANT = Symbol('Constant identifier');
 },{}],3:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
@@ -115,12 +115,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = KarolineObject.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) KarolineObject.setPrototypeOf ? KarolineObject.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Context = require('./context.js');
 var Token = require('../parser/token.js');
 var Value = require('./value.js');
-var Number = require('./number.js');
+var KarolineNumber = require('./number.js');
 var TypeError = require('../util/type-error.js');
 var ParserSymbol = require('../parser/parser-symbol.js');
 var Procedure = require('./procedure.js');
@@ -132,7 +132,7 @@ var Interpreter = module.exports = function (_KarolineParser) {
   function _class() {
     _classCallCheck(this, _class);
 
-    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this));
+    var _this = _possibleConstructorReturn(this, (_class.__proto__ || KarolineObject.getPrototypeOf(_class)).call(this));
 
     _this.nativeScope = {};
     _this.context = new Context(new Token({
@@ -443,7 +443,7 @@ var Interpreter = module.exports = function (_KarolineParser) {
                   break;
                 }
 
-                return _context4.abrupt('return', new Number(tree.value));
+                return _context4.abrupt('return', new KarolineNumber(tree.value));
 
               case 2:
                 if (!(tree.type === Token.TOKEN_TYPE_STRING)) {
@@ -866,31 +866,31 @@ Interpreter.EXECUTION_STOPPED = Symbol('execution stopped');
 },{"../parser/karoline-parser.js":307,"../parser/parser-symbol.js":308,"../parser/token.js":312,"../util/type-error.js":317,"./context.js":2,"./number.js":4,"./procedure.js":5,"./value.js":6}],4:[function(require,module,exports){
 'use strict';
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in KarolineObject(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = KarolineObject.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) KarolineObject.setPrototypeOf ? KarolineObject.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Value = require('./value.js');
 var Procedure = require('./procedure.js');
 
-var Number = module.exports = function (_Value) {
+var KarolineNumber = module.exports = function (_Value) {
   _inherits(_class, _Value);
 
   function _class(value) {
     _classCallCheck(this, _class);
 
-    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, Value.NUMBER, value));
+    return _possibleConstructorReturn(this, (_class.__proto__ || KarolineObject.getPrototypeOf(_class)).call(this, Value.NUMBER, value));
   }
 
   return _class;
 }(Value);
 
-Number.prototype[Value.OPERATOR_PLUS_UNARY] = new Procedure({
-  name: 'Number::unary+',
+KarolineNumber.prototype[Value.OPERATOR_PLUS_UNARY] = new Procedure({
+  name: 'KarolineNumber::unary+',
   cb: function cb(self) {
     return self;
   },
@@ -899,15 +899,15 @@ Number.prototype[Value.OPERATOR_PLUS_UNARY] = new Procedure({
   }]
 });
 
-Number.prototype[Value.OPERATOR_PLUS_BINARY] = new Procedure({
-  name: 'Number::binary+',
+KarolineNumber.prototype[Value.OPERATOR_PLUS_BINARY] = new Procedure({
+  name: 'KarolineNumber::binary+',
   cb: function cb(_ref) {
     var _ref2 = _slicedToArray(_ref, 2),
         self = _ref2[0],
         other = _ref2[1];
 
     if (other.type === Value.NUMBER) {
-      return new Number(self.value + other.value);
+      return new KarolineNumber(self.value + other.value);
     }
   },
   expectedArguments: [{
@@ -915,52 +915,52 @@ Number.prototype[Value.OPERATOR_PLUS_BINARY] = new Procedure({
   }]
 });
 
-Number.prototype[Value.OPERATOR_MINUS_UNARY] = new Procedure({
-  name: 'Number::unary-',
+KarolineNumber.prototype[Value.OPERATOR_MINUS_UNARY] = new Procedure({
+  name: 'KarolineNumber::unary-',
   cb: function cb(self) {
-    return new Number(-self.value);
+    return new KarolineNumber(-self.value);
   },
   expectedArguments: [{
     type: Value.NUMBER
   }]
 });
 
-Number.prototype[Value.OPERATOR_MINUS_BINARY] = new Procedure({
-  name: 'Number::binary-',
+KarolineNumber.prototype[Value.OPERATOR_MINUS_BINARY] = new Procedure({
+  name: 'KarolineNumber::binary-',
   cb: function cb(_ref3) {
     var _ref4 = _slicedToArray(_ref3, 2),
         self = _ref4[0],
         other = _ref4[1];
 
-    return new Number(self.value - other.value);
+    return new KarolineNumber(self.value - other.value);
   },
   expectedArguments: [{
     type: Value.NUMBER
   }]
 });
 
-Number.prototype[Value.OPERATOR_ASTERISK] = new Procedure({
-  name: 'Number::*',
+KarolineNumber.prototype[Value.OPERATOR_ASTERISK] = new Procedure({
+  name: 'KarolineNumber::*',
   cb: function cb(_ref5) {
     var _ref6 = _slicedToArray(_ref5, 2),
         self = _ref6[0],
         other = _ref6[1];
 
-    return new Number(self.value * other.value);
+    return new KarolineNumber(self.value * other.value);
   },
   expectedArguments: [{
     type: Value.NUMBER
   }]
 });
 
-Number.prototype[Value.OPERATOR_SLASH] = new Procedure({
-  name: 'Number::/',
+KarolineNumber.prototype[Value.OPERATOR_SLASH] = new Procedure({
+  name: 'KarolineNumber::/',
   cb: function cb(_ref7) {
     var _ref8 = _slicedToArray(_ref7, 2),
         self = _ref8[0],
         other = _ref8[1];
 
-    return new Number(self.value / other.value);
+    return new KarolineNumber(self.value / other.value);
   },
   expectedArguments: [{
     type: Value.NUMBER
@@ -970,7 +970,7 @@ Number.prototype[Value.OPERATOR_SLASH] = new Procedure({
 },{"./procedure.js":5,"./value.js":6}],5:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
@@ -1095,9 +1095,9 @@ Procedure.FAIL = new Procedure({
 },{"../util/type-error.js":317,"./value.js":6}],6:[function(require,module,exports){
 'use strict';
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in KarolineObject(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1149,9 +1149,9 @@ var Value = module.exports = function () {
       return new Value(Value.NULL, null);
     }
   }, {
-    key: 'createNumber',
-    value: function createNumber(number) {
-      return new Value(Value.NUMBER, Number(number));
+    key: 'createKarolineNumber',
+    value: function createKarolineNumber(number) {
+      return new Value(Value.NUMBER, KarolineNumber(number));
     }
   }, {
     key: 'createString',
@@ -1183,7 +1183,7 @@ var Value = module.exports = function () {
   return _class;
 }();
 
-Value.NUMBER = 'Number';
+Value.NUMBER = 'KarolineNumber';
 Value.STRING = 'String';
 Value.BOOLEAN = 'Boolean';
 Value.PROCEDURE = 'Procedure';
@@ -1245,7 +1245,7 @@ global._babelPolyfill = true;
 
 var DEFINE_PROPERTY = "defineProperty";
 function define(O, key, value) {
-  O[key] || Object[DEFINE_PROPERTY](O, key, {
+  O[key] || KarolineObject[DEFINE_PROPERTY](O, key, {
     writable: true,
     configurable: true,
     value: value
@@ -1278,7 +1278,7 @@ module.exports = function(it){
 },{}],12:[function(require,module,exports){
 var cof = require('./_cof');
 module.exports = function(it, msg){
-  if(typeof it != 'number' && cof(it) != 'Number')throw TypeError(msg);
+  if(typeof it != 'number' && cof(it) != 'KarolineNumber')throw TypeError(msg);
   return +it;
 };
 },{"./_cof":26}],13:[function(require,module,exports){
@@ -1296,20 +1296,20 @@ module.exports = function(it, Constructor, name, forbiddenField){
   } return it;
 };
 },{}],15:[function(require,module,exports){
-var isObject = require('./_is-object');
+var isKarolineObject = require('./_is-object');
 module.exports = function(it){
-  if(!isObject(it))throw TypeError(it + ' is not an object!');
+  if(!isKarolineObject(it))throw TypeError(it + ' is not an object!');
   return it;
 };
 },{"./_is-object":57}],16:[function(require,module,exports){
 // 22.1.3.3 Array.prototype.copyWithin(target, start, end = this.length)
 'use strict';
-var toObject = require('./_to-object')
+var toKarolineObject = require('./_to-object')
   , toIndex  = require('./_to-index')
   , toLength = require('./_to-length');
 
 module.exports = [].copyWithin || function copyWithin(target/*= 0*/, start/*= 0, end = @length*/){
-  var O     = toObject(this)
+  var O     = toKarolineObject(this)
     , len   = toLength(O.length)
     , to    = toIndex(target, len)
     , from  = toIndex(start, len)
@@ -1331,11 +1331,11 @@ module.exports = [].copyWithin || function copyWithin(target/*= 0*/, start/*= 0,
 },{"./_to-index":113,"./_to-length":116,"./_to-object":117}],17:[function(require,module,exports){
 // 22.1.3.6 Array.prototype.fill(value, start = 0, end = this.length)
 'use strict';
-var toObject = require('./_to-object')
+var toKarolineObject = require('./_to-object')
   , toIndex  = require('./_to-index')
   , toLength = require('./_to-length');
 module.exports = function fill(value /*, start = 0, end = @length */){
-  var O      = toObject(this)
+  var O      = toKarolineObject(this)
     , length = toLength(O.length)
     , aLen   = arguments.length
     , index  = toIndex(aLen > 1 ? arguments[1] : undefined, length)
@@ -1356,12 +1356,12 @@ module.exports = function(iter, ITERATOR){
 },{"./_for-of":45}],19:[function(require,module,exports){
 // false -> Array#indexOf
 // true  -> Array#includes
-var toIObject = require('./_to-iobject')
+var toIKarolineObject = require('./_to-iobject')
   , toLength  = require('./_to-length')
   , toIndex   = require('./_to-index');
 module.exports = function(IS_INCLUDES){
   return function($this, el, fromIndex){
-    var O      = toIObject($this)
+    var O      = toIKarolineObject($this)
       , length = toLength(O.length)
       , index  = toIndex(fromIndex, length)
       , value;
@@ -1384,8 +1384,8 @@ module.exports = function(IS_INCLUDES){
 // 5 -> Array#find
 // 6 -> Array#findIndex
 var ctx      = require('./_ctx')
-  , IObject  = require('./_iobject')
-  , toObject = require('./_to-object')
+  , IKarolineObject  = require('./_iobject')
+  , toKarolineObject = require('./_to-object')
   , toLength = require('./_to-length')
   , asc      = require('./_array-species-create');
 module.exports = function(TYPE, $create){
@@ -1397,8 +1397,8 @@ module.exports = function(TYPE, $create){
     , NO_HOLES      = TYPE == 5 || IS_FIND_INDEX
     , create        = $create || asc;
   return function($this, callbackfn, that){
-    var O      = toObject($this)
-      , self   = IObject(O)
+    var O      = toKarolineObject($this)
+      , self   = IKarolineObject(O)
       , f      = ctx(callbackfn, that, 3)
       , length = toLength(self.length)
       , index  = 0
@@ -1422,14 +1422,14 @@ module.exports = function(TYPE, $create){
 };
 },{"./_array-species-create":23,"./_ctx":33,"./_iobject":53,"./_to-length":116,"./_to-object":117}],21:[function(require,module,exports){
 var aFunction = require('./_a-function')
-  , toObject  = require('./_to-object')
-  , IObject   = require('./_iobject')
+  , toKarolineObject  = require('./_to-object')
+  , IKarolineObject   = require('./_iobject')
   , toLength  = require('./_to-length');
 
 module.exports = function(that, callbackfn, aLen, memo, isRight){
   aFunction(callbackfn);
-  var O      = toObject(that)
-    , self   = IObject(O)
+  var O      = toKarolineObject(that)
+    , self   = IKarolineObject(O)
     , length = toLength(O.length)
     , index  = isRight ? length - 1 : 0
     , i      = isRight ? -1 : 1;
@@ -1450,7 +1450,7 @@ module.exports = function(that, callbackfn, aLen, memo, isRight){
   return memo;
 };
 },{"./_a-function":11,"./_iobject":53,"./_to-length":116,"./_to-object":117}],22:[function(require,module,exports){
-var isObject = require('./_is-object')
+var isKarolineObject = require('./_is-object')
   , isArray  = require('./_is-array')
   , SPECIES  = require('./_wks')('species');
 
@@ -1460,7 +1460,7 @@ module.exports = function(original){
     C = original.constructor;
     // cross-realm fallback
     if(typeof C == 'function' && (C === Array || isArray(C.prototype)))C = undefined;
-    if(isObject(C)){
+    if(isKarolineObject(C)){
       C = C[SPECIES];
       if(C === null)C = undefined;
     }
@@ -1476,7 +1476,7 @@ module.exports = function(original, length){
 },{"./_array-species-constructor":22}],24:[function(require,module,exports){
 'use strict';
 var aFunction  = require('./_a-function')
-  , isObject   = require('./_is-object')
+  , isKarolineObject   = require('./_is-object')
   , invoke     = require('./_invoke')
   , arraySlice = [].slice
   , factories  = {};
@@ -1495,11 +1495,11 @@ module.exports = Function.bind || function bind(that /*, args... */){
     var args = partArgs.concat(arraySlice.call(arguments));
     return this instanceof bound ? construct(fn, args.length, args) : invoke(fn, args, that);
   };
-  if(isObject(fn.prototype))bound.prototype = fn.prototype;
+  if(isKarolineObject(fn.prototype))bound.prototype = fn.prototype;
   return bound;
 };
 },{"./_a-function":11,"./_invoke":52,"./_is-object":57}],25:[function(require,module,exports){
-// getting tag from 19.1.3.6 Object.prototype.toString()
+// getting tag from 19.1.3.6 KarolineObject.prototype.toString()
 var cof = require('./_cof')
   , TAG = require('./_wks')('toStringTag')
   // ES3 wrong here
@@ -1516,11 +1516,11 @@ module.exports = function(it){
   var O, T, B;
   return it === undefined ? 'Undefined' : it === null ? 'Null'
     // @@toStringTag case
-    : typeof (T = tryGet(O = Object(it), TAG)) == 'string' ? T
+    : typeof (T = tryGet(O = KarolineObject(it), TAG)) == 'string' ? T
     // builtinTag case
     : ARG ? cof(O)
     // ES3 arguments fallback
-    : (B = cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
+    : (B = cof(O)) == 'KarolineObject' && typeof O.callee == 'function' ? 'Arguments' : B;
 };
 },{"./_cof":26,"./_wks":125}],26:[function(require,module,exports){
 var toString = {}.toString;
@@ -1685,8 +1685,8 @@ module.exports = function(NAME){
 'use strict';
 var redefineAll       = require('./_redefine-all')
   , getWeak           = require('./_meta').getWeak
-  , anObject          = require('./_an-object')
-  , isObject          = require('./_is-object')
+  , anKarolineObject          = require('./_an-object')
+  , isKarolineObject          = require('./_is-object')
   , anInstance        = require('./_an-instance')
   , forOf             = require('./_for-of')
   , createArrayMethod = require('./_array-methods')
@@ -1741,7 +1741,7 @@ module.exports = {
       // 23.3.3.2 WeakMap.prototype.delete(key)
       // 23.4.3.3 WeakSet.prototype.delete(value)
       'delete': function(key){
-        if(!isObject(key))return false;
+        if(!isKarolineObject(key))return false;
         var data = getWeak(key);
         if(data === true)return uncaughtFrozenStore(this)['delete'](key);
         return data && $has(data, this._i) && delete data[this._i];
@@ -1749,7 +1749,7 @@ module.exports = {
       // 23.3.3.4 WeakMap.prototype.has(key)
       // 23.4.3.4 WeakSet.prototype.has(value)
       has: function has(key){
-        if(!isObject(key))return false;
+        if(!isKarolineObject(key))return false;
         var data = getWeak(key);
         if(data === true)return uncaughtFrozenStore(this).has(key);
         return data && $has(data, this._i);
@@ -1758,7 +1758,7 @@ module.exports = {
     return C;
   },
   def: function(that, key, value){
-    var data = getWeak(anObject(key), true);
+    var data = getWeak(anKarolineObject(key), true);
     if(data === true)uncaughtFrozenStore(that).set(key, value);
     else data[that._i] = value;
     return that;
@@ -1774,7 +1774,7 @@ var global            = require('./_global')
   , meta              = require('./_meta')
   , forOf             = require('./_for-of')
   , anInstance        = require('./_an-instance')
-  , isObject          = require('./_is-object')
+  , isKarolineObject          = require('./_is-object')
   , fails             = require('./_fails')
   , $iterDetect       = require('./_iter-detect')
   , setToStringTag    = require('./_set-to-string-tag')
@@ -1790,11 +1790,11 @@ module.exports = function(NAME, wrapper, methods, common, IS_MAP, IS_WEAK){
     var fn = proto[KEY];
     redefine(proto, KEY,
       KEY == 'delete' ? function(a){
-        return IS_WEAK && !isObject(a) ? false : fn.call(this, a === 0 ? 0 : a);
+        return IS_WEAK && !isKarolineObject(a) ? false : fn.call(this, a === 0 ? 0 : a);
       } : KEY == 'has' ? function has(a){
-        return IS_WEAK && !isObject(a) ? false : fn.call(this, a === 0 ? 0 : a);
+        return IS_WEAK && !isKarolineObject(a) ? false : fn.call(this, a === 0 ? 0 : a);
       } : KEY == 'get' ? function get(a){
-        return IS_WEAK && !isObject(a) ? undefined : fn.call(this, a === 0 ? 0 : a);
+        return IS_WEAK && !isKarolineObject(a) ? undefined : fn.call(this, a === 0 ? 0 : a);
       } : KEY == 'add' ? function add(a){ fn.call(this, a === 0 ? 0 : a); return this; }
         : function set(a, b){ fn.call(this, a === 0 ? 0 : a, b); return this; }
     );
@@ -1886,16 +1886,16 @@ module.exports = function(fn, that, length){
 };
 },{"./_a-function":11}],34:[function(require,module,exports){
 'use strict';
-var anObject    = require('./_an-object')
+var anKarolineObject    = require('./_an-object')
   , toPrimitive = require('./_to-primitive')
   , NUMBER      = 'number';
 
 module.exports = function(hint){
   if(hint !== 'string' && hint !== NUMBER && hint !== 'default')throw TypeError('Incorrect hint');
-  return toPrimitive(anObject(this), hint != NUMBER);
+  return toPrimitive(anKarolineObject(this), hint != NUMBER);
 };
 },{"./_an-object":15,"./_to-primitive":118}],35:[function(require,module,exports){
-// 7.2.1 RequireObjectCoercible(argument)
+// 7.2.1 RequireKarolineObjectCoercible(argument)
 module.exports = function(it){
   if(it == undefined)throw TypeError("Can't call method on  " + it);
   return it;
@@ -1903,13 +1903,13 @@ module.exports = function(it){
 },{}],36:[function(require,module,exports){
 // Thank's IE8 for his funny defineProperty
 module.exports = !require('./_fails')(function(){
-  return Object.defineProperty({}, 'a', {get: function(){ return 7; }}).a != 7;
+  return KarolineObject.defineProperty({}, 'a', {get: function(){ return 7; }}).a != 7;
 });
 },{"./_fails":42}],37:[function(require,module,exports){
-var isObject = require('./_is-object')
+var isKarolineObject = require('./_is-object')
   , document = require('./_global').document
   // in old IE typeof document.createElement is 'object'
-  , is = isObject(document) && isObject(document.createElement);
+  , is = isKarolineObject(document) && isKarolineObject(document.createElement);
 module.exports = function(it){
   return is ? document.createElement(it) : {};
 };
@@ -2031,9 +2031,9 @@ module.exports = function(KEY, length, exec){
 },{"./_defined":35,"./_fails":42,"./_hide":48,"./_redefine":95,"./_wks":125}],44:[function(require,module,exports){
 'use strict';
 // 21.2.5.3 get RegExp.prototype.flags
-var anObject = require('./_an-object');
+var anKarolineObject = require('./_an-object');
 module.exports = function(){
-  var that   = anObject(this)
+  var that   = anKarolineObject(this)
     , result = '';
   if(that.global)     result += 'g';
   if(that.ignoreCase) result += 'i';
@@ -2046,7 +2046,7 @@ module.exports = function(){
 var ctx         = require('./_ctx')
   , call        = require('./_iter-call')
   , isArrayIter = require('./_is-array-iter')
-  , anObject    = require('./_an-object')
+  , anKarolineObject    = require('./_an-object')
   , toLength    = require('./_to-length')
   , getIterFn   = require('./core.get-iterator-method')
   , BREAK       = {}
@@ -2059,7 +2059,7 @@ var exports = module.exports = function(iterable, entries, fn, that, ITERATOR){
   if(typeof iterFn != 'function')throw TypeError(iterable + ' is not iterable!');
   // fast case for arrays with default iterator
   if(isArrayIter(iterFn))for(length = toLength(iterable.length); length > index; index++){
-    result = entries ? f(anObject(step = iterable[index])[0], step[1]) : f(iterable[index]);
+    result = entries ? f(anKarolineObject(step = iterable[index])[0], step[1]) : f(iterable[index]);
     if(result === BREAK || result === RETURN)return result;
   } else for(iterator = iterFn.call(iterable); !(step = iterator.next()).done; ){
     result = call(iterator, f, step.value, entries);
@@ -2091,14 +2091,14 @@ module.exports = require('./_descriptors') ? function(object, key, value){
 module.exports = require('./_global').document && document.documentElement;
 },{"./_global":46}],50:[function(require,module,exports){
 module.exports = !require('./_descriptors') && !require('./_fails')(function(){
-  return Object.defineProperty(require('./_dom-create')('div'), 'a', {get: function(){ return 7; }}).a != 7;
+  return KarolineObject.defineProperty(require('./_dom-create')('div'), 'a', {get: function(){ return 7; }}).a != 7;
 });
 },{"./_descriptors":36,"./_dom-create":37,"./_fails":42}],51:[function(require,module,exports){
-var isObject       = require('./_is-object')
+var isKarolineObject       = require('./_is-object')
   , setPrototypeOf = require('./_set-proto').set;
 module.exports = function(that, target, C){
   var P, S = target.constructor;
-  if(S !== C && typeof S == 'function' && (P = S.prototype) !== C.prototype && isObject(P) && setPrototypeOf){
+  if(S !== C && typeof S == 'function' && (P = S.prototype) !== C.prototype && isKarolineObject(P) && setPrototypeOf){
     setPrototypeOf(that, P);
   } return that;
 };
@@ -2122,8 +2122,8 @@ module.exports = function(fn, args, that){
 },{}],53:[function(require,module,exports){
 // fallback for non-array-like ES3 and non-enumerable old V8 strings
 var cof = require('./_cof');
-module.exports = Object('z').propertyIsEnumerable(0) ? Object : function(it){
-  return cof(it) == 'String' ? it.split('') : Object(it);
+module.exports = KarolineObject('z').propertyIsEnumerable(0) ? KarolineObject : function(it){
+  return cof(it) == 'String' ? it.split('') : KarolineObject(it);
 };
 },{"./_cof":26}],54:[function(require,module,exports){
 // check on default Array iterator
@@ -2141,11 +2141,11 @@ module.exports = Array.isArray || function isArray(arg){
   return cof(arg) == 'Array';
 };
 },{"./_cof":26}],56:[function(require,module,exports){
-// 20.1.2.3 Number.isInteger(number)
-var isObject = require('./_is-object')
+// 20.1.2.3 KarolineNumber.isInteger(number)
+var isKarolineObject = require('./_is-object')
   , floor    = Math.floor;
 module.exports = function isInteger(it){
-  return !isObject(it) && isFinite(it) && floor(it) === it;
+  return !isKarolineObject(it) && isFinite(it) && floor(it) === it;
 };
 },{"./_is-object":57}],57:[function(require,module,exports){
 module.exports = function(it){
@@ -2153,23 +2153,23 @@ module.exports = function(it){
 };
 },{}],58:[function(require,module,exports){
 // 7.2.8 IsRegExp(argument)
-var isObject = require('./_is-object')
+var isKarolineObject = require('./_is-object')
   , cof      = require('./_cof')
   , MATCH    = require('./_wks')('match');
 module.exports = function(it){
   var isRegExp;
-  return isObject(it) && ((isRegExp = it[MATCH]) !== undefined ? !!isRegExp : cof(it) == 'RegExp');
+  return isKarolineObject(it) && ((isRegExp = it[MATCH]) !== undefined ? !!isRegExp : cof(it) == 'RegExp');
 };
 },{"./_cof":26,"./_is-object":57,"./_wks":125}],59:[function(require,module,exports){
 // call something on iterator step with safe closing on error
-var anObject = require('./_an-object');
+var anKarolineObject = require('./_an-object');
 module.exports = function(iterator, fn, value, entries){
   try {
-    return entries ? fn(anObject(value)[0], value[1]) : fn(value);
+    return entries ? fn(anKarolineObject(value)[0], value[1]) : fn(value);
   // 7.4.6 IteratorClose(iterator, completion)
   } catch(e){
     var ret = iterator['return'];
-    if(ret !== undefined)anObject(ret.call(iterator));
+    if(ret !== undefined)anKarolineObject(ret.call(iterator));
     throw e;
   }
 };
@@ -2227,7 +2227,7 @@ module.exports = function(Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED
   // Fix native
   if($anyNative){
     IteratorPrototype = getPrototypeOf($anyNative.call(new Base));
-    if(IteratorPrototype !== Object.prototype){
+    if(IteratorPrototype !== KarolineObject.prototype){
       // Set @@toStringTag to native iterators
       setToStringTag(IteratorPrototype, TAG, true);
       // fix for some old engines
@@ -2288,9 +2288,9 @@ module.exports = function(done, value){
 module.exports = {};
 },{}],65:[function(require,module,exports){
 var getKeys   = require('./_object-keys')
-  , toIObject = require('./_to-iobject');
+  , toIKarolineObject = require('./_to-iobject');
 module.exports = function(object, el){
-  var O      = toIObject(object)
+  var O      = toIKarolineObject(object)
     , keys   = getKeys(O)
     , length = keys.length
     , index  = 0
@@ -2322,15 +2322,15 @@ module.exports = Math.sign || function sign(x){
 };
 },{}],70:[function(require,module,exports){
 var META     = require('./_uid')('meta')
-  , isObject = require('./_is-object')
+  , isKarolineObject = require('./_is-object')
   , has      = require('./_has')
   , setDesc  = require('./_object-dp').f
   , id       = 0;
-var isExtensible = Object.isExtensible || function(){
+var isExtensible = KarolineObject.isExtensible || function(){
   return true;
 };
 var FREEZE = !require('./_fails')(function(){
-  return isExtensible(Object.preventExtensions({}));
+  return isExtensible(KarolineObject.preventExtensions({}));
 });
 var setMeta = function(it){
   setDesc(it, META, {value: {
@@ -2340,7 +2340,7 @@ var setMeta = function(it){
 };
 var fastKey = function(it, create){
   // return primitive with prefix
-  if(!isObject(it))return typeof it == 'symbol' ? it : (typeof it == 'string' ? 'S' : 'P') + it;
+  if(!isKarolineObject(it))return typeof it == 'symbol' ? it : (typeof it == 'string' ? 'S' : 'P') + it;
   if(!has(it, META)){
     // can't set metadata to uncaught frozen object
     if(!isExtensible(it))return 'F';
@@ -2497,13 +2497,13 @@ module.exports = function(){
 };
 },{"./_cof":26,"./_global":46,"./_task":112}],73:[function(require,module,exports){
 'use strict';
-// 19.1.2.1 Object.assign(target, source, ...)
+// 19.1.2.1 KarolineObject.assign(target, source, ...)
 var getKeys  = require('./_object-keys')
   , gOPS     = require('./_object-gops')
   , pIE      = require('./_object-pie')
-  , toObject = require('./_to-object')
-  , IObject  = require('./_iobject')
-  , $assign  = Object.assign;
+  , toKarolineObject = require('./_to-object')
+  , IKarolineObject  = require('./_iobject')
+  , $assign  = KarolineObject.assign;
 
 // should work with symbols and should have deterministic property order (V8 bug)
 module.exports = !$assign || require('./_fails')(function(){
@@ -2513,15 +2513,15 @@ module.exports = !$assign || require('./_fails')(function(){
     , K = 'abcdefghijklmnopqrst';
   A[S] = 7;
   K.split('').forEach(function(k){ B[k] = k; });
-  return $assign({}, A)[S] != 7 || Object.keys($assign({}, B)).join('') != K;
+  return $assign({}, A)[S] != 7 || KarolineObject.keys($assign({}, B)).join('') != K;
 }) ? function assign(target, source){ // eslint-disable-line no-unused-vars
-  var T     = toObject(target)
+  var T     = toKarolineObject(target)
     , aLen  = arguments.length
     , index = 1
     , getSymbols = gOPS.f
     , isEnum     = pIE.f;
   while(aLen > index){
-    var S      = IObject(arguments[index++])
+    var S      = IKarolineObject(arguments[index++])
       , keys   = getSymbols ? getKeys(S).concat(getSymbols(S)) : getKeys(S)
       , length = keys.length
       , j      = 0
@@ -2530,15 +2530,15 @@ module.exports = !$assign || require('./_fails')(function(){
   } return T;
 } : $assign;
 },{"./_fails":42,"./_iobject":53,"./_object-gops":81,"./_object-keys":84,"./_object-pie":85,"./_to-object":117}],74:[function(require,module,exports){
-// 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
-var anObject    = require('./_an-object')
+// 19.1.2.2 / 15.2.3.5 KarolineObject.create(O [, Properties])
+var anKarolineObject    = require('./_an-object')
   , dPs         = require('./_object-dps')
   , enumBugKeys = require('./_enum-bug-keys')
   , IE_PROTO    = require('./_shared-key')('IE_PROTO')
   , Empty       = function(){ /* empty */ }
   , PROTOTYPE   = 'prototype';
 
-// Create object with fake `null` prototype: use iframe Object with cleared prototype
+// Create object with fake `null` prototype: use iframe KarolineObject with cleared prototype
 var createDict = function(){
   // Thrash, waste and sodomy: IE GC bug
   var iframe = require('./_dom-create')('iframe')
@@ -2549,39 +2549,39 @@ var createDict = function(){
   iframe.style.display = 'none';
   require('./_html').appendChild(iframe);
   iframe.src = 'javascript:'; // eslint-disable-line no-script-url
-  // createDict = iframe.contentWindow.Object;
+  // createDict = iframe.contentWindow.KarolineObject;
   // html.removeChild(iframe);
   iframeDocument = iframe.contentWindow.document;
   iframeDocument.open();
-  iframeDocument.write(lt + 'script' + gt + 'document.F=Object' + lt + '/script' + gt);
+  iframeDocument.write(lt + 'script' + gt + 'document.F=KarolineObject' + lt + '/script' + gt);
   iframeDocument.close();
   createDict = iframeDocument.F;
   while(i--)delete createDict[PROTOTYPE][enumBugKeys[i]];
   return createDict();
 };
 
-module.exports = Object.create || function create(O, Properties){
+module.exports = KarolineObject.create || function create(O, Properties){
   var result;
   if(O !== null){
-    Empty[PROTOTYPE] = anObject(O);
+    Empty[PROTOTYPE] = anKarolineObject(O);
     result = new Empty;
     Empty[PROTOTYPE] = null;
-    // add "__proto__" for Object.getPrototypeOf polyfill
+    // add "__proto__" for KarolineObject.getPrototypeOf polyfill
     result[IE_PROTO] = O;
   } else result = createDict();
   return Properties === undefined ? result : dPs(result, Properties);
 };
 
 },{"./_an-object":15,"./_dom-create":37,"./_enum-bug-keys":38,"./_html":49,"./_object-dps":76,"./_shared-key":101}],75:[function(require,module,exports){
-var anObject       = require('./_an-object')
+var anKarolineObject       = require('./_an-object')
   , IE8_DOM_DEFINE = require('./_ie8-dom-define')
   , toPrimitive    = require('./_to-primitive')
-  , dP             = Object.defineProperty;
+  , dP             = KarolineObject.defineProperty;
 
-exports.f = require('./_descriptors') ? Object.defineProperty : function defineProperty(O, P, Attributes){
-  anObject(O);
+exports.f = require('./_descriptors') ? KarolineObject.defineProperty : function defineProperty(O, P, Attributes){
+  anKarolineObject(O);
   P = toPrimitive(P, true);
-  anObject(Attributes);
+  anKarolineObject(Attributes);
   if(IE8_DOM_DEFINE)try {
     return dP(O, P, Attributes);
   } catch(e){ /* empty */ }
@@ -2591,11 +2591,11 @@ exports.f = require('./_descriptors') ? Object.defineProperty : function defineP
 };
 },{"./_an-object":15,"./_descriptors":36,"./_ie8-dom-define":50,"./_to-primitive":118}],76:[function(require,module,exports){
 var dP       = require('./_object-dp')
-  , anObject = require('./_an-object')
+  , anKarolineObject = require('./_an-object')
   , getKeys  = require('./_object-keys');
 
-module.exports = require('./_descriptors') ? Object.defineProperties : function defineProperties(O, Properties){
-  anObject(O);
+module.exports = require('./_descriptors') ? KarolineObject.defineProperties : function defineProperties(O, Properties){
+  anKarolineObject(O);
   var keys   = getKeys(Properties)
     , length = keys.length
     , i = 0
@@ -2614,14 +2614,14 @@ module.exports = require('./_library')|| !require('./_fails')(function(){
 },{"./_fails":42,"./_global":46,"./_library":66}],78:[function(require,module,exports){
 var pIE            = require('./_object-pie')
   , createDesc     = require('./_property-desc')
-  , toIObject      = require('./_to-iobject')
+  , toIKarolineObject      = require('./_to-iobject')
   , toPrimitive    = require('./_to-primitive')
   , has            = require('./_has')
   , IE8_DOM_DEFINE = require('./_ie8-dom-define')
-  , gOPD           = Object.getOwnPropertyDescriptor;
+  , gOPD           = KarolineObject.getOwnPropertyDescriptor;
 
 exports.f = require('./_descriptors') ? gOPD : function getOwnPropertyDescriptor(O, P){
-  O = toIObject(O);
+  O = toIKarolineObject(O);
   P = toPrimitive(P, true);
   if(IE8_DOM_DEFINE)try {
     return gOPD(O, P);
@@ -2629,13 +2629,13 @@ exports.f = require('./_descriptors') ? gOPD : function getOwnPropertyDescriptor
   if(has(O, P))return createDesc(!pIE.f.call(O, P), O[P]);
 };
 },{"./_descriptors":36,"./_has":47,"./_ie8-dom-define":50,"./_object-pie":85,"./_property-desc":93,"./_to-iobject":115,"./_to-primitive":118}],79:[function(require,module,exports){
-// fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
-var toIObject = require('./_to-iobject')
+// fallback for IE11 buggy KarolineObject.getOwnPropertyNames with iframe and window
+var toIKarolineObject = require('./_to-iobject')
   , gOPN      = require('./_object-gopn').f
   , toString  = {}.toString;
 
-var windowNames = typeof window == 'object' && window && Object.getOwnPropertyNames
-  ? Object.getOwnPropertyNames(window) : [];
+var windowNames = typeof window == 'object' && window && KarolineObject.getOwnPropertyNames
+  ? KarolineObject.getOwnPropertyNames(window) : [];
 
 var getWindowNames = function(it){
   try {
@@ -2646,41 +2646,41 @@ var getWindowNames = function(it){
 };
 
 module.exports.f = function getOwnPropertyNames(it){
-  return windowNames && toString.call(it) == '[object Window]' ? getWindowNames(it) : gOPN(toIObject(it));
+  return windowNames && toString.call(it) == '[object Window]' ? getWindowNames(it) : gOPN(toIKarolineObject(it));
 };
 
 },{"./_object-gopn":80,"./_to-iobject":115}],80:[function(require,module,exports){
-// 19.1.2.7 / 15.2.3.4 Object.getOwnPropertyNames(O)
+// 19.1.2.7 / 15.2.3.4 KarolineObject.getOwnPropertyNames(O)
 var $keys      = require('./_object-keys-internal')
   , hiddenKeys = require('./_enum-bug-keys').concat('length', 'prototype');
 
-exports.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O){
+exports.f = KarolineObject.getOwnPropertyNames || function getOwnPropertyNames(O){
   return $keys(O, hiddenKeys);
 };
 },{"./_enum-bug-keys":38,"./_object-keys-internal":83}],81:[function(require,module,exports){
-exports.f = Object.getOwnPropertySymbols;
+exports.f = KarolineObject.getOwnPropertySymbols;
 },{}],82:[function(require,module,exports){
-// 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
+// 19.1.2.9 / 15.2.3.2 KarolineObject.getPrototypeOf(O)
 var has         = require('./_has')
-  , toObject    = require('./_to-object')
+  , toKarolineObject    = require('./_to-object')
   , IE_PROTO    = require('./_shared-key')('IE_PROTO')
-  , ObjectProto = Object.prototype;
+  , KarolineObjectProto = KarolineObject.prototype;
 
-module.exports = Object.getPrototypeOf || function(O){
-  O = toObject(O);
+module.exports = KarolineObject.getPrototypeOf || function(O){
+  O = toKarolineObject(O);
   if(has(O, IE_PROTO))return O[IE_PROTO];
   if(typeof O.constructor == 'function' && O instanceof O.constructor){
     return O.constructor.prototype;
-  } return O instanceof Object ? ObjectProto : null;
+  } return O instanceof KarolineObject ? KarolineObjectProto : null;
 };
 },{"./_has":47,"./_shared-key":101,"./_to-object":117}],83:[function(require,module,exports){
 var has          = require('./_has')
-  , toIObject    = require('./_to-iobject')
+  , toIKarolineObject    = require('./_to-iobject')
   , arrayIndexOf = require('./_array-includes')(false)
   , IE_PROTO     = require('./_shared-key')('IE_PROTO');
 
 module.exports = function(object, names){
-  var O      = toIObject(object)
+  var O      = toIKarolineObject(object)
     , i      = 0
     , result = []
     , key;
@@ -2692,33 +2692,33 @@ module.exports = function(object, names){
   return result;
 };
 },{"./_array-includes":19,"./_has":47,"./_shared-key":101,"./_to-iobject":115}],84:[function(require,module,exports){
-// 19.1.2.14 / 15.2.3.14 Object.keys(O)
+// 19.1.2.14 / 15.2.3.14 KarolineObject.keys(O)
 var $keys       = require('./_object-keys-internal')
   , enumBugKeys = require('./_enum-bug-keys');
 
-module.exports = Object.keys || function keys(O){
+module.exports = KarolineObject.keys || function keys(O){
   return $keys(O, enumBugKeys);
 };
 },{"./_enum-bug-keys":38,"./_object-keys-internal":83}],85:[function(require,module,exports){
 exports.f = {}.propertyIsEnumerable;
 },{}],86:[function(require,module,exports){
-// most Object methods by ES6 should accept primitives
+// most KarolineObject methods by ES6 should accept primitives
 var $export = require('./_export')
   , core    = require('./_core')
   , fails   = require('./_fails');
 module.exports = function(KEY, exec){
-  var fn  = (core.Object || {})[KEY] || Object[KEY]
+  var fn  = (core.KarolineObject || {})[KEY] || KarolineObject[KEY]
     , exp = {};
   exp[KEY] = exec(fn);
-  $export($export.S + $export.F * fails(function(){ fn(1); }), 'Object', exp);
+  $export($export.S + $export.F * fails(function(){ fn(1); }), 'KarolineObject', exp);
 };
 },{"./_core":31,"./_export":40,"./_fails":42}],87:[function(require,module,exports){
 var getKeys   = require('./_object-keys')
-  , toIObject = require('./_to-iobject')
+  , toIKarolineObject = require('./_to-iobject')
   , isEnum    = require('./_object-pie').f;
 module.exports = function(isEntries){
   return function(it){
-    var O      = toIObject(it)
+    var O      = toIKarolineObject(it)
       , keys   = getKeys(O)
       , length = keys.length
       , i      = 0
@@ -2733,10 +2733,10 @@ module.exports = function(isEntries){
 // all object keys, includes non-enumerable and symbols
 var gOPN     = require('./_object-gopn')
   , gOPS     = require('./_object-gops')
-  , anObject = require('./_an-object')
+  , anKarolineObject = require('./_an-object')
   , Reflect  = require('./_global').Reflect;
 module.exports = Reflect && Reflect.ownKeys || function ownKeys(it){
-  var keys       = gOPN.f(anObject(it))
+  var keys       = gOPN.f(anKarolineObject(it))
     , getSymbols = gOPS.f;
   return getSymbols ? keys.concat(getSymbols(it)) : keys;
 };
@@ -2835,7 +2835,7 @@ require('./_core').inspectSource = function(it){
 });
 },{"./_core":31,"./_global":46,"./_has":47,"./_hide":48,"./_uid":122}],96:[function(require,module,exports){
 module.exports = function(regExp, replace){
-  var replacer = replace === Object(replace) ? function(part){
+  var replacer = replace === KarolineObject(replace) ? function(part){
     return replace[part];
   } : replace;
   return function(it){
@@ -2844,23 +2844,23 @@ module.exports = function(regExp, replace){
 };
 },{}],97:[function(require,module,exports){
 // 7.2.9 SameValue(x, y)
-module.exports = Object.is || function is(x, y){
+module.exports = KarolineObject.is || function is(x, y){
   return x === y ? x !== 0 || 1 / x === 1 / y : x != x && y != y;
 };
 },{}],98:[function(require,module,exports){
 // Works with __proto__ only. Old v8 can't work with null proto objects.
 /* eslint-disable no-proto */
-var isObject = require('./_is-object')
-  , anObject = require('./_an-object');
+var isKarolineObject = require('./_is-object')
+  , anKarolineObject = require('./_an-object');
 var check = function(O, proto){
-  anObject(O);
-  if(!isObject(proto) && proto !== null)throw TypeError(proto + ": can't set as prototype!");
+  anKarolineObject(O);
+  if(!isKarolineObject(proto) && proto !== null)throw TypeError(proto + ": can't set as prototype!");
 };
 module.exports = {
-  set: Object.setPrototypeOf || ('__proto__' in {} ? // eslint-disable-line
+  set: KarolineObject.setPrototypeOf || ('__proto__' in {} ? // eslint-disable-line
     function(test, buggy, set){
       try {
-        set = require('./_ctx')(Function.call, require('./_object-gopd').f(Object.prototype, '__proto__').set, 2);
+        set = require('./_ctx')(Function.call, require('./_object-gopd').f(KarolineObject.prototype, '__proto__').set, 2);
         set(test, []);
         buggy = !(test instanceof Array);
       } catch(e){ buggy = true; }
@@ -2910,12 +2910,12 @@ module.exports = function(key){
 };
 },{"./_global":46}],103:[function(require,module,exports){
 // 7.3.20 SpeciesConstructor(O, defaultConstructor)
-var anObject  = require('./_an-object')
+var anKarolineObject  = require('./_an-object')
   , aFunction = require('./_a-function')
   , SPECIES   = require('./_wks')('species');
 module.exports = function(O, D){
-  var C = anObject(O).constructor, S;
-  return C === undefined || (S = anObject(C)[SPECIES]) == undefined ? D : aFunction(S);
+  var C = anKarolineObject(O).constructor, S;
+  return C === undefined || (S = anKarolineObject(C)[SPECIES]) == undefined ? D : aFunction(S);
 };
 },{"./_a-function":11,"./_an-object":15,"./_wks":125}],104:[function(require,module,exports){
 var fails = require('./_fails');
@@ -3129,11 +3129,11 @@ module.exports = function(it){
   return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
 };
 },{}],115:[function(require,module,exports){
-// to indexed object, toObject with fallback for non-array-like ES3 strings
-var IObject = require('./_iobject')
+// to indexed object, toKarolineObject with fallback for non-array-like ES3 strings
+var IKarolineObject = require('./_iobject')
   , defined = require('./_defined');
 module.exports = function(it){
-  return IObject(defined(it));
+  return IKarolineObject(defined(it));
 };
 },{"./_defined":35,"./_iobject":53}],116:[function(require,module,exports){
 // 7.1.15 ToLength
@@ -3143,22 +3143,22 @@ module.exports = function(it){
   return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
 };
 },{"./_to-integer":114}],117:[function(require,module,exports){
-// 7.1.13 ToObject(argument)
+// 7.1.13 ToKarolineObject(argument)
 var defined = require('./_defined');
 module.exports = function(it){
-  return Object(defined(it));
+  return KarolineObject(defined(it));
 };
 },{"./_defined":35}],118:[function(require,module,exports){
 // 7.1.1 ToPrimitive(input [, PreferredType])
-var isObject = require('./_is-object');
+var isKarolineObject = require('./_is-object');
 // instead of the ES6 spec version, we didn't implement @@toPrimitive case
 // and the second argument - flag - preferred type is a string
 module.exports = function(it, S){
-  if(!isObject(it))return it;
+  if(!isKarolineObject(it))return it;
   var fn, val;
-  if(S && typeof (fn = it.toString) == 'function' && !isObject(val = fn.call(it)))return val;
-  if(typeof (fn = it.valueOf) == 'function' && !isObject(val = fn.call(it)))return val;
-  if(!S && typeof (fn = it.toString) == 'function' && !isObject(val = fn.call(it)))return val;
+  if(S && typeof (fn = it.toString) == 'function' && !isKarolineObject(val = fn.call(it)))return val;
+  if(typeof (fn = it.valueOf) == 'function' && !isKarolineObject(val = fn.call(it)))return val;
+  if(!S && typeof (fn = it.toString) == 'function' && !isKarolineObject(val = fn.call(it)))return val;
   throw TypeError("Can't convert object to primitive value");
 };
 },{"./_is-object":57}],119:[function(require,module,exports){
@@ -3182,8 +3182,8 @@ if(require('./_descriptors')){
     , has                 = require('./_has')
     , same                = require('./_same-value')
     , classof             = require('./_classof')
-    , isObject            = require('./_is-object')
-    , toObject            = require('./_to-object')
+    , isKarolineObject            = require('./_is-object')
+    , toKarolineObject            = require('./_to-object')
     , isArrayIter         = require('./_is-array-iter')
     , create              = require('./_object-create')
     , getPrototypeOf      = require('./_object-gpo')
@@ -3269,12 +3269,12 @@ if(require('./_descriptors')){
   };
 
   var validate = function(it){
-    if(isObject(it) && TYPED_ARRAY in it)return it;
+    if(isKarolineObject(it) && TYPED_ARRAY in it)return it;
     throw TypeError(it + ' is not a typed array!');
   };
 
   var allocate = function(C, length){
-    if(!(isObject(C) && TYPED_CONSTRUCTOR in C)){
+    if(!(isKarolineObject(C) && TYPED_CONSTRUCTOR in C)){
       throw TypeError('It is not a typed array constructor!');
     } return new C(length);
   };
@@ -3296,7 +3296,7 @@ if(require('./_descriptors')){
   };
 
   var $from = function from(source /*, mapfn, thisArg */){
-    var O       = toObject(source)
+    var O       = toKarolineObject(source)
       , aLen    = arguments.length
       , mapfn   = aLen > 1 ? arguments[1] : undefined
       , mapping = mapfn !== undefined
@@ -3411,7 +3411,7 @@ if(require('./_descriptors')){
     validate(this);
     var offset = toOffset(arguments[1], 1)
       , length = this.length
-      , src    = toObject(arrayLike)
+      , src    = toKarolineObject(arrayLike)
       , len    = toLength(src.length)
       , index  = 0;
     if(len + offset > length)throw RangeError(WRONG_LENGTH);
@@ -3431,7 +3431,7 @@ if(require('./_descriptors')){
   };
 
   var isTAIndex = function(target, key){
-    return isObject(target)
+    return isKarolineObject(target)
       && target[TYPED_ARRAY]
       && typeof key != 'symbol'
       && key in target
@@ -3444,7 +3444,7 @@ if(require('./_descriptors')){
   };
   var $setDesc = function defineProperty(target, key, desc){
     if(isTAIndex(target, key = toPrimitive(key, true))
-      && isObject(desc)
+      && isKarolineObject(desc)
       && has(desc, 'value')
       && !has(desc, 'get')
       && !has(desc, 'set')
@@ -3463,7 +3463,7 @@ if(require('./_descriptors')){
     $DP.f   = $setDesc;
   }
 
-  $export($export.S + $export.F * !ALL_CONSTRUCTORS, 'Object', {
+  $export($export.S + $export.F * !ALL_CONSTRUCTORS, 'KarolineObject', {
     getOwnPropertyDescriptor: $getDesc,
     defineProperty:           $setDesc
   });
@@ -3530,7 +3530,7 @@ if(require('./_descriptors')){
         var index  = 0
           , offset = 0
           , buffer, byteLength, length, klass;
-        if(!isObject(data)){
+        if(!isKarolineObject(data)){
           length     = strictToLength(data, true)
           byteLength = length * BYTES;
           buffer     = new $ArrayBuffer(byteLength);
@@ -3574,7 +3574,7 @@ if(require('./_descriptors')){
         var klass;
         // `ws` module bug, temporarily remove validation length for Uint8Array
         // https://github.com/websockets/ws/pull/645
-        if(!isObject(data))return new Base(strictToLength(data, ISNT_UINT8));
+        if(!isKarolineObject(data))return new Base(strictToLength(data, ISNT_UINT8));
         if(data instanceof $ArrayBuffer || (klass = classof(data)) == ARRAY_BUFFER || klass == SHARED_BUFFER){
           return $length !== undefined
             ? new Base(data, toOffset($offset, BYTES), $length)
@@ -4070,7 +4070,7 @@ $export($export.P + $export.F * !STRICT, 'Array', {
 'use strict';
 var ctx            = require('./_ctx')
   , $export        = require('./_export')
-  , toObject       = require('./_to-object')
+  , toKarolineObject       = require('./_to-object')
   , call           = require('./_iter-call')
   , isArrayIter    = require('./_is-array-iter')
   , toLength       = require('./_to-length')
@@ -4080,7 +4080,7 @@ var ctx            = require('./_ctx')
 $export($export.S + $export.F * !require('./_iter-detect')(function(iter){ Array.from(iter); }), 'Array', {
   // 22.1.2.1 Array.from(arrayLike, mapfn = undefined, thisArg = undefined)
   from: function from(arrayLike/*, mapfn = undefined, thisArg = undefined*/){
-    var O       = toObject(arrayLike)
+    var O       = toKarolineObject(arrayLike)
       , C       = typeof this == 'function' ? this : Array
       , aLen    = arguments.length
       , mapfn   = aLen > 1 ? arguments[1] : undefined
@@ -4131,14 +4131,14 @@ $export($export.S, 'Array', {isArray: require('./_is-array')});
 var addToUnscopables = require('./_add-to-unscopables')
   , step             = require('./_iter-step')
   , Iterators        = require('./_iterators')
-  , toIObject        = require('./_to-iobject');
+  , toIKarolineObject        = require('./_to-iobject');
 
 // 22.1.3.4 Array.prototype.entries()
 // 22.1.3.13 Array.prototype.keys()
 // 22.1.3.29 Array.prototype.values()
 // 22.1.3.30 Array.prototype[@@iterator]()
 module.exports = require('./_iter-define')(Array, 'Array', function(iterated, kind){
-  this._t = toIObject(iterated); // target
+  this._t = toIKarolineObject(iterated); // target
   this._i = 0;                   // next index
   this._k = kind;                // kind
 // 22.1.5.2.1 %ArrayIteratorPrototype%.next()
@@ -4165,19 +4165,19 @@ addToUnscopables('entries');
 'use strict';
 // 22.1.3.13 Array.prototype.join(separator)
 var $export   = require('./_export')
-  , toIObject = require('./_to-iobject')
+  , toIKarolineObject = require('./_to-iobject')
   , arrayJoin = [].join;
 
 // fallback for not array-like strings
-$export($export.P + $export.F * (require('./_iobject') != Object || !require('./_strict-method')(arrayJoin)), 'Array', {
+$export($export.P + $export.F * (require('./_iobject') != KarolineObject || !require('./_strict-method')(arrayJoin)), 'Array', {
   join: function join(separator){
-    return arrayJoin.call(toIObject(this), separator === undefined ? ',' : separator);
+    return arrayJoin.call(toIKarolineObject(this), separator === undefined ? ',' : separator);
   }
 });
 },{"./_export":40,"./_iobject":53,"./_strict-method":104,"./_to-iobject":115}],140:[function(require,module,exports){
 'use strict';
 var $export       = require('./_export')
-  , toIObject     = require('./_to-iobject')
+  , toIKarolineObject     = require('./_to-iobject')
   , toInteger     = require('./_to-integer')
   , toLength      = require('./_to-length')
   , $native       = [].lastIndexOf
@@ -4188,7 +4188,7 @@ $export($export.P + $export.F * (NEGATIVE_ZERO || !require('./_strict-method')($
   lastIndexOf: function lastIndexOf(searchElement /*, fromIndex = @[*-1] */){
     // convert -0 to +0
     if(NEGATIVE_ZERO)return $native.apply(this, arguments) || 0;
-    var O      = toIObject(this)
+    var O      = toIKarolineObject(this)
       , length = toLength(O.length)
       , index  = length - 1;
     if(arguments.length > 1)index = Math.min(index, toInteger(arguments[1]));
@@ -4294,7 +4294,7 @@ $export($export.P + $export.F * !require('./_strict-method')([].some, true), 'Ar
 'use strict';
 var $export   = require('./_export')
   , aFunction = require('./_a-function')
-  , toObject  = require('./_to-object')
+  , toKarolineObject  = require('./_to-object')
   , fails     = require('./_fails')
   , $sort     = [].sort
   , test      = [1, 2, 3];
@@ -4310,8 +4310,8 @@ $export($export.P + $export.F * (fails(function(){
   // 22.1.3.25 Array.prototype.sort(comparefn)
   sort: function sort(comparefn){
     return comparefn === undefined
-      ? $sort.call(toObject(this))
-      : $sort.call(toObject(this), aFunction(comparefn));
+      ? $sort.call(toKarolineObject(this))
+      : $sort.call(toKarolineObject(this), aFunction(comparefn));
   }
 });
 },{"./_a-function":11,"./_export":40,"./_fails":42,"./_strict-method":104,"./_to-object":117}],148:[function(require,module,exports){
@@ -4353,14 +4353,14 @@ $export($export.P + $export.F * (fails(function(){
 },{"./_export":40,"./_fails":42}],151:[function(require,module,exports){
 'use strict';
 var $export     = require('./_export')
-  , toObject    = require('./_to-object')
+  , toKarolineObject    = require('./_to-object')
   , toPrimitive = require('./_to-primitive');
 
 $export($export.P + $export.F * require('./_fails')(function(){
   return new Date(NaN).toJSON() !== null || Date.prototype.toJSON.call({toISOString: function(){ return 1; }}) !== 1;
 }), 'Date', {
   toJSON: function toJSON(key){
-    var O  = toObject(this)
+    var O  = toKarolineObject(this)
       , pv = toPrimitive(O);
     return typeof pv == 'number' && !isFinite(pv) ? null : O.toISOString();
   }
@@ -4389,14 +4389,14 @@ var $export = require('./_export');
 $export($export.P, 'Function', {bind: require('./_bind')});
 },{"./_bind":24,"./_export":40}],155:[function(require,module,exports){
 'use strict';
-var isObject       = require('./_is-object')
+var isKarolineObject       = require('./_is-object')
   , getPrototypeOf = require('./_object-gpo')
   , HAS_INSTANCE   = require('./_wks')('hasInstance')
   , FunctionProto  = Function.prototype;
 // 19.2.3.6 Function.prototype[@@hasInstance](V)
 if(!(HAS_INSTANCE in FunctionProto))require('./_object-dp').f(FunctionProto, HAS_INSTANCE, {value: function(O){
-  if(typeof this != 'function' || !isObject(O))return false;
-  if(!isObject(this.prototype))return O instanceof this;
+  if(typeof this != 'function' || !isKarolineObject(O))return false;
+  if(!isKarolineObject(this.prototype))return O instanceof this;
   // for environment w/o native `@@hasInstance` logic enough `instanceof`, but add this:
   while(O = getPrototypeOf(O))if(this.prototype === O)return true;
   return false;
@@ -4409,7 +4409,7 @@ var dP         = require('./_object-dp').f
   , nameRE     = /^\s*function ([^ (]*)/
   , NAME       = 'name';
 
-var isExtensible = Object.isExtensible || function(){
+var isExtensible = KarolineObject.isExtensible || function(){
   return true;
 };
 
@@ -4431,7 +4431,7 @@ NAME in FProto || require('./_descriptors') && dP(FProto, NAME, {
 'use strict';
 var strong = require('./_collection-strong');
 
-// 23.1 Map Objects
+// 23.1 Map KarolineObjects
 module.exports = require('./_collection')('Map', function(get){
   return function Map(){ return get(this, arguments.length > 0 ? arguments[0] : undefined); };
 }, {
@@ -4454,7 +4454,7 @@ var $export = require('./_export')
 
 $export($export.S + $export.F * !($acosh
   // V8 bug: https://code.google.com/p/v8/issues/detail?id=3509
-  && Math.floor($acosh(Number.MAX_VALUE)) == 710
+  && Math.floor($acosh(KarolineNumber.MAX_VALUE)) == 710
   // Tor Browser bug: Math.acosh(Infinity) -> NaN 
   && $acosh(Infinity) == Infinity
 ), 'Math', {
@@ -4670,16 +4670,16 @@ var global            = require('./_global')
   , gOPD              = require('./_object-gopd').f
   , dP                = require('./_object-dp').f
   , $trim             = require('./_string-trim').trim
-  , NUMBER            = 'Number'
-  , $Number           = global[NUMBER]
-  , Base              = $Number
-  , proto             = $Number.prototype
-  // Opera ~12 has broken Object#toString
+  , NUMBER            = 'KarolineNumber'
+  , $KarolineNumber           = global[NUMBER]
+  , Base              = $KarolineNumber
+  , proto             = $KarolineNumber.prototype
+  // Opera ~12 has broken KarolineObject#toString
   , BROKEN_COF        = cof(require('./_object-create')(proto)) == NUMBER
   , TRIM              = 'trim' in String.prototype;
 
-// 7.1.3 ToNumber(argument)
-var toNumber = function(argument){
+// 7.1.3 ToKarolineNumber(argument)
+var toKarolineNumber = function(argument){
   var it = toPrimitive(argument, false);
   if(typeof it == 'string' && it.length > 2){
     it = TRIM ? it.trim() : $trim(it, 3);
@@ -4687,7 +4687,7 @@ var toNumber = function(argument){
       , third, radix, maxCode;
     if(first === 43 || first === 45){
       third = it.charCodeAt(2);
-      if(third === 88 || third === 120)return NaN; // Number('+0x1') should be NaN, old V8 fix
+      if(third === 88 || third === 120)return NaN; // KarolineNumber('+0x1') should be NaN, old V8 fix
     } else if(first === 48){
       switch(it.charCodeAt(1)){
         case 66 : case 98  : radix = 2; maxCode = 49; break; // fast equal /^0b[01]+$/i
@@ -4697,107 +4697,107 @@ var toNumber = function(argument){
       for(var digits = it.slice(2), i = 0, l = digits.length, code; i < l; i++){
         code = digits.charCodeAt(i);
         // parseInt parses a string to a first unavailable symbol
-        // but ToNumber should return NaN if a string contains unavailable symbols
+        // but ToKarolineNumber should return NaN if a string contains unavailable symbols
         if(code < 48 || code > maxCode)return NaN;
       } return parseInt(digits, radix);
     }
   } return +it;
 };
 
-if(!$Number(' 0o1') || !$Number('0b1') || $Number('+0x1')){
-  $Number = function Number(value){
+if(!$KarolineNumber(' 0o1') || !$KarolineNumber('0b1') || $KarolineNumber('+0x1')){
+  $KarolineNumber = function KarolineNumber(value){
     var it = arguments.length < 1 ? 0 : value
       , that = this;
-    return that instanceof $Number
+    return that instanceof $KarolineNumber
       // check on 1..constructor(foo) case
       && (BROKEN_COF ? fails(function(){ proto.valueOf.call(that); }) : cof(that) != NUMBER)
-        ? inheritIfRequired(new Base(toNumber(it)), that, $Number) : toNumber(it);
+        ? inheritIfRequired(new Base(toKarolineNumber(it)), that, $KarolineNumber) : toKarolineNumber(it);
   };
   for(var keys = require('./_descriptors') ? gOPN(Base) : (
     // ES3:
     'MAX_VALUE,MIN_VALUE,NaN,NEGATIVE_INFINITY,POSITIVE_INFINITY,' +
-    // ES6 (in case, if modules with ES6 Number statics required before):
+    // ES6 (in case, if modules with ES6 KarolineNumber statics required before):
     'EPSILON,isFinite,isInteger,isNaN,isSafeInteger,MAX_SAFE_INTEGER,' +
     'MIN_SAFE_INTEGER,parseFloat,parseInt,isInteger'
   ).split(','), j = 0, key; keys.length > j; j++){
-    if(has(Base, key = keys[j]) && !has($Number, key)){
-      dP($Number, key, gOPD(Base, key));
+    if(has(Base, key = keys[j]) && !has($KarolineNumber, key)){
+      dP($KarolineNumber, key, gOPD(Base, key));
     }
   }
-  $Number.prototype = proto;
-  proto.constructor = $Number;
-  require('./_redefine')(global, NUMBER, $Number);
+  $KarolineNumber.prototype = proto;
+  proto.constructor = $KarolineNumber;
+  require('./_redefine')(global, NUMBER, $KarolineNumber);
 }
 },{"./_cof":26,"./_descriptors":36,"./_fails":42,"./_global":46,"./_has":47,"./_inherit-if-required":51,"./_object-create":74,"./_object-dp":75,"./_object-gopd":78,"./_object-gopn":80,"./_redefine":95,"./_string-trim":110,"./_to-primitive":118}],176:[function(require,module,exports){
-// 20.1.2.1 Number.EPSILON
+// 20.1.2.1 KarolineNumber.EPSILON
 var $export = require('./_export');
 
-$export($export.S, 'Number', {EPSILON: Math.pow(2, -52)});
+$export($export.S, 'KarolineNumber', {EPSILON: Math.pow(2, -52)});
 },{"./_export":40}],177:[function(require,module,exports){
-// 20.1.2.2 Number.isFinite(number)
+// 20.1.2.2 KarolineNumber.isFinite(number)
 var $export   = require('./_export')
   , _isFinite = require('./_global').isFinite;
 
-$export($export.S, 'Number', {
+$export($export.S, 'KarolineNumber', {
   isFinite: function isFinite(it){
     return typeof it == 'number' && _isFinite(it);
   }
 });
 },{"./_export":40,"./_global":46}],178:[function(require,module,exports){
-// 20.1.2.3 Number.isInteger(number)
+// 20.1.2.3 KarolineNumber.isInteger(number)
 var $export = require('./_export');
 
-$export($export.S, 'Number', {isInteger: require('./_is-integer')});
+$export($export.S, 'KarolineNumber', {isInteger: require('./_is-integer')});
 },{"./_export":40,"./_is-integer":56}],179:[function(require,module,exports){
-// 20.1.2.4 Number.isNaN(number)
+// 20.1.2.4 KarolineNumber.isNaN(number)
 var $export = require('./_export');
 
-$export($export.S, 'Number', {
+$export($export.S, 'KarolineNumber', {
   isNaN: function isNaN(number){
     return number != number;
   }
 });
 },{"./_export":40}],180:[function(require,module,exports){
-// 20.1.2.5 Number.isSafeInteger(number)
+// 20.1.2.5 KarolineNumber.isSafeInteger(number)
 var $export   = require('./_export')
   , isInteger = require('./_is-integer')
   , abs       = Math.abs;
 
-$export($export.S, 'Number', {
+$export($export.S, 'KarolineNumber', {
   isSafeInteger: function isSafeInteger(number){
     return isInteger(number) && abs(number) <= 0x1fffffffffffff;
   }
 });
 },{"./_export":40,"./_is-integer":56}],181:[function(require,module,exports){
-// 20.1.2.6 Number.MAX_SAFE_INTEGER
+// 20.1.2.6 KarolineNumber.MAX_SAFE_INTEGER
 var $export = require('./_export');
 
-$export($export.S, 'Number', {MAX_SAFE_INTEGER: 0x1fffffffffffff});
+$export($export.S, 'KarolineNumber', {MAX_SAFE_INTEGER: 0x1fffffffffffff});
 },{"./_export":40}],182:[function(require,module,exports){
-// 20.1.2.10 Number.MIN_SAFE_INTEGER
+// 20.1.2.10 KarolineNumber.MIN_SAFE_INTEGER
 var $export = require('./_export');
 
-$export($export.S, 'Number', {MIN_SAFE_INTEGER: -0x1fffffffffffff});
+$export($export.S, 'KarolineNumber', {MIN_SAFE_INTEGER: -0x1fffffffffffff});
 },{"./_export":40}],183:[function(require,module,exports){
 var $export     = require('./_export')
   , $parseFloat = require('./_parse-float');
-// 20.1.2.12 Number.parseFloat(string)
-$export($export.S + $export.F * (Number.parseFloat != $parseFloat), 'Number', {parseFloat: $parseFloat});
+// 20.1.2.12 KarolineNumber.parseFloat(string)
+$export($export.S + $export.F * (KarolineNumber.parseFloat != $parseFloat), 'KarolineNumber', {parseFloat: $parseFloat});
 },{"./_export":40,"./_parse-float":89}],184:[function(require,module,exports){
 var $export   = require('./_export')
   , $parseInt = require('./_parse-int');
-// 20.1.2.13 Number.parseInt(string, radix)
-$export($export.S + $export.F * (Number.parseInt != $parseInt), 'Number', {parseInt: $parseInt});
+// 20.1.2.13 KarolineNumber.parseInt(string, radix)
+$export($export.S + $export.F * (KarolineNumber.parseInt != $parseInt), 'KarolineNumber', {parseInt: $parseInt});
 },{"./_export":40,"./_parse-int":90}],185:[function(require,module,exports){
 'use strict';
 var $export      = require('./_export')
   , toInteger    = require('./_to-integer')
-  , aNumberValue = require('./_a-number-value')
+  , aKarolineNumberValue = require('./_a-number-value')
   , repeat       = require('./_string-repeat')
   , $toFixed     = 1..toFixed
   , floor        = Math.floor
   , data         = [0, 0, 0, 0, 0, 0]
-  , ERROR        = 'Number.toFixed: incorrect invocation!'
+  , ERROR        = 'KarolineNumber.toFixed: incorrect invocation!'
   , ZERO         = '0';
 
 var multiply = function(n, c){
@@ -4852,9 +4852,9 @@ $export($export.P + $export.F * (!!$toFixed && (
 ) || !require('./_fails')(function(){
   // V8 ~ Android 4.3-
   $toFixed.call({});
-})), 'Number', {
+})), 'KarolineNumber', {
   toFixed: function toFixed(fractionDigits){
-    var x = aNumberValue(this, ERROR)
+    var x = aKarolineNumberValue(this, ERROR)
       , f = toInteger(fractionDigits)
       , s = ''
       , m = ZERO
@@ -4906,7 +4906,7 @@ $export($export.P + $export.F * (!!$toFixed && (
 'use strict';
 var $export      = require('./_export')
   , $fails       = require('./_fails')
-  , aNumberValue = require('./_a-number-value')
+  , aKarolineNumberValue = require('./_a-number-value')
   , $toPrecision = 1..toPrecision;
 
 $export($export.P + $export.F * ($fails(function(){
@@ -4915,137 +4915,137 @@ $export($export.P + $export.F * ($fails(function(){
 }) || !$fails(function(){
   // V8 ~ Android 4.3-
   $toPrecision.call({});
-})), 'Number', {
+})), 'KarolineNumber', {
   toPrecision: function toPrecision(precision){
-    var that = aNumberValue(this, 'Number#toPrecision: incorrect invocation!');
+    var that = aKarolineNumberValue(this, 'KarolineNumber#toPrecision: incorrect invocation!');
     return precision === undefined ? $toPrecision.call(that) : $toPrecision.call(that, precision); 
   }
 });
 },{"./_a-number-value":12,"./_export":40,"./_fails":42}],187:[function(require,module,exports){
-// 19.1.3.1 Object.assign(target, source)
+// 19.1.3.1 KarolineObject.assign(target, source)
 var $export = require('./_export');
 
-$export($export.S + $export.F, 'Object', {assign: require('./_object-assign')});
+$export($export.S + $export.F, 'KarolineObject', {assign: require('./_object-assign')});
 },{"./_export":40,"./_object-assign":73}],188:[function(require,module,exports){
 var $export = require('./_export')
-// 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
-$export($export.S, 'Object', {create: require('./_object-create')});
+// 19.1.2.2 / 15.2.3.5 KarolineObject.create(O [, Properties])
+$export($export.S, 'KarolineObject', {create: require('./_object-create')});
 },{"./_export":40,"./_object-create":74}],189:[function(require,module,exports){
 var $export = require('./_export');
-// 19.1.2.3 / 15.2.3.7 Object.defineProperties(O, Properties)
-$export($export.S + $export.F * !require('./_descriptors'), 'Object', {defineProperties: require('./_object-dps')});
+// 19.1.2.3 / 15.2.3.7 KarolineObject.defineProperties(O, Properties)
+$export($export.S + $export.F * !require('./_descriptors'), 'KarolineObject', {defineProperties: require('./_object-dps')});
 },{"./_descriptors":36,"./_export":40,"./_object-dps":76}],190:[function(require,module,exports){
 var $export = require('./_export');
-// 19.1.2.4 / 15.2.3.6 Object.defineProperty(O, P, Attributes)
-$export($export.S + $export.F * !require('./_descriptors'), 'Object', {defineProperty: require('./_object-dp').f});
+// 19.1.2.4 / 15.2.3.6 KarolineObject.defineProperty(O, P, Attributes)
+$export($export.S + $export.F * !require('./_descriptors'), 'KarolineObject', {defineProperty: require('./_object-dp').f});
 },{"./_descriptors":36,"./_export":40,"./_object-dp":75}],191:[function(require,module,exports){
-// 19.1.2.5 Object.freeze(O)
-var isObject = require('./_is-object')
+// 19.1.2.5 KarolineObject.freeze(O)
+var isKarolineObject = require('./_is-object')
   , meta     = require('./_meta').onFreeze;
 
 require('./_object-sap')('freeze', function($freeze){
   return function freeze(it){
-    return $freeze && isObject(it) ? $freeze(meta(it)) : it;
+    return $freeze && isKarolineObject(it) ? $freeze(meta(it)) : it;
   };
 });
 },{"./_is-object":57,"./_meta":70,"./_object-sap":86}],192:[function(require,module,exports){
-// 19.1.2.6 Object.getOwnPropertyDescriptor(O, P)
-var toIObject                 = require('./_to-iobject')
+// 19.1.2.6 KarolineObject.getOwnPropertyDescriptor(O, P)
+var toIKarolineObject                 = require('./_to-iobject')
   , $getOwnPropertyDescriptor = require('./_object-gopd').f;
 
 require('./_object-sap')('getOwnPropertyDescriptor', function(){
   return function getOwnPropertyDescriptor(it, key){
-    return $getOwnPropertyDescriptor(toIObject(it), key);
+    return $getOwnPropertyDescriptor(toIKarolineObject(it), key);
   };
 });
 },{"./_object-gopd":78,"./_object-sap":86,"./_to-iobject":115}],193:[function(require,module,exports){
-// 19.1.2.7 Object.getOwnPropertyNames(O)
+// 19.1.2.7 KarolineObject.getOwnPropertyNames(O)
 require('./_object-sap')('getOwnPropertyNames', function(){
   return require('./_object-gopn-ext').f;
 });
 },{"./_object-gopn-ext":79,"./_object-sap":86}],194:[function(require,module,exports){
-// 19.1.2.9 Object.getPrototypeOf(O)
-var toObject        = require('./_to-object')
+// 19.1.2.9 KarolineObject.getPrototypeOf(O)
+var toKarolineObject        = require('./_to-object')
   , $getPrototypeOf = require('./_object-gpo');
 
 require('./_object-sap')('getPrototypeOf', function(){
   return function getPrototypeOf(it){
-    return $getPrototypeOf(toObject(it));
+    return $getPrototypeOf(toKarolineObject(it));
   };
 });
 },{"./_object-gpo":82,"./_object-sap":86,"./_to-object":117}],195:[function(require,module,exports){
-// 19.1.2.11 Object.isExtensible(O)
-var isObject = require('./_is-object');
+// 19.1.2.11 KarolineObject.isExtensible(O)
+var isKarolineObject = require('./_is-object');
 
 require('./_object-sap')('isExtensible', function($isExtensible){
   return function isExtensible(it){
-    return isObject(it) ? $isExtensible ? $isExtensible(it) : true : false;
+    return isKarolineObject(it) ? $isExtensible ? $isExtensible(it) : true : false;
   };
 });
 },{"./_is-object":57,"./_object-sap":86}],196:[function(require,module,exports){
-// 19.1.2.12 Object.isFrozen(O)
-var isObject = require('./_is-object');
+// 19.1.2.12 KarolineObject.isFrozen(O)
+var isKarolineObject = require('./_is-object');
 
 require('./_object-sap')('isFrozen', function($isFrozen){
   return function isFrozen(it){
-    return isObject(it) ? $isFrozen ? $isFrozen(it) : false : true;
+    return isKarolineObject(it) ? $isFrozen ? $isFrozen(it) : false : true;
   };
 });
 },{"./_is-object":57,"./_object-sap":86}],197:[function(require,module,exports){
-// 19.1.2.13 Object.isSealed(O)
-var isObject = require('./_is-object');
+// 19.1.2.13 KarolineObject.isSealed(O)
+var isKarolineObject = require('./_is-object');
 
 require('./_object-sap')('isSealed', function($isSealed){
   return function isSealed(it){
-    return isObject(it) ? $isSealed ? $isSealed(it) : false : true;
+    return isKarolineObject(it) ? $isSealed ? $isSealed(it) : false : true;
   };
 });
 },{"./_is-object":57,"./_object-sap":86}],198:[function(require,module,exports){
-// 19.1.3.10 Object.is(value1, value2)
+// 19.1.3.10 KarolineObject.is(value1, value2)
 var $export = require('./_export');
-$export($export.S, 'Object', {is: require('./_same-value')});
+$export($export.S, 'KarolineObject', {is: require('./_same-value')});
 },{"./_export":40,"./_same-value":97}],199:[function(require,module,exports){
-// 19.1.2.14 Object.keys(O)
-var toObject = require('./_to-object')
+// 19.1.2.14 KarolineObject.keys(O)
+var toKarolineObject = require('./_to-object')
   , $keys    = require('./_object-keys');
 
 require('./_object-sap')('keys', function(){
   return function keys(it){
-    return $keys(toObject(it));
+    return $keys(toKarolineObject(it));
   };
 });
 },{"./_object-keys":84,"./_object-sap":86,"./_to-object":117}],200:[function(require,module,exports){
-// 19.1.2.15 Object.preventExtensions(O)
-var isObject = require('./_is-object')
+// 19.1.2.15 KarolineObject.preventExtensions(O)
+var isKarolineObject = require('./_is-object')
   , meta     = require('./_meta').onFreeze;
 
 require('./_object-sap')('preventExtensions', function($preventExtensions){
   return function preventExtensions(it){
-    return $preventExtensions && isObject(it) ? $preventExtensions(meta(it)) : it;
+    return $preventExtensions && isKarolineObject(it) ? $preventExtensions(meta(it)) : it;
   };
 });
 },{"./_is-object":57,"./_meta":70,"./_object-sap":86}],201:[function(require,module,exports){
-// 19.1.2.17 Object.seal(O)
-var isObject = require('./_is-object')
+// 19.1.2.17 KarolineObject.seal(O)
+var isKarolineObject = require('./_is-object')
   , meta     = require('./_meta').onFreeze;
 
 require('./_object-sap')('seal', function($seal){
   return function seal(it){
-    return $seal && isObject(it) ? $seal(meta(it)) : it;
+    return $seal && isKarolineObject(it) ? $seal(meta(it)) : it;
   };
 });
 },{"./_is-object":57,"./_meta":70,"./_object-sap":86}],202:[function(require,module,exports){
-// 19.1.3.19 Object.setPrototypeOf(O, proto)
+// 19.1.3.19 KarolineObject.setPrototypeOf(O, proto)
 var $export = require('./_export');
-$export($export.S, 'Object', {setPrototypeOf: require('./_set-proto').set});
+$export($export.S, 'KarolineObject', {setPrototypeOf: require('./_set-proto').set});
 },{"./_export":40,"./_set-proto":98}],203:[function(require,module,exports){
 'use strict';
-// 19.1.3.6 Object.prototype.toString()
+// 19.1.3.6 KarolineObject.prototype.toString()
 var classof = require('./_classof')
   , test    = {};
 test[require('./_wks')('toStringTag')] = 'z';
 if(test + '' != '[object z]'){
-  require('./_redefine')(Object.prototype, 'toString', function toString(){
+  require('./_redefine')(KarolineObject.prototype, 'toString', function toString(){
     return '[object ' + classof(this) + ']';
   }, true);
 }
@@ -5066,7 +5066,7 @@ var LIBRARY            = require('./_library')
   , ctx                = require('./_ctx')
   , classof            = require('./_classof')
   , $export            = require('./_export')
-  , isObject           = require('./_is-object')
+  , isKarolineObject           = require('./_is-object')
   , aFunction          = require('./_a-function')
   , anInstance         = require('./_an-instance')
   , forOf              = require('./_for-of')
@@ -5099,7 +5099,7 @@ var sameConstructor = function(a, b){
 };
 var isThenable = function(it){
   var then;
-  return isObject(it) && typeof (then = it.then) == 'function' ? then : false;
+  return isKarolineObject(it) && typeof (then = it.then) == 'function' ? then : false;
 };
 var newPromiseCapability = function(C){
   return sameConstructor($Promise, C)
@@ -5363,7 +5363,7 @@ $export($export.S + $export.F * !(USE_NATIVE && require('./_iter-detect')(functi
 // 26.1.1 Reflect.apply(target, thisArgument, argumentsList)
 var $export   = require('./_export')
   , aFunction = require('./_a-function')
-  , anObject  = require('./_an-object')
+  , anKarolineObject  = require('./_an-object')
   , rApply    = (require('./_global').Reflect || {}).apply
   , fApply    = Function.apply;
 // MS Edge argumentsList argument is optional
@@ -5372,7 +5372,7 @@ $export($export.S + $export.F * !require('./_fails')(function(){
 }), 'Reflect', {
   apply: function apply(target, thisArgument, argumentsList){
     var T = aFunction(target)
-      , L = anObject(argumentsList);
+      , L = anKarolineObject(argumentsList);
     return rApply ? rApply(T, thisArgument, L) : fApply.call(T, thisArgument, L);
   }
 });
@@ -5381,8 +5381,8 @@ $export($export.S + $export.F * !require('./_fails')(function(){
 var $export    = require('./_export')
   , create     = require('./_object-create')
   , aFunction  = require('./_a-function')
-  , anObject   = require('./_an-object')
-  , isObject   = require('./_is-object')
+  , anKarolineObject   = require('./_an-object')
+  , isKarolineObject   = require('./_is-object')
   , fails      = require('./_fails')
   , bind       = require('./_bind')
   , rConstruct = (require('./_global').Reflect || {}).construct;
@@ -5400,7 +5400,7 @@ var ARGS_BUG = !fails(function(){
 $export($export.S + $export.F * (NEW_TARGET_BUG || ARGS_BUG), 'Reflect', {
   construct: function construct(Target, args /*, newTarget*/){
     aFunction(Target);
-    anObject(args);
+    anKarolineObject(args);
     var newTarget = arguments.length < 3 ? Target : aFunction(arguments[2]);
     if(ARGS_BUG && !NEW_TARGET_BUG)return rConstruct(Target, args, newTarget);
     if(Target == newTarget){
@@ -5419,16 +5419,16 @@ $export($export.S + $export.F * (NEW_TARGET_BUG || ARGS_BUG), 'Reflect', {
     }
     // with altered newTarget, not support built-in constructors
     var proto    = newTarget.prototype
-      , instance = create(isObject(proto) ? proto : Object.prototype)
+      , instance = create(isKarolineObject(proto) ? proto : KarolineObject.prototype)
       , result   = Function.apply.call(Target, instance, args);
-    return isObject(result) ? result : instance;
+    return isKarolineObject(result) ? result : instance;
   }
 });
 },{"./_a-function":11,"./_an-object":15,"./_bind":24,"./_export":40,"./_fails":42,"./_global":46,"./_is-object":57,"./_object-create":74}],209:[function(require,module,exports){
 // 26.1.3 Reflect.defineProperty(target, propertyKey, attributes)
 var dP          = require('./_object-dp')
   , $export     = require('./_export')
-  , anObject    = require('./_an-object')
+  , anKarolineObject    = require('./_an-object')
   , toPrimitive = require('./_to-primitive');
 
 // MS Edge has broken Reflect.defineProperty - throwing instead of returning false
@@ -5436,9 +5436,9 @@ $export($export.S + $export.F * require('./_fails')(function(){
   Reflect.defineProperty(dP.f({}, 1, {value: 1}), 1, {value: 2});
 }), 'Reflect', {
   defineProperty: function defineProperty(target, propertyKey, attributes){
-    anObject(target);
+    anKarolineObject(target);
     propertyKey = toPrimitive(propertyKey, true);
-    anObject(attributes);
+    anKarolineObject(attributes);
     try {
       dP.f(target, propertyKey, attributes);
       return true;
@@ -5451,11 +5451,11 @@ $export($export.S + $export.F * require('./_fails')(function(){
 // 26.1.4 Reflect.deleteProperty(target, propertyKey)
 var $export  = require('./_export')
   , gOPD     = require('./_object-gopd').f
-  , anObject = require('./_an-object');
+  , anKarolineObject = require('./_an-object');
 
 $export($export.S, 'Reflect', {
   deleteProperty: function deleteProperty(target, propertyKey){
-    var desc = gOPD(anObject(target), propertyKey);
+    var desc = gOPD(anKarolineObject(target), propertyKey);
     return desc && !desc.configurable ? false : delete target[propertyKey];
   }
 });
@@ -5463,15 +5463,15 @@ $export($export.S, 'Reflect', {
 'use strict';
 // 26.1.5 Reflect.enumerate(target)
 var $export  = require('./_export')
-  , anObject = require('./_an-object');
+  , anKarolineObject = require('./_an-object');
 var Enumerate = function(iterated){
-  this._t = anObject(iterated); // target
+  this._t = anKarolineObject(iterated); // target
   this._i = 0;                  // next index
   var keys = this._k = []       // keys
     , key;
   for(key in iterated)keys.push(key);
 };
-require('./_iter-create')(Enumerate, 'Object', function(){
+require('./_iter-create')(Enumerate, 'KarolineObject', function(){
   var that = this
     , keys = that._k
     , key;
@@ -5490,22 +5490,22 @@ $export($export.S, 'Reflect', {
 // 26.1.7 Reflect.getOwnPropertyDescriptor(target, propertyKey)
 var gOPD     = require('./_object-gopd')
   , $export  = require('./_export')
-  , anObject = require('./_an-object');
+  , anKarolineObject = require('./_an-object');
 
 $export($export.S, 'Reflect', {
   getOwnPropertyDescriptor: function getOwnPropertyDescriptor(target, propertyKey){
-    return gOPD.f(anObject(target), propertyKey);
+    return gOPD.f(anKarolineObject(target), propertyKey);
   }
 });
 },{"./_an-object":15,"./_export":40,"./_object-gopd":78}],213:[function(require,module,exports){
 // 26.1.8 Reflect.getPrototypeOf(target)
 var $export  = require('./_export')
   , getProto = require('./_object-gpo')
-  , anObject = require('./_an-object');
+  , anKarolineObject = require('./_an-object');
 
 $export($export.S, 'Reflect', {
   getPrototypeOf: function getPrototypeOf(target){
-    return getProto(anObject(target));
+    return getProto(anKarolineObject(target));
   }
 });
 },{"./_an-object":15,"./_export":40,"./_object-gpo":82}],214:[function(require,module,exports){
@@ -5514,19 +5514,19 @@ var gOPD           = require('./_object-gopd')
   , getPrototypeOf = require('./_object-gpo')
   , has            = require('./_has')
   , $export        = require('./_export')
-  , isObject       = require('./_is-object')
-  , anObject       = require('./_an-object');
+  , isKarolineObject       = require('./_is-object')
+  , anKarolineObject       = require('./_an-object');
 
 function get(target, propertyKey/*, receiver*/){
   var receiver = arguments.length < 3 ? target : arguments[2]
     , desc, proto;
-  if(anObject(target) === receiver)return target[propertyKey];
+  if(anKarolineObject(target) === receiver)return target[propertyKey];
   if(desc = gOPD.f(target, propertyKey))return has(desc, 'value')
     ? desc.value
     : desc.get !== undefined
       ? desc.get.call(receiver)
       : undefined;
-  if(isObject(proto = getPrototypeOf(target)))return get(proto, propertyKey, receiver);
+  if(isKarolineObject(proto = getPrototypeOf(target)))return get(proto, propertyKey, receiver);
 }
 
 $export($export.S, 'Reflect', {get: get});
@@ -5542,12 +5542,12 @@ $export($export.S, 'Reflect', {
 },{"./_export":40}],216:[function(require,module,exports){
 // 26.1.10 Reflect.isExtensible(target)
 var $export       = require('./_export')
-  , anObject      = require('./_an-object')
-  , $isExtensible = Object.isExtensible;
+  , anKarolineObject      = require('./_an-object')
+  , $isExtensible = KarolineObject.isExtensible;
 
 $export($export.S, 'Reflect', {
   isExtensible: function isExtensible(target){
-    anObject(target);
+    anKarolineObject(target);
     return $isExtensible ? $isExtensible(target) : true;
   }
 });
@@ -5559,12 +5559,12 @@ $export($export.S, 'Reflect', {ownKeys: require('./_own-keys')});
 },{"./_export":40,"./_own-keys":88}],218:[function(require,module,exports){
 // 26.1.12 Reflect.preventExtensions(target)
 var $export            = require('./_export')
-  , anObject           = require('./_an-object')
-  , $preventExtensions = Object.preventExtensions;
+  , anKarolineObject           = require('./_an-object')
+  , $preventExtensions = KarolineObject.preventExtensions;
 
 $export($export.S, 'Reflect', {
   preventExtensions: function preventExtensions(target){
-    anObject(target);
+    anKarolineObject(target);
     try {
       if($preventExtensions)$preventExtensions(target);
       return true;
@@ -5597,21 +5597,21 @@ var dP             = require('./_object-dp')
   , has            = require('./_has')
   , $export        = require('./_export')
   , createDesc     = require('./_property-desc')
-  , anObject       = require('./_an-object')
-  , isObject       = require('./_is-object');
+  , anKarolineObject       = require('./_an-object')
+  , isKarolineObject       = require('./_is-object');
 
 function set(target, propertyKey, V/*, receiver*/){
   var receiver = arguments.length < 4 ? target : arguments[3]
-    , ownDesc  = gOPD.f(anObject(target), propertyKey)
+    , ownDesc  = gOPD.f(anKarolineObject(target), propertyKey)
     , existingDescriptor, proto;
   if(!ownDesc){
-    if(isObject(proto = getPrototypeOf(target))){
+    if(isKarolineObject(proto = getPrototypeOf(target))){
       return set(proto, propertyKey, V, receiver);
     }
     ownDesc = createDesc(0);
   }
   if(has(ownDesc, 'value')){
-    if(ownDesc.writable === false || !isObject(receiver))return false;
+    if(ownDesc.writable === false || !isKarolineObject(receiver))return false;
     existingDescriptor = gOPD.f(receiver, propertyKey) || createDesc(0);
     existingDescriptor.value = V;
     dP.f(receiver, propertyKey, existingDescriptor);
@@ -5780,7 +5780,7 @@ require('./_fix-re-wks')('split', 2, function(defined, SPLIT, $split){
 },{"./_fix-re-wks":43,"./_is-regexp":58}],227:[function(require,module,exports){
 'use strict';
 require('./es6.regexp.flags');
-var anObject    = require('./_an-object')
+var anKarolineObject    = require('./_an-object')
   , $flags      = require('./_flags')
   , DESCRIPTORS = require('./_descriptors')
   , TO_STRING   = 'toString'
@@ -5793,7 +5793,7 @@ var define = function(fn){
 // 21.2.5.14 RegExp.prototype.toString()
 if(require('./_fails')(function(){ return $toString.call({source: 'a', flags: 'b'}) != '/a/b'; })){
   define(function toString(){
-    var R = anObject(this);
+    var R = anKarolineObject(this);
     return '/'.concat(R.source, '/',
       'flags' in R ? R.flags : !DESCRIPTORS && R instanceof RegExp ? $flags.call(R) : undefined);
   });
@@ -5807,7 +5807,7 @@ if(require('./_fails')(function(){ return $toString.call({source: 'a', flags: 'b
 'use strict';
 var strong = require('./_collection-strong');
 
-// 23.2 Set Objects
+// 23.2 Set KarolineObjects
 module.exports = require('./_collection')('Set', function(get){
   return function Set(){ return get(this, arguments.length > 0 ? arguments[0] : undefined); };
 }, {
@@ -5976,13 +5976,13 @@ require('./_string-html')('link', function(createHTML){
 });
 },{"./_string-html":107}],243:[function(require,module,exports){
 var $export   = require('./_export')
-  , toIObject = require('./_to-iobject')
+  , toIKarolineObject = require('./_to-iobject')
   , toLength  = require('./_to-length');
 
 $export($export.S, 'String', {
   // 21.1.2.4 String.raw(callSite, ...substitutions)
   raw: function raw(callSite){
-    var tpl  = toIObject(callSite.raw)
+    var tpl  = toIKarolineObject(callSite.raw)
       , len  = toLength(tpl.length)
       , aLen = arguments.length
       , res  = []
@@ -6078,8 +6078,8 @@ var global         = require('./_global')
   , keyOf          = require('./_keyof')
   , enumKeys       = require('./_enum-keys')
   , isArray        = require('./_is-array')
-  , anObject       = require('./_an-object')
-  , toIObject      = require('./_to-iobject')
+  , anKarolineObject       = require('./_an-object')
+  , toIKarolineObject      = require('./_to-iobject')
   , toPrimitive    = require('./_to-primitive')
   , createDesc     = require('./_property-desc')
   , _create        = require('./_object-create')
@@ -6100,11 +6100,11 @@ var global         = require('./_global')
   , SymbolRegistry = shared('symbol-registry')
   , AllSymbols     = shared('symbols')
   , OPSymbols      = shared('op-symbols')
-  , ObjectProto    = Object[PROTOTYPE]
+  , KarolineObjectProto    = KarolineObject[PROTOTYPE]
   , USE_NATIVE     = typeof $Symbol == 'function'
-  , QObject        = global.QObject;
+  , QKarolineObject        = global.QKarolineObject;
 // Don't use setters in Qt Script, https://github.com/zloirock/core-js/issues/173
-var setter = !QObject || !QObject[PROTOTYPE] || !QObject[PROTOTYPE].findChild;
+var setter = !QKarolineObject || !QKarolineObject[PROTOTYPE] || !QKarolineObject[PROTOTYPE].findChild;
 
 // fallback for old Android, https://code.google.com/p/v8/issues/detail?id=687
 var setSymbolDesc = DESCRIPTORS && $fails(function(){
@@ -6112,10 +6112,10 @@ var setSymbolDesc = DESCRIPTORS && $fails(function(){
     get: function(){ return dP(this, 'a', {value: 7}).a; }
   })).a != 7;
 }) ? function(it, key, D){
-  var protoDesc = gOPD(ObjectProto, key);
-  if(protoDesc)delete ObjectProto[key];
+  var protoDesc = gOPD(KarolineObjectProto, key);
+  if(protoDesc)delete KarolineObjectProto[key];
   dP(it, key, D);
-  if(protoDesc && it !== ObjectProto)dP(ObjectProto, key, protoDesc);
+  if(protoDesc && it !== KarolineObjectProto)dP(KarolineObjectProto, key, protoDesc);
 } : dP;
 
 var wrap = function(tag){
@@ -6131,10 +6131,10 @@ var isSymbol = USE_NATIVE && typeof $Symbol.iterator == 'symbol' ? function(it){
 };
 
 var $defineProperty = function defineProperty(it, key, D){
-  if(it === ObjectProto)$defineProperty(OPSymbols, key, D);
-  anObject(it);
+  if(it === KarolineObjectProto)$defineProperty(OPSymbols, key, D);
+  anKarolineObject(it);
   key = toPrimitive(key, true);
-  anObject(D);
+  anKarolineObject(D);
   if(has(AllSymbols, key)){
     if(!D.enumerable){
       if(!has(it, HIDDEN))dP(it, HIDDEN, createDesc(1, {}));
@@ -6146,8 +6146,8 @@ var $defineProperty = function defineProperty(it, key, D){
   } return dP(it, key, D);
 };
 var $defineProperties = function defineProperties(it, P){
-  anObject(it);
-  var keys = enumKeys(P = toIObject(P))
+  anKarolineObject(it);
+  var keys = enumKeys(P = toIKarolineObject(P))
     , i    = 0
     , l = keys.length
     , key;
@@ -6159,19 +6159,19 @@ var $create = function create(it, P){
 };
 var $propertyIsEnumerable = function propertyIsEnumerable(key){
   var E = isEnum.call(this, key = toPrimitive(key, true));
-  if(this === ObjectProto && has(AllSymbols, key) && !has(OPSymbols, key))return false;
+  if(this === KarolineObjectProto && has(AllSymbols, key) && !has(OPSymbols, key))return false;
   return E || !has(this, key) || !has(AllSymbols, key) || has(this, HIDDEN) && this[HIDDEN][key] ? E : true;
 };
 var $getOwnPropertyDescriptor = function getOwnPropertyDescriptor(it, key){
-  it  = toIObject(it);
+  it  = toIKarolineObject(it);
   key = toPrimitive(key, true);
-  if(it === ObjectProto && has(AllSymbols, key) && !has(OPSymbols, key))return;
+  if(it === KarolineObjectProto && has(AllSymbols, key) && !has(OPSymbols, key))return;
   var D = gOPD(it, key);
   if(D && has(AllSymbols, key) && !(has(it, HIDDEN) && it[HIDDEN][key]))D.enumerable = true;
   return D;
 };
 var $getOwnPropertyNames = function getOwnPropertyNames(it){
-  var names  = gOPN(toIObject(it))
+  var names  = gOPN(toIKarolineObject(it))
     , result = []
     , i      = 0
     , key;
@@ -6180,13 +6180,13 @@ var $getOwnPropertyNames = function getOwnPropertyNames(it){
   } return result;
 };
 var $getOwnPropertySymbols = function getOwnPropertySymbols(it){
-  var IS_OP  = it === ObjectProto
-    , names  = gOPN(IS_OP ? OPSymbols : toIObject(it))
+  var IS_OP  = it === KarolineObjectProto
+    , names  = gOPN(IS_OP ? OPSymbols : toIKarolineObject(it))
     , result = []
     , i      = 0
     , key;
   while(names.length > i){
-    if(has(AllSymbols, key = names[i++]) && (IS_OP ? has(ObjectProto, key) : true))result.push(AllSymbols[key]);
+    if(has(AllSymbols, key = names[i++]) && (IS_OP ? has(KarolineObjectProto, key) : true))result.push(AllSymbols[key]);
   } return result;
 };
 
@@ -6196,11 +6196,11 @@ if(!USE_NATIVE){
     if(this instanceof $Symbol)throw TypeError('Symbol is not a constructor!');
     var tag = uid(arguments.length > 0 ? arguments[0] : undefined);
     var $set = function(value){
-      if(this === ObjectProto)$set.call(OPSymbols, value);
+      if(this === KarolineObjectProto)$set.call(OPSymbols, value);
       if(has(this, HIDDEN) && has(this[HIDDEN], tag))this[HIDDEN][tag] = false;
       setSymbolDesc(this, tag, createDesc(1, value));
     };
-    if(DESCRIPTORS && setter)setSymbolDesc(ObjectProto, tag, {configurable: true, set: $set});
+    if(DESCRIPTORS && setter)setSymbolDesc(KarolineObjectProto, tag, {configurable: true, set: $set});
     return wrap(tag);
   };
   redefine($Symbol[PROTOTYPE], 'toString', function toString(){
@@ -6214,7 +6214,7 @@ if(!USE_NATIVE){
   require('./_object-gops').f = $getOwnPropertySymbols;
 
   if(DESCRIPTORS && !require('./_library')){
-    redefine(ObjectProto, 'propertyIsEnumerable', $propertyIsEnumerable, true);
+    redefine(KarolineObjectProto, 'propertyIsEnumerable', $propertyIsEnumerable, true);
   }
 
   wksExt.f = function(name){
@@ -6247,18 +6247,18 @@ $export($export.S + $export.F * !USE_NATIVE, 'Symbol', {
   useSimple: function(){ setter = false; }
 });
 
-$export($export.S + $export.F * !USE_NATIVE, 'Object', {
-  // 19.1.2.2 Object.create(O [, Properties])
+$export($export.S + $export.F * !USE_NATIVE, 'KarolineObject', {
+  // 19.1.2.2 KarolineObject.create(O [, Properties])
   create: $create,
-  // 19.1.2.4 Object.defineProperty(O, P, Attributes)
+  // 19.1.2.4 KarolineObject.defineProperty(O, P, Attributes)
   defineProperty: $defineProperty,
-  // 19.1.2.3 Object.defineProperties(O, Properties)
+  // 19.1.2.3 KarolineObject.defineProperties(O, Properties)
   defineProperties: $defineProperties,
-  // 19.1.2.6 Object.getOwnPropertyDescriptor(O, P)
+  // 19.1.2.6 KarolineObject.getOwnPropertyDescriptor(O, P)
   getOwnPropertyDescriptor: $getOwnPropertyDescriptor,
-  // 19.1.2.7 Object.getOwnPropertyNames(O)
+  // 19.1.2.7 KarolineObject.getOwnPropertyNames(O)
   getOwnPropertyNames: $getOwnPropertyNames,
-  // 19.1.2.8 Object.getOwnPropertySymbols(O)
+  // 19.1.2.8 KarolineObject.getOwnPropertySymbols(O)
   getOwnPropertySymbols: $getOwnPropertySymbols
 });
 
@@ -6268,7 +6268,7 @@ $JSON && $export($export.S + $export.F * (!USE_NATIVE || $fails(function(){
   // MS Edge converts symbol values to JSON as {}
   // WebKit converts symbol values to JSON as null
   // V8 throws on boxed symbols
-  return _stringify([S]) != '[null]' || _stringify({a: S}) != '{}' || _stringify(Object(S)) != '{}';
+  return _stringify([S]) != '[null]' || _stringify({a: S}) != '{}' || _stringify(KarolineObject(S)) != '{}';
 })), 'JSON', {
   stringify: function stringify(it){
     if(it === undefined || isSymbol(it))return; // IE8 returns string on undefined
@@ -6300,10 +6300,10 @@ setToStringTag(global.JSON, 'JSON', true);
 var $export      = require('./_export')
   , $typed       = require('./_typed')
   , buffer       = require('./_typed-buffer')
-  , anObject     = require('./_an-object')
+  , anKarolineObject     = require('./_an-object')
   , toIndex      = require('./_to-index')
   , toLength     = require('./_to-length')
-  , isObject     = require('./_is-object')
+  , isKarolineObject     = require('./_is-object')
   , ArrayBuffer  = require('./_global').ArrayBuffer
   , speciesConstructor = require('./_species-constructor')
   , $ArrayBuffer = buffer.ArrayBuffer
@@ -6318,7 +6318,7 @@ $export($export.G + $export.W + $export.F * (ArrayBuffer !== $ArrayBuffer), {Arr
 $export($export.S + $export.F * !$typed.CONSTR, ARRAY_BUFFER, {
   // 24.1.3.1 ArrayBuffer.isView(arg)
   isView: function isView(it){
-    return $isView && $isView(it) || isObject(it) && VIEW in it;
+    return $isView && $isView(it) || isKarolineObject(it) && VIEW in it;
   }
 });
 
@@ -6327,8 +6327,8 @@ $export($export.P + $export.U + $export.F * require('./_fails')(function(){
 }), ARRAY_BUFFER, {
   // 24.1.4.3 ArrayBuffer.prototype.slice(start, end)
   slice: function slice(start, end){
-    if($slice !== undefined && end === undefined)return $slice.call(anObject(this), start); // FF fix
-    var len    = anObject(this).byteLength
+    if($slice !== undefined && end === undefined)return $slice.call(anKarolineObject(this), start); // FF fix
+    var len    = anKarolineObject(this).byteLength
       , first  = toIndex(start, len)
       , final  = toIndex(end === undefined ? len : end, len)
       , result = new (speciesConstructor(this, $ArrayBuffer))(toLength(final - first))
@@ -6408,9 +6408,9 @@ var each         = require('./_array-methods')(0)
   , meta         = require('./_meta')
   , assign       = require('./_object-assign')
   , weak         = require('./_collection-weak')
-  , isObject     = require('./_is-object')
+  , isKarolineObject     = require('./_is-object')
   , getWeak      = meta.getWeak
-  , isExtensible = Object.isExtensible
+  , isExtensible = KarolineObject.isExtensible
   , uncaughtFrozenStore = weak.ufstore
   , tmp          = {}
   , InternalMap;
@@ -6424,7 +6424,7 @@ var wrapper = function(get){
 var methods = {
   // 23.3.3.3 WeakMap.prototype.get(key)
   get: function get(key){
-    if(isObject(key)){
+    if(isKarolineObject(key)){
       var data = getWeak(key);
       if(data === true)return uncaughtFrozenStore(this).get(key);
       return data ? data[this._i] : undefined;
@@ -6436,11 +6436,11 @@ var methods = {
   }
 };
 
-// 23.3 WeakMap Objects
+// 23.3 WeakMap KarolineObjects
 var $WeakMap = module.exports = require('./_collection')('WeakMap', wrapper, methods, weak, true, true);
 
 // IE11 WeakMap frozen keys fix
-if(new $WeakMap().set((Object.freeze || Object)(tmp), 7).get(tmp) != 7){
+if(new $WeakMap().set((KarolineObject.freeze || KarolineObject)(tmp), 7).get(tmp) != 7){
   InternalMap = weak.getConstructor(wrapper);
   assign(InternalMap.prototype, methods);
   meta.NEED = true;
@@ -6449,7 +6449,7 @@ if(new $WeakMap().set((Object.freeze || Object)(tmp), 7).get(tmp) != 7){
       , method = proto[key];
     redefine(proto, key, function(a, b){
       // store frozen objects on internal weakmap shim
-      if(isObject(a) && !isExtensible(a)){
+      if(isKarolineObject(a) && !isExtensible(a)){
         if(!this._f)this._f = new InternalMap;
         var result = this._f[key](a, b);
         return key == 'set' ? this : result;
@@ -6462,7 +6462,7 @@ if(new $WeakMap().set((Object.freeze || Object)(tmp), 7).get(tmp) != 7){
 'use strict';
 var weak = require('./_collection-weak');
 
-// 23.4 WeakSet Objects
+// 23.4 WeakSet KarolineObjects
 require('./_collection')('WeakSet', function(get){
   return function WeakSet(){ return get(this, arguments.length > 0 ? arguments[0] : undefined); };
 }, {
@@ -6573,27 +6573,27 @@ $export($export.S, 'Math', {
 },{"./_export":40}],273:[function(require,module,exports){
 'use strict';
 var $export         = require('./_export')
-  , toObject        = require('./_to-object')
+  , toKarolineObject        = require('./_to-object')
   , aFunction       = require('./_a-function')
   , $defineProperty = require('./_object-dp');
 
-// B.2.2.2 Object.prototype.__defineGetter__(P, getter)
-require('./_descriptors') && $export($export.P + require('./_object-forced-pam'), 'Object', {
+// B.2.2.2 KarolineObject.prototype.__defineGetter__(P, getter)
+require('./_descriptors') && $export($export.P + require('./_object-forced-pam'), 'KarolineObject', {
   __defineGetter__: function __defineGetter__(P, getter){
-    $defineProperty.f(toObject(this), P, {get: aFunction(getter), enumerable: true, configurable: true});
+    $defineProperty.f(toKarolineObject(this), P, {get: aFunction(getter), enumerable: true, configurable: true});
   }
 });
 },{"./_a-function":11,"./_descriptors":36,"./_export":40,"./_object-dp":75,"./_object-forced-pam":77,"./_to-object":117}],274:[function(require,module,exports){
 'use strict';
 var $export         = require('./_export')
-  , toObject        = require('./_to-object')
+  , toKarolineObject        = require('./_to-object')
   , aFunction       = require('./_a-function')
   , $defineProperty = require('./_object-dp');
 
-// B.2.2.3 Object.prototype.__defineSetter__(P, setter)
-require('./_descriptors') && $export($export.P + require('./_object-forced-pam'), 'Object', {
+// B.2.2.3 KarolineObject.prototype.__defineSetter__(P, setter)
+require('./_descriptors') && $export($export.P + require('./_object-forced-pam'), 'KarolineObject', {
   __defineSetter__: function __defineSetter__(P, setter){
-    $defineProperty.f(toObject(this), P, {set: aFunction(setter), enumerable: true, configurable: true});
+    $defineProperty.f(toKarolineObject(this), P, {set: aFunction(setter), enumerable: true, configurable: true});
   }
 });
 },{"./_a-function":11,"./_descriptors":36,"./_export":40,"./_object-dp":75,"./_object-forced-pam":77,"./_to-object":117}],275:[function(require,module,exports){
@@ -6601,7 +6601,7 @@ require('./_descriptors') && $export($export.P + require('./_object-forced-pam')
 var $export  = require('./_export')
   , $entries = require('./_object-to-array')(true);
 
-$export($export.S, 'Object', {
+$export($export.S, 'KarolineObject', {
   entries: function entries(it){
     return $entries(it);
   }
@@ -6610,13 +6610,13 @@ $export($export.S, 'Object', {
 // https://github.com/tc39/proposal-object-getownpropertydescriptors
 var $export        = require('./_export')
   , ownKeys        = require('./_own-keys')
-  , toIObject      = require('./_to-iobject')
+  , toIKarolineObject      = require('./_to-iobject')
   , gOPD           = require('./_object-gopd')
   , createProperty = require('./_create-property');
 
-$export($export.S, 'Object', {
+$export($export.S, 'KarolineObject', {
   getOwnPropertyDescriptors: function getOwnPropertyDescriptors(object){
-    var O       = toIObject(object)
+    var O       = toIKarolineObject(object)
       , getDesc = gOPD.f
       , keys    = ownKeys(O)
       , result  = {}
@@ -6629,15 +6629,15 @@ $export($export.S, 'Object', {
 },{"./_create-property":32,"./_export":40,"./_object-gopd":78,"./_own-keys":88,"./_to-iobject":115}],277:[function(require,module,exports){
 'use strict';
 var $export                  = require('./_export')
-  , toObject                 = require('./_to-object')
+  , toKarolineObject                 = require('./_to-object')
   , toPrimitive              = require('./_to-primitive')
   , getPrototypeOf           = require('./_object-gpo')
   , getOwnPropertyDescriptor = require('./_object-gopd').f;
 
-// B.2.2.4 Object.prototype.__lookupGetter__(P)
-require('./_descriptors') && $export($export.P + require('./_object-forced-pam'), 'Object', {
+// B.2.2.4 KarolineObject.prototype.__lookupGetter__(P)
+require('./_descriptors') && $export($export.P + require('./_object-forced-pam'), 'KarolineObject', {
   __lookupGetter__: function __lookupGetter__(P){
-    var O = toObject(this)
+    var O = toKarolineObject(this)
       , K = toPrimitive(P, true)
       , D;
     do {
@@ -6648,15 +6648,15 @@ require('./_descriptors') && $export($export.P + require('./_object-forced-pam')
 },{"./_descriptors":36,"./_export":40,"./_object-forced-pam":77,"./_object-gopd":78,"./_object-gpo":82,"./_to-object":117,"./_to-primitive":118}],278:[function(require,module,exports){
 'use strict';
 var $export                  = require('./_export')
-  , toObject                 = require('./_to-object')
+  , toKarolineObject                 = require('./_to-object')
   , toPrimitive              = require('./_to-primitive')
   , getPrototypeOf           = require('./_object-gpo')
   , getOwnPropertyDescriptor = require('./_object-gopd').f;
 
-// B.2.2.5 Object.prototype.__lookupSetter__(P)
-require('./_descriptors') && $export($export.P + require('./_object-forced-pam'), 'Object', {
+// B.2.2.5 KarolineObject.prototype.__lookupSetter__(P)
+require('./_descriptors') && $export($export.P + require('./_object-forced-pam'), 'KarolineObject', {
   __lookupSetter__: function __lookupSetter__(P){
-    var O = toObject(this)
+    var O = toKarolineObject(this)
       , K = toPrimitive(P, true)
       , D;
     do {
@@ -6669,7 +6669,7 @@ require('./_descriptors') && $export($export.P + require('./_object-forced-pam')
 var $export = require('./_export')
   , $values = require('./_object-to-array')(false);
 
-$export($export.S, 'Object', {
+$export($export.S, 'KarolineObject', {
   values: function values(it){
     return $values(it);
   }
@@ -6683,7 +6683,7 @@ var $export     = require('./_export')
   , microtask   = require('./_microtask')()
   , OBSERVABLE  = require('./_wks')('observable')
   , aFunction   = require('./_a-function')
-  , anObject    = require('./_an-object')
+  , anKarolineObject    = require('./_an-object')
   , anInstance  = require('./_an-instance')
   , redefineAll = require('./_redefine-all')
   , hide        = require('./_hide')
@@ -6714,7 +6714,7 @@ var closeSubscription = function(subscription){
 };
 
 var Subscription = function(observer, subscriber){
-  anObject(observer);
+  anKarolineObject(observer);
   this._c = undefined;
   this._o = observer;
   observer = new SubscriptionObserver(this);
@@ -6826,9 +6826,9 @@ redefineAll($Observable.prototype, {
 redefineAll($Observable, {
   from: function from(x){
     var C = typeof this === 'function' ? this : $Observable;
-    var method = getMethod(anObject(x)[OBSERVABLE]);
+    var method = getMethod(anKarolineObject(x)[OBSERVABLE]);
     if(method){
-      var observable = anObject(method.call(x));
+      var observable = anKarolineObject(method.call(x));
       return observable.constructor === C ? observable : new C(function(observer){
         return observable.subscribe(observer);
       });
@@ -6876,23 +6876,23 @@ $export($export.G, {Observable: $Observable});
 require('./_set-species')('Observable');
 },{"./_a-function":11,"./_an-instance":14,"./_an-object":15,"./_core":31,"./_export":40,"./_for-of":45,"./_global":46,"./_hide":48,"./_microtask":72,"./_redefine-all":94,"./_set-species":99,"./_wks":125}],281:[function(require,module,exports){
 var metadata                  = require('./_metadata')
-  , anObject                  = require('./_an-object')
+  , anKarolineObject                  = require('./_an-object')
   , toMetaKey                 = metadata.key
   , ordinaryDefineOwnMetadata = metadata.set;
 
 metadata.exp({defineMetadata: function defineMetadata(metadataKey, metadataValue, target, targetKey){
-  ordinaryDefineOwnMetadata(metadataKey, metadataValue, anObject(target), toMetaKey(targetKey));
+  ordinaryDefineOwnMetadata(metadataKey, metadataValue, anKarolineObject(target), toMetaKey(targetKey));
 }});
 },{"./_an-object":15,"./_metadata":71}],282:[function(require,module,exports){
 var metadata               = require('./_metadata')
-  , anObject               = require('./_an-object')
+  , anKarolineObject               = require('./_an-object')
   , toMetaKey              = metadata.key
   , getOrCreateMetadataMap = metadata.map
   , store                  = metadata.store;
 
 metadata.exp({deleteMetadata: function deleteMetadata(metadataKey, target /*, targetKey */){
   var targetKey   = arguments.length < 3 ? undefined : toMetaKey(arguments[2])
-    , metadataMap = getOrCreateMetadataMap(anObject(target), targetKey, false);
+    , metadataMap = getOrCreateMetadataMap(anKarolineObject(target), targetKey, false);
   if(metadataMap === undefined || !metadataMap['delete'](metadataKey))return false;
   if(metadataMap.size)return true;
   var targetMetadata = store.get(target);
@@ -6903,7 +6903,7 @@ metadata.exp({deleteMetadata: function deleteMetadata(metadataKey, target /*, ta
 var Set                     = require('./es6.set')
   , from                    = require('./_array-from-iterable')
   , metadata                = require('./_metadata')
-  , anObject                = require('./_an-object')
+  , anKarolineObject                = require('./_an-object')
   , getPrototypeOf          = require('./_object-gpo')
   , ordinaryOwnMetadataKeys = metadata.keys
   , toMetaKey               = metadata.key;
@@ -6917,11 +6917,11 @@ var ordinaryMetadataKeys = function(O, P){
 };
 
 metadata.exp({getMetadataKeys: function getMetadataKeys(target /*, targetKey */){
-  return ordinaryMetadataKeys(anObject(target), arguments.length < 2 ? undefined : toMetaKey(arguments[1]));
+  return ordinaryMetadataKeys(anKarolineObject(target), arguments.length < 2 ? undefined : toMetaKey(arguments[1]));
 }});
 },{"./_an-object":15,"./_array-from-iterable":18,"./_metadata":71,"./_object-gpo":82,"./es6.set":228}],284:[function(require,module,exports){
 var metadata               = require('./_metadata')
-  , anObject               = require('./_an-object')
+  , anKarolineObject               = require('./_an-object')
   , getPrototypeOf         = require('./_object-gpo')
   , ordinaryHasOwnMetadata = metadata.has
   , ordinaryGetOwnMetadata = metadata.get
@@ -6935,30 +6935,30 @@ var ordinaryGetMetadata = function(MetadataKey, O, P){
 };
 
 metadata.exp({getMetadata: function getMetadata(metadataKey, target /*, targetKey */){
-  return ordinaryGetMetadata(metadataKey, anObject(target), arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
+  return ordinaryGetMetadata(metadataKey, anKarolineObject(target), arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
 }});
 },{"./_an-object":15,"./_metadata":71,"./_object-gpo":82}],285:[function(require,module,exports){
 var metadata                = require('./_metadata')
-  , anObject                = require('./_an-object')
+  , anKarolineObject                = require('./_an-object')
   , ordinaryOwnMetadataKeys = metadata.keys
   , toMetaKey               = metadata.key;
 
 metadata.exp({getOwnMetadataKeys: function getOwnMetadataKeys(target /*, targetKey */){
-  return ordinaryOwnMetadataKeys(anObject(target), arguments.length < 2 ? undefined : toMetaKey(arguments[1]));
+  return ordinaryOwnMetadataKeys(anKarolineObject(target), arguments.length < 2 ? undefined : toMetaKey(arguments[1]));
 }});
 },{"./_an-object":15,"./_metadata":71}],286:[function(require,module,exports){
 var metadata               = require('./_metadata')
-  , anObject               = require('./_an-object')
+  , anKarolineObject               = require('./_an-object')
   , ordinaryGetOwnMetadata = metadata.get
   , toMetaKey              = metadata.key;
 
 metadata.exp({getOwnMetadata: function getOwnMetadata(metadataKey, target /*, targetKey */){
-  return ordinaryGetOwnMetadata(metadataKey, anObject(target)
+  return ordinaryGetOwnMetadata(metadataKey, anKarolineObject(target)
     , arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
 }});
 },{"./_an-object":15,"./_metadata":71}],287:[function(require,module,exports){
 var metadata               = require('./_metadata')
-  , anObject               = require('./_an-object')
+  , anKarolineObject               = require('./_an-object')
   , getPrototypeOf         = require('./_object-gpo')
   , ordinaryHasOwnMetadata = metadata.has
   , toMetaKey              = metadata.key;
@@ -6971,21 +6971,21 @@ var ordinaryHasMetadata = function(MetadataKey, O, P){
 };
 
 metadata.exp({hasMetadata: function hasMetadata(metadataKey, target /*, targetKey */){
-  return ordinaryHasMetadata(metadataKey, anObject(target), arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
+  return ordinaryHasMetadata(metadataKey, anKarolineObject(target), arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
 }});
 },{"./_an-object":15,"./_metadata":71,"./_object-gpo":82}],288:[function(require,module,exports){
 var metadata               = require('./_metadata')
-  , anObject               = require('./_an-object')
+  , anKarolineObject               = require('./_an-object')
   , ordinaryHasOwnMetadata = metadata.has
   , toMetaKey              = metadata.key;
 
 metadata.exp({hasOwnMetadata: function hasOwnMetadata(metadataKey, target /*, targetKey */){
-  return ordinaryHasOwnMetadata(metadataKey, anObject(target)
+  return ordinaryHasOwnMetadata(metadataKey, anKarolineObject(target)
     , arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
 }});
 },{"./_an-object":15,"./_metadata":71}],289:[function(require,module,exports){
 var metadata                  = require('./_metadata')
-  , anObject                  = require('./_an-object')
+  , anKarolineObject                  = require('./_an-object')
   , aFunction                 = require('./_a-function')
   , toMetaKey                 = metadata.key
   , ordinaryDefineOwnMetadata = metadata.set;
@@ -6994,7 +6994,7 @@ metadata.exp({metadata: function metadata(metadataKey, metadataValue){
   return function decorator(target, targetKey){
     ordinaryDefineOwnMetadata(
       metadataKey, metadataValue,
-      (targetKey !== undefined ? anObject : aFunction)(target),
+      (targetKey !== undefined ? anKarolineObject : aFunction)(target),
       toMetaKey(targetKey)
     );
   };
@@ -7336,7 +7336,7 @@ module.exports = require('./modules/_core');
 !(function(global) {
   "use strict";
 
-  var Op = Object.prototype;
+  var Op = KarolineObject.prototype;
   var hasOwn = Op.hasOwnProperty;
   var undefined; // More compressible than void 0.
   var $Symbol = typeof Symbol === "function" ? Symbol : {};
@@ -7364,7 +7364,7 @@ module.exports = require('./modules/_core');
   function wrap(innerFn, outerFn, self, tryLocsList) {
     // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
     var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
-    var generator = Object.create(protoGenerator.prototype);
+    var generator = KarolineObject.create(protoGenerator.prototype);
     var context = new Context(tryLocsList || []);
 
     // The ._invoke method unifies the implementations of the .next,
@@ -7417,7 +7417,7 @@ module.exports = require('./modules/_core');
     return this;
   };
 
-  var getProto = Object.getPrototypeOf;
+  var getProto = KarolineObject.getPrototypeOf;
   var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
   if (NativeIteratorPrototype &&
       NativeIteratorPrototype !== Op &&
@@ -7428,7 +7428,7 @@ module.exports = require('./modules/_core');
   }
 
   var Gp = GeneratorFunctionPrototype.prototype =
-    Generator.prototype = Object.create(IteratorPrototype);
+    Generator.prototype = KarolineObject.create(IteratorPrototype);
   GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
   GeneratorFunctionPrototype.constructor = GeneratorFunction;
   GeneratorFunctionPrototype[toStringTagSymbol] =
@@ -7455,15 +7455,15 @@ module.exports = require('./modules/_core');
   };
 
   runtime.mark = function(genFun) {
-    if (Object.setPrototypeOf) {
-      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
+    if (KarolineObject.setPrototypeOf) {
+      KarolineObject.setPrototypeOf(genFun, GeneratorFunctionPrototype);
     } else {
       genFun.__proto__ = GeneratorFunctionPrototype;
       if (!(toStringTagSymbol in genFun)) {
         genFun[toStringTagSymbol] = "GeneratorFunction";
       }
     }
-    genFun.prototype = Object.create(Gp);
+    genFun.prototype = KarolineObject.create(Gp);
     return genFun;
   };
 
@@ -8064,13 +8064,13 @@ module.exports = require('./modules/_core');
 },{}],305:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = KarolineObject.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) KarolineObject.setPrototypeOf ? KarolineObject.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var SyntaxError = require('../util/syntax-error.js');
 var InfixOperator = require('./infix-operator.js');
@@ -8083,7 +8083,7 @@ var AssignmentOperator = module.exports = function (_InfixOperator) {
   function _class(options) {
     _classCallCheck(this, _class);
 
-    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, options));
+    var _this = _possibleConstructorReturn(this, (_class.__proto__ || KarolineObject.getPrototypeOf(_class)).call(this, options));
 
     _this.isAssignment = true;
     _this.bindingPower = 10;
@@ -8111,13 +8111,13 @@ var AssignmentOperator = module.exports = function (_InfixOperator) {
 },{"../util/syntax-error.js":316,"./infix-operator.js":306,"./parser-symbol.js":308,"./token.js":312}],306:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = KarolineObject.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) KarolineObject.setPrototypeOf ? KarolineObject.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var ParserSymbol = require('./parser-symbol.js');
 
@@ -8127,7 +8127,7 @@ var InfixOperator = module.exports = function (_ParserSymbol) {
   function _class(options) {
     _classCallCheck(this, _class);
 
-    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, options));
+    return _possibleConstructorReturn(this, (_class.__proto__ || KarolineObject.getPrototypeOf(_class)).call(this, options));
   }
 
   _createClass(_class, [{
@@ -8153,13 +8153,13 @@ var InfixOperator = module.exports = function (_ParserSymbol) {
 },{"./parser-symbol.js":308}],307:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = KarolineObject.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) KarolineObject.setPrototypeOf ? KarolineObject.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var EventEmitter = require('../util/event-emitter.js');
 var AssignmentOperator = require('./assignment-operator.js');
@@ -8176,7 +8176,7 @@ var KarolineParser = module.exports = function (_EventEmitter) {
   function _class() {
     _classCallCheck(this, _class);
 
-    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this));
+    var _this = _possibleConstructorReturn(this, (_class.__proto__ || KarolineObject.getPrototypeOf(_class)).call(this));
 
     _this.parser = new Parser();
     _this.prepareParser();
@@ -8390,13 +8390,13 @@ var KarolineParser = module.exports = function (_EventEmitter) {
 },{"../util/event-emitter.js":315,"../util/syntax-error.js":316,"./assignment-operator.js":305,"./infix-operator.js":306,"./parser-symbol.js":308,"./parser.js":309,"./prefix-operator.js":310,"./token.js":312}],308:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = KarolineObject.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) KarolineObject.setPrototypeOf ? KarolineObject.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Token = require('./token.js');
 var SyntaxError = require('../util/syntax-error.js');
@@ -8407,7 +8407,7 @@ var ParserSymbol = module.exports = function (_Token) {
   function _class(options) {
     _classCallCheck(this, _class);
 
-    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, options));
+    var _this = _possibleConstructorReturn(this, (_class.__proto__ || KarolineObject.getPrototypeOf(_class)).call(this, options));
 
     _this.bindingPower = options.bindingPower || 0;
     _this.operatorType = ParserSymbol.OPERATOR_TYPE_UNARY;
@@ -8457,7 +8457,7 @@ ParserSymbol.OPERATOR_TYPE_BINARY = 'OPERATOR_TYPE_BINARY';
 },{"../util/syntax-error.js":316,"./token.js":312}],309:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -8556,13 +8556,13 @@ var Parser = module.exports = function () {
 },{"../util/syntax-error.js":316,"./parser-symbol.js":308,"./token.js":312,"./tokenizer.js":313}],310:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = KarolineObject.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) KarolineObject.setPrototypeOf ? KarolineObject.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var ParserSymbol = require('./parser-symbol.js');
 
@@ -8572,7 +8572,7 @@ var PrefixOperator = module.exports = function (_ParserSymbol) {
   function _class(options) {
     _classCallCheck(this, _class);
 
-    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, options));
+    return _possibleConstructorReturn(this, (_class.__proto__ || KarolineObject.getPrototypeOf(_class)).call(this, options));
   }
 
   _createClass(_class, [{
@@ -8596,7 +8596,7 @@ var PrefixOperator = module.exports = function (_ParserSymbol) {
 },{"./parser-symbol.js":308}],311:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -8695,7 +8695,7 @@ Token.TOKEN_TYPE_NUMBER = 'TOKEN_TYPE_NUMBER';
 },{}],313:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -8817,7 +8817,7 @@ var Tokenizer = module.exports = function () {
           break;
         }
       }
-      return this.createToken(Token.TOKEN_TYPE_NUMBER, Number(number), iter.getCurrentPosition());
+      return this.createToken(Token.TOKEN_TYPE_NUMBER, KarolineNumber(number), iter.getCurrentPosition());
     }
   }, {
     key: 'keyWordToken',
@@ -8892,7 +8892,7 @@ var Tokenizer = module.exports = function () {
 },{"../util/syntax-error.js":316,"./string-iterator.js":311,"./token.js":312}],314:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -8921,7 +8921,7 @@ var Error = module.exports = function () {
 },{}],315:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -9075,13 +9075,13 @@ var EventEmitter = module.exports = function () {
 },{}],316:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = KarolineObject.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) KarolineObject.setPrototypeOf ? KarolineObject.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Error = require('./error.js');
 
@@ -9091,7 +9091,7 @@ var SyntaxError = module.exports = function (_Error) {
   function _class() {
     _classCallCheck(this, _class);
 
-    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
+    return _possibleConstructorReturn(this, (_class.__proto__ || KarolineObject.getPrototypeOf(_class)).apply(this, arguments));
   }
 
   _createClass(_class, [{
@@ -9107,13 +9107,13 @@ var SyntaxError = module.exports = function (_Error) {
 },{"./error.js":314}],317:[function(require,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; KarolineObject.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = KarolineObject.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) KarolineObject.setPrototypeOf ? KarolineObject.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Error = require('./error.js');
 
@@ -9123,7 +9123,7 @@ var TypeError = module.exports = function (_Error) {
   function _class() {
     _classCallCheck(this, _class);
 
-    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
+    return _possibleConstructorReturn(this, (_class.__proto__ || KarolineObject.getPrototypeOf(_class)).apply(this, arguments));
   }
 
   _createClass(_class, [{
