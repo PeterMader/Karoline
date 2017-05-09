@@ -1,4 +1,4 @@
-const {Error, Procedure, KarolineNumber, Class, Value} = require('../index.js')
+const {Error, Procedure, KarolineNumber, KarolineBoolean, KarolineObject, Class, Value} = require('../index.js')
 const {Robot, World} = require('karol.js')
 
 const Application = module.exports = class {
@@ -20,15 +20,15 @@ const Application = module.exports = class {
   addStandardLibrary () {
     const {interpreter} = this
 
-    interpreter.addNativeValue('true', Value.createTrue())
-    interpreter.addNativeValue('false', Value.createFalse())
-    interpreter.addNativeValue('Number', Class.fromNativeClass(KarolineNumber))
+    interpreter.addNativeValue('true', KarolineBoolean.createNativeInstance(true))
+    interpreter.addNativeValue('false', KarolineBoolean.createNativeInstance(false))
+    interpreter.addNativeValue('Number', KarolineNumber)
 
     interpreter.addNativeProcedure(new Procedure({
       name: 'step',
       cb: (args) => this.robot.step(args[0] ? args[0].value : 1),
       expectedArguments: [{
-        type: Value.NUMBER,
+        type: KarolineNumber,
         optional: true
       }]
     }))
@@ -102,7 +102,7 @@ const Application = module.exports = class {
         let index
         for (index in args) {
           const arg = args[index]
-          strings.push(await arg[Value.TO_STRING].execute([arg]))
+          strings.push(await arg.getProperty(KarolineObject.TO_STRING).value.execute([arg], arg))
         }
         this.karolConsole.log(...strings)
       }
@@ -117,7 +117,7 @@ const Application = module.exports = class {
         })
       },
       expectedArguments: [{
-        type: Value.NUMBER
+        type: KarolineNumber
       }]
     }))
   }

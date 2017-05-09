@@ -11,8 +11,11 @@
     Interpreter: require('./interpreter/interpreter.js'),
     Context: require('./interpreter/context.js'),
     Value: require('./interpreter/value.js'),
-    KarolineNumber: require('./interpreter/karoline-number.js'),
     KarolineObject: require('./interpreter/karoline-object.js'),
+    KarolineNumber: require('./interpreter/karoline-number.js'),
+    KarolineString: require('./interpreter/karoline-string.js'),
+    KarolineBoolean: require('./interpreter/karoline-boolean.js'),
+    KarolineProcedure: require('./interpreter/karoline-procedure.js'),
     Class: require('./interpreter/class.js'),
     Procedure: require('./interpreter/procedure.js'),
 

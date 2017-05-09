@@ -23,16 +23,19 @@ const Procedure = module.exports = class {
       if (!real) {
         throw new TypeError(`procedure ${this.name}: missing argument ${index}`)
       }
-      if (Array.isArray(expected.types)) {
-        if (expected.types.indexOf(real.type) < 0) {
-          const types = expected.types.reduce((acc, b) => acc + ', ' + b, '')
-          throw new TypeError(`procedure ${this.name}: expected argument ${index} to be of types ${types}got type ${real.class}`)
-        }
-      } else if (expected.type !== real.class && expected.type !== Value.ANY) {
-        throw new TypeError(`procedure ${this.name}: expected argument ${index} to be of type ${expected.type}, got type ${real.class}`)
-      }
+
+      // if (Array.isArray(expected.types)) {
+      //   if (expected.types.indexOf(real.type) < 0) {
+      //     const types = expected.types.reduce((acc, b) => acc + ', ' + b, '')
+      //     throw new TypeError(`procedure ${this.name}: expected argument ${index} to be of types ${types}got type ${real.class}`)
+      //   }
+      // } else if (expected.type !== real.class && expected.type !== Value.ANY) {
+      //   throw new TypeError(`procedure ${this.name}: expected argument ${index} to be of type ${expected.type}, got type ${real.class}`)
+      // }
     }
-    return await cb.call(thisArg, args) // ... await ...
+
+    console.log(thisArg)
+    return await cb.call(thisArg || null, args) // ... await ...
   }
 
 }

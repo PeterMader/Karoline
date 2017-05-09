@@ -1,41 +1,37 @@
 const Value = require('./value.js')
-const Procedure = require('./procedure.js')
-const KarolineObject = require('./karoline-object.js')
 
-const Class = module.exports = class extends KarolineObject {
+const Class = module.exports = class extends Value {
 
   constructor (ctor, superClass) {
     super()
     this.ctor = ctor
-    this.members = new KarolineObject()
-    if (superClass instanceof Class) {
-      this.members.properties[Value.SUPER_CLASS_KEY] = superClass.members.properties
-    } else {
-      this.members.properties[Value.SUPER_CLASS_KEY] = KarolineObject
-    }
+    this.members = {}
+    this.setProperty('members', new Value())
+    this.superClass = superClass || null
+  }
+
+  hasMember (name, visibility = Class.VISIBILITY_PUBLIC) {
+    return this.members.hasOwnProperty(name) && this.members[name].visibility === visibility
+  }
+
+  getMember (name) {
+    return this.members[name]
+  }
+
+  setMember (name, value, visibility) {
+    value.visibility = visibility || Class.VISIBILITY_PUBLIC
+    this.members[name] = value
   }
 
   async createInstance (args) {
-    const instance = new KarolineObject(args)
-    instance.class = this
-    Object.setPrototypeOf(instance, this.members.properties)
+    const instance = new Value(this)
     const result = await this.ctor.execute(args, instance)
     // if the constructor has a return statement, return that instead of the new instance
     return result || instance
   }
 
-  static fromNativeClass (cls) {
-    return new Class(new Procedure({
-      cb: async (args) => {
-        const instance = new cls(args)
-        if (cls.prototype.constructorProcedure) {
-          return await cls.prototype.constructorProcedure.execute(args, instance)
-        }
-        return instance
-      }
-    }))
-  }
-
 }
 
-Class.prototype[Value.SUPER_CLASS_KEY] = KarolineObject
+Class.VISIBILITY_PUBLIC = Symbol('Public')
+Class.VISIBILITY_PROTECTED = Symbol('Protected')
+Class.VISIBILITY_PRIVATE = Symbol('Private')

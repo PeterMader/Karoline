@@ -1,28 +1,17 @@
 const KarolineObject = require('./karoline-object.js')
+const KarolinePrimitive = require('./karoline-primitive.js')
+const KarolineProcedure = require('./karoline-procedure.js')
 const Value = require('./value.js')
 const Procedure = require('./procedure.js')
 
-const KarolineString = module.exports = class extends KarolineObject {
-
-  constructor (values) {
-    super()
-    if (typeof values === 'string') {
-      this.value = values
-    }
+const KarolineString = module.exports = new KarolinePrimitive(new Procedure({
+  name: 'KarolineString::@constructor',
+  cb: async ([first]) => {
+    this.setProperty('value', await first.getProperty(KarolineObject.TO_STRING).value.execute([], first))
   }
+}), KarolineObject)
 
-}
-
-KarolineString.prototype.constructorProcedure = new Procedure({
-  cb: async (args) => {
-    const first = args[0]
-    this.value = await first[Value.TO_NUMBER].execute([first])
-  },
-  expectedArguments: [{
-    type: Value.ANY
-  }]
-})
-
-KarolineString.prototype.test = new KarolineString(4)
-
-KarolineString.prototype[Value.SUPER_CLASS_KEY] = KarolineObject
+KarolineString.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineString::@toKarolineString',
+  cb: () => this
+})))

@@ -35,7 +35,7 @@ const Interpreter = module.exports = class extends KarolineParser {
   }
 
   addNativeProcedure (procedure) {
-    this.nativeScope[procedure.name] = new KarolineProcedure([procedure])
+    this.nativeScope[procedure.name] = KarolineProcedure.createNativeInstance(procedure)
   }
 
   addNativeValue (name, value) {
@@ -50,7 +50,7 @@ const Interpreter = module.exports = class extends KarolineParser {
       userDefined: true,
       scope: this.context.scope
     })
-    const value = new KarolineProcedure([procedure])
+    const value = KarolineProcedure.createNativeInstance(procedure)
     this.context.set(name, value)
     return value
   }
@@ -94,7 +94,7 @@ const Interpreter = module.exports = class extends KarolineParser {
         this.emit('error', e)
         result = e
       } else {
-        result = new KarolineObject()
+        result = new Value()
       }
     }
     this.cleanUp()
@@ -134,7 +134,7 @@ const Interpreter = module.exports = class extends KarolineParser {
 
     let result
     try {
-      result = (await procedure.execute(args)) || new KarolineObject()
+      result = (await procedure.execute(args)) || new Value()
     } catch (e) {
       if (e[Interpreter.RETURN]) {
         result = e
@@ -151,7 +151,7 @@ const Interpreter = module.exports = class extends KarolineParser {
 
   async evaluateBlock (block) {
     const {length} = block
-    let value = new KarolineObject()
+    let value = new Value()
     let i
     this.context.pushScope()
     for (i = 0; i < length; i += 1) {
@@ -173,11 +173,11 @@ const Interpreter = module.exports = class extends KarolineParser {
 
   async evaluate (tree, isStatement) {
     if (tree.type === Token.TOKEN_TYPE_NUMBER) {
-      return new KarolineNumber(tree.value)
+      return KarolineNumber.createNativeInstance(tree.value)
     }
 
     if (tree.type === Token.TOKEN_TYPE_STRING) {
-      return new KarolineString(tree.value)
+      return KarolineString.createNativeInstance(tree.value)
     }
 
     if (tree.isAssignment) {
@@ -264,7 +264,7 @@ const Interpreter = module.exports = class extends KarolineParser {
         if (declaration.value) {
           value = await this.evaluate(declaration.value)
         } else {
-          value = new KarolineObject()
+          value = new Value()
         }
         this.context.scope[identifier.value] = value
       }
@@ -295,15 +295,17 @@ const Interpreter = module.exports = class extends KarolineParser {
     }
 
     if (tree.value === '||') {
+      // TODO: only evaluate the second if 1st is falsy
       const first = await this.evaluate(tree.first)
       const second = await this.evaluate(tree.second)
-      return new KarolineBoolean(first.castToBoolean().value || second.castToBoolean().value)
+      return KarolineBoolean.createNativeInstance(first.castToBoolean().value || second.castToBoolean().value)
     }
 
     if (tree.value === '&&') {
+      // TODO: only evaluate the second if 1st is truthy
       const first = await this.evaluate(tree.first)
       const second = await this.evaluate(tree.second)
-      return new KarolineBoolean(first.castToBoolean().value && second.castToBoolean().value)
+      return KarolineBoolean.createNativeInstance(first.castToBoolean().value && second.castToBoolean().value)
     }
 
     if (tree.value === '+') {
@@ -371,7 +373,7 @@ const Interpreter = module.exports = class extends KarolineParser {
           await this.evaluateBlock(block)
         }
       }
-      return new KarolineObject()
+      return new Value()
     }
 
     if (tree.value === 'procedure') {
