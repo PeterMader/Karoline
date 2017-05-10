@@ -196,7 +196,8 @@ const Interpreter = module.exports = class extends KarolineParser {
       } else {
         const first = await this.evaluate(tree.first.first)
         const second = await this.evaluate(tree.first.second)
-        first.setProperty(second.toString(), result)
+        const string = await second.getProperty(KarolineObject.TO_STRING).value.execute([], second)
+        first.setProperty(string.value, result)
       }
       return result
     }
@@ -234,11 +235,12 @@ const Interpreter = module.exports = class extends KarolineParser {
       } else {
         cls = await this.evaluate(tree.first)
       }
-      if (cls.class !== Class) {
+      // TODO: implement Class.getProperty(Class.IS_INSTANCE_OF).execute([cls])
+      if (cls.class !== Class && cls.class !== KarolinePrimitive) {
         this.throwTypeError(`expected class`, tree)
       }
-      const instance = await cls.createInstance(args)
-      return instance
+      
+      return cls.createInstance(args)
     }
 
     if (tree.value === '[') {
@@ -282,7 +284,6 @@ const Interpreter = module.exports = class extends KarolineParser {
         }
         value = await this.evaluate(declaration.value)
         value[Context.CONSTANT] = true
-        console.log(value)
         this.context.scope[identifier.value] = value
       }
       return value
@@ -291,33 +292,39 @@ const Interpreter = module.exports = class extends KarolineParser {
     if (tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY && KarolineObject.BINARY_OPERATORS.hasOwnProperty(tree.value)) {
       const first = await this.evaluate(tree.first)
       const second = await this.evaluate(tree.second)
-      return first[KarolineObject.BINARY_OPERATORS[tree.value]].execute([first, second])
+      return first.getProperty(KarolineObject.BINARY_OPERATORS[tree.value]).value.execute([second], first)
     }
 
     if (tree.value === '||') {
-      // TODO: only evaluate the second if 1st is falsy
       const first = await this.evaluate(tree.first)
+      const firstBoolean = await first.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], first)
+      if (firstBoolean.value) {
+        return first
+      }
       const second = await this.evaluate(tree.second)
-      return KarolineBoolean.createNativeInstance(first.castToBoolean().value || second.castToBoolean().value)
+      return second
     }
 
     if (tree.value === '&&') {
-      // TODO: only evaluate the second if 1st is truthy
       const first = await this.evaluate(tree.first)
+      const firstBoolean = await first.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], first)
+      if (!firstBoolean.value) {
+        return first
+      }
       const second = await this.evaluate(tree.second)
-      return KarolineBoolean.createNativeInstance(first.castToBoolean().value && second.castToBoolean().value)
+      return second
     }
 
     if (tree.value === '+') {
       // unary +
       const first = await this.evaluate(tree.first)
-      return first[KarolineObject.OPERATOR_PLUS_UNARY].execute([first])
+      return first.getProperty(KarolineObject.OPERATOR_PLUS_UNARY).value.execute([], first)
     }
 
     if (tree.value === '-') {
       // unary -
       const first = await this.evaluate(tree.first)
-      return first[KarolineObject.OPERATOR_MINUS_UNARY].execute([first])
+      return first.getProperty(KarolineObject.OPERATOR_MINUS_UNARY).value.execute([], first)
     }
 
     if (tree.value === '(' && tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {

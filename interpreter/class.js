@@ -2,12 +2,23 @@ const Value = require('./value.js')
 
 const Class = module.exports = class extends Value {
 
-  constructor (ctor, superClass) {
-    super()
+  constructor (name, ctor, superClass) {
+    super(Class)
+    this.name = name
     this.ctor = ctor
     this.members = {}
     this.setProperty('members', new Value())
     this.superClass = superClass || null
+  }
+
+  isInstance (value) {
+    let cls = value.class
+    while (cls) {
+      if (cls === this) {
+        return true
+      }
+      cls = cls.superClass
+    }
   }
 
   hasMember (name, visibility = Class.VISIBILITY_PUBLIC) {

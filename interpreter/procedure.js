@@ -8,6 +8,7 @@ const Procedure = module.exports = class {
     this.userDefined = !!options.userDefined
     this.name = options.name || '<unnamed procedure>'
     this.scope = options.scope || null
+    this.thisArg = options.thisArg || null
   }
 
   async execute (args, thisArg) {
@@ -34,8 +35,11 @@ const Procedure = module.exports = class {
       // }
     }
 
-    console.log(thisArg)
-    return await cb.call(thisArg || null, args) // ... await ...
+    return await cb.call(this.thisArg || thisArg || null, args) // ... await ...
+  }
+
+  bind (thisArg) {
+    this.thisArg = thisArg
   }
 
 }

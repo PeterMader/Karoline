@@ -21,6 +21,7 @@
 
     Parser: require('./parser/parser.js'),
     Token: require('./parser/token.js'),
+    Tokenizer: require('./parser/tokenizer.js'),
     // TODO: require all classes
 
     EventEmitter: require('./util/event-emitter.js'),

@@ -22,6 +22,7 @@
 
     Parser: require('./parser/parser.js'),
     Token: require('./parser/token.js'),
+    Tokenizer: require('./parser/tokenizer.js'),
     // TODO: require all classes
 
     EventEmitter: require('./util/event-emitter.js'),
@@ -31,17 +32,28 @@
   }
 })
 
-},{"./interpreter/class.js":2,"./interpreter/context.js":3,"./interpreter/interpreter.js":4,"./interpreter/karoline-boolean.js":5,"./interpreter/karoline-number.js":6,"./interpreter/karoline-object.js":7,"./interpreter/karoline-procedure.js":9,"./interpreter/karoline-string.js":10,"./interpreter/procedure.js":11,"./interpreter/value.js":12,"./parser/parser.js":319,"./parser/token.js":322,"./util/error.js":324,"./util/event-emitter.js":325,"./util/syntax-error.js":326,"./util/type-error.js":327,"babel-core/register":13,"babel-polyfill":14}],2:[function(require,module,exports){
+},{"./interpreter/class.js":2,"./interpreter/context.js":3,"./interpreter/interpreter.js":4,"./interpreter/karoline-boolean.js":5,"./interpreter/karoline-number.js":6,"./interpreter/karoline-object.js":7,"./interpreter/karoline-procedure.js":9,"./interpreter/karoline-string.js":10,"./interpreter/procedure.js":11,"./interpreter/value.js":12,"./parser/parser.js":319,"./parser/token.js":322,"./parser/tokenizer.js":323,"./util/error.js":324,"./util/event-emitter.js":325,"./util/syntax-error.js":326,"./util/type-error.js":327,"babel-core/register":13,"babel-polyfill":14}],2:[function(require,module,exports){
 const Value = require('./value.js')
 
 const Class = module.exports = class extends Value {
 
-  constructor (ctor, superClass) {
-    super()
+  constructor (name, ctor, superClass) {
+    super(Class)
+    this.name = name
     this.ctor = ctor
     this.members = {}
     this.setProperty('members', new Value())
     this.superClass = superClass || null
+  }
+
+  isInstance (value) {
+    let cls = value.class
+    while (cls) {
+      if (cls === this) {
+        return true
+      }
+      cls = cls.superClass
+    }
   }
 
   hasMember (name, visibility = Class.VISIBILITY_PUBLIC) {
@@ -330,7 +342,8 @@ const Interpreter = module.exports = class extends KarolineParser {
       } else {
         const first = await this.evaluate(tree.first.first)
         const second = await this.evaluate(tree.first.second)
-        first.setProperty(second.toString(), result)
+        const string = await second.getProperty(KarolineObject.TO_STRING).value.execute([], second)
+        first.setProperty(string.value, result)
       }
       return result
     }
@@ -368,11 +381,12 @@ const Interpreter = module.exports = class extends KarolineParser {
       } else {
         cls = await this.evaluate(tree.first)
       }
-      if (cls.class !== Class) {
+      // TODO: implement Class.getProperty(Class.IS_INSTANCE_OF).execute([cls])
+      if (cls.class !== Class && cls.class !== KarolinePrimitive) {
         this.throwTypeError(`expected class`, tree)
       }
-      const instance = await cls.createInstance(args)
-      return instance
+      
+      return cls.createInstance(args)
     }
 
     if (tree.value === '[') {
@@ -416,7 +430,6 @@ const Interpreter = module.exports = class extends KarolineParser {
         }
         value = await this.evaluate(declaration.value)
         value[Context.CONSTANT] = true
-        console.log(value)
         this.context.scope[identifier.value] = value
       }
       return value
@@ -425,33 +438,39 @@ const Interpreter = module.exports = class extends KarolineParser {
     if (tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY && KarolineObject.BINARY_OPERATORS.hasOwnProperty(tree.value)) {
       const first = await this.evaluate(tree.first)
       const second = await this.evaluate(tree.second)
-      return first[KarolineObject.BINARY_OPERATORS[tree.value]].execute([first, second])
+      return first.getProperty(KarolineObject.BINARY_OPERATORS[tree.value]).value.execute([second], first)
     }
 
     if (tree.value === '||') {
-      // TODO: only evaluate the second if 1st is falsy
       const first = await this.evaluate(tree.first)
+      const firstBoolean = await first.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], first)
+      if (firstBoolean.value) {
+        return first
+      }
       const second = await this.evaluate(tree.second)
-      return KarolineBoolean.createNativeInstance(first.castToBoolean().value || second.castToBoolean().value)
+      return second
     }
 
     if (tree.value === '&&') {
-      // TODO: only evaluate the second if 1st is truthy
       const first = await this.evaluate(tree.first)
+      const firstBoolean = await first.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], first)
+      if (!firstBoolean.value) {
+        return first
+      }
       const second = await this.evaluate(tree.second)
-      return KarolineBoolean.createNativeInstance(first.castToBoolean().value && second.castToBoolean().value)
+      return second
     }
 
     if (tree.value === '+') {
       // unary +
       const first = await this.evaluate(tree.first)
-      return first[KarolineObject.OPERATOR_PLUS_UNARY].execute([first])
+      return first.getProperty(KarolineObject.OPERATOR_PLUS_UNARY).value.execute([], first)
     }
 
     if (tree.value === '-') {
       // unary -
       const first = await this.evaluate(tree.first)
-      return first[KarolineObject.OPERATOR_MINUS_UNARY].execute([first])
+      return first.getProperty(KarolineObject.OPERATOR_MINUS_UNARY).value.execute([], first)
     }
 
     if (tree.value === '(' && tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {
@@ -530,19 +549,35 @@ const KarolineProcedure = require('./karoline-procedure.js')
 const Value = require('./value.js')
 const Procedure = require('./procedure.js')
 
-const KarolineBoolean = module.exports = new KarolinePrimitive(new Procedure({
+const KarolineBoolean = module.exports = new KarolinePrimitive('KarolineBoolean', new Procedure({
   name: 'KarolineBoolean::@constructor',
   cb: async ([first]) => {
-    this.setProperty('value', await first.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], first))
+    this.value = await first.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], first)
   }
 }), KarolineObject)
 
-KarolineBoolean.setMember(KarolineObject.TO_BOOLEAN, KarolineProcedure.createNativeInstance(new Procedure({
-  name: 'KarolineBoolean::@toKarolineBoolean',
-  cb: () => this
+KarolineBoolean.setMember(KarolineObject.TO_NUMBER, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineBoolean::@toKarolineNumber',
+  cb () {
+    return require('./karoline-number.js').createNativeInstance(this.value ? 'true' : 'false')
+  }
 })))
 
-},{"./karoline-object.js":7,"./karoline-primitive.js":8,"./karoline-procedure.js":9,"./procedure.js":11,"./value.js":12}],6:[function(require,module,exports){
+KarolineBoolean.setMember(KarolineObject.TO_BOOLEAN, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineBoolean::@toKarolineBoolean',
+  cb () {
+    return this
+  }
+})))
+
+KarolineBoolean.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineBoolean::@toKarolineString',
+  cb () {
+    return require('./karoline-string.js').createNativeInstance(this.value.toString())
+  }
+})))
+
+},{"./karoline-number.js":6,"./karoline-object.js":7,"./karoline-primitive.js":8,"./karoline-procedure.js":9,"./karoline-string.js":10,"./procedure.js":11,"./value.js":12}],6:[function(require,module,exports){
 const KarolineObject = require('./karoline-object.js')
 const KarolinePrimitive = require('./karoline-primitive.js')
 const KarolineProcedure = require('./karoline-procedure.js')
@@ -550,10 +585,10 @@ const KarolineString = require('./karoline-string.js')
 const Value = require('./value.js')
 const Procedure = require('./procedure.js')
 
-const KarolineNumber = module.exports = new KarolinePrimitive(new Procedure({
+const KarolineNumber = module.exports = new KarolinePrimitive('KarolineNumber', new Procedure({
   name: 'KarolineNumber::@constructor',
   cb: async ([first]) => {
-    this.setProperty('value', await first.getProperty(KarolineObject.TO_NUMBER).value.execute([], first))
+    this.value = (await first.getProperty(KarolineObject.TO_NUMBER).value.execute([], first)).value
   }
 }), KarolineObject)
 
@@ -561,94 +596,107 @@ KarolineNumber.setMember('test', KarolineNumber.createNativeInstance(4))
 
 KarolineNumber.setMember(KarolineObject.TO_NUMBER, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::@toKarolineNumber',
-  cb: () => this
+  cb () {
+    return this
+  }
 })))
 
 KarolineNumber.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::@toKarolineString',
-  cb: () => console.log(this) || KarolineString.createNativeInstance(this.value.toString())
+  cb () {
+    console.log(this)
+    return KarolineString.createNativeInstance(this.value.toString())
+  }
 })))
 
 KarolineNumber.setMember(KarolineObject.TO_BOOLEAN, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::@toKarolineBoolean',
-  cb: () => KarolineBoolean.createNativeInstance(this.value !== 0)
+  cb () {
+    return KarolineBoolean.createNativeInstance(this.value !== 0)
+  }
 })))
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_PLUS_UNARY, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::unary+',
-  cb: (self) => self,
+  cb () {
+    return this
+  },
   expectedArguments: [{
-    type: Value.NUMBER
+    type: KarolineNumber
   }]
 })))
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_PLUS_BINARY, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::binary+',
-  cb: ([self, other]) => {
-    if (other.type === Value.NUMBER) {
-      return new KarolineNumber(self.value + other.value)
+  cb: async function ([other]) {
+    if (other.class === KarolineNumber) {
+      return KarolineNumber.createNativeInstance(this.value + other.value)
     }
+    const string = await other.getProperty(KarolineObject.TO_STRING).value.execute([], other)
+    return KarolineString.createNativeInstance(this.value.toString() + string.value)
   },
   expectedArguments: [{
-    types: [Value.NUMBER, Value.STRING]
+    types: [KarolineNumber, KarolineString]
   }]
 })))
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_MINUS_UNARY, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::unary-',
-  cb: (self) => new KarolineNumber(-self.value),
+  cb () {
+    return KarolineNumber.createNativeInstance(-this.value)
+  },
   expectedArguments: [{
-    type: Value.NUMBER
+    type: KarolineNumber
   }]
 })))
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_MINUS_BINARY, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::binary-',
-  cb: ([self, other]) => {
-    return new KarolineNumber(self.value - other.value)
+  cb ([other]) {
+    return KarolineNumber.createNativeInstance(this.value - other.value)
   },
   expectedArguments: [{
-    type: Value.NUMBER
+    type: KarolineNumber
   }]
 })))
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_ASTERISK, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::*',
-  cb: ([self, other]) => {
-    return new KarolineNumber(self.value * other.value)
+  cb ([other]) {
+    return KarolineNumber.createNativeInstance(this.value * other.value)
   },
   expectedArguments: [{
-    type: Value.NUMBER
+    type: KarolineNumber
   }]
 })))
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_SLASH, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::/',
-  cb: ([self, other]) => {
-    return new KarolineNumber(self.value / other.value)
+  cb ([other]) {
+    return KarolineNumber.createNativeInstance(this.value / other.value)
   },
   expectedArguments: [{
-    type: Value.NUMBER
+    type: KarolineNumber
   }]
 })))
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_LESS_THAN, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::<',
-  cb: ([self, other]) => {
-    return new KarolineNumber(self.value < other.value)
+  cb ([other]) {
+    return KarolineNumber.createNativeInstance(this.value < other.value)
   },
   expectedArguments: [{
-    type: Value.NUMBER
+    type: KarolineNumber
   }]
 })))
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_GREATER_THAN, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::<',
-  cb: ([self, other]) => {
-    return new KarolineNumber(self.value > other.value)
+  cb ([other]) {
+    return KarolineNumber.createNativeInstance(this.value > other.value)
   },
   expectedArguments: [{
-    type: Value.NUMBER
+    type: KarolineNumber
   }]
 })))
 
@@ -659,26 +707,32 @@ const Procedure = require('./procedure.js')
 const KarolineProcedure = require('./karoline-procedure.js')
 const TypeError = require('../util/type-error.js')
 
-const KarolineObject = module.exports = new Class(new Procedure({
+const KarolineObject = module.exports = new Class('KarolineObject', new Procedure({
   name: 'KarolineObject::@constructor'
 }))
 
 KarolineObject.TO_NUMBER = Symbol('To number')
 KarolineObject.setMember(KarolineObject.TO_NUMBER, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineObject::@toKarolineNumber',
-  cb: ([self]) => new (require('./karoline-number.js'))(0)
+  cb () {
+    return require('./karoline-number.js').createNativeInstance(0)
+  }
 })))
 
 KarolineObject.TO_STRING = Symbol('To string')
 KarolineObject.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineObject::@toKarolineString',
-  cb: ([self]) => new (require('./karoline-string.js'))('<instance of KarolineObject>')
+  cb () {
+    return require('./karoline-string.js').createNativeInstance('<instance of KarolineObject>')
+  }
 })))
 
 KarolineObject.TO_BOOLEAN = Symbol('To boolean')
 KarolineObject.setMember(KarolineObject.TO_BOOLEAN, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineObject::@toKarolineBoolean',
-  cb: ([self]) => new (require('./karoline-boolean.js'))(true)
+  cb () {
+    return require('./karoline-boolean.js').createNativeInstance(true)
+  }
 })))
 
 KarolineObject.OPERATOR_PLUS_UNARY = Symbol('Operator plus unary')
@@ -702,8 +756,8 @@ KarolineObject.setMember(KarolineObject.OPERATOR_SLASH, KarolineProcedure.create
 KarolineObject.OPERATOR_EQUALITY = Symbol('Operator equality')
 KarolineObject.setMember(KarolineObject.OPERATOR_EQUALITY, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineObject::==',
-  cb: ([self, other]) => {
-    return new KarolineObject(self.type === other.type && self.value === other.value)
+  cb ([other]) {
+    return require('./karoline-boolean.js').createNativeInstance(this.type === other.type && this.value === other.value)
   },
   expectedArguments: [{
     type: KarolineObject.ANY
@@ -729,7 +783,9 @@ KarolineObject.BINARY_OPERATORS = {
 KarolineObject.TO_NUMBER = Symbol('to number')
 KarolineObject.setMember(KarolineObject.TO_NUMBER, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineObject::@toKarolineNumber',
-  cb: (self) => new (require('./karoline-number.js'))(0)
+  cb () {
+    return require('./karoline-number.js').createNativeInstance(0)
+  }
 })))
 
 },{"../util/type-error.js":327,"./class.js":2,"./karoline-boolean.js":5,"./karoline-number.js":6,"./karoline-procedure.js":9,"./karoline-string.js":10,"./procedure.js":11,"./value.js":12}],8:[function(require,module,exports){
@@ -756,16 +812,26 @@ const KarolinePrimitive = require('./karoline-primitive.js')
 const Value = require('./value.js')
 const Procedure = require('./procedure.js')
 
-const KarolineProcedure = module.exports = new KarolinePrimitive(new Procedure({
+const KarolineProcedure = module.exports = new KarolinePrimitive('KarolineProcedure', new Procedure({
   name: 'KarolineProcedure::@constructor',
   cb: ([first]) => {
-    this.setProperty('value', first)
+    if (first.class = KarolineProcedure) {
+      this.value = first
+    } else {
+      this.value = KarolineProcedure.createNativeInstance(new Procedure({
+        cb () {
+          return first
+        }
+      }))
+    }
   }
 }), KarolineObject)
 
 KarolineProcedure.setMember('call', KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineProcedure::call',
-  cb: (args) => this.value.execute(args.slice(0, -1), args.slice(-1)[0])
+  cb (args) {
+    return this.value.execute(args.slice(0, -1), args.slice(-1)[0])
+  }
 })))
 
 },{"./karoline-object.js":7,"./karoline-primitive.js":8,"./procedure.js":11,"./value.js":12}],10:[function(require,module,exports){
@@ -775,16 +841,29 @@ const KarolineProcedure = require('./karoline-procedure.js')
 const Value = require('./value.js')
 const Procedure = require('./procedure.js')
 
-const KarolineString = module.exports = new KarolinePrimitive(new Procedure({
+const KarolineString = module.exports = new KarolinePrimitive('KarolineString', new Procedure({
   name: 'KarolineString::@constructor',
   cb: async ([first]) => {
-    this.setProperty('value', await first.getProperty(KarolineObject.TO_STRING).value.execute([], first))
+    this.value = await first.getProperty(KarolineObject.TO_STRING).value.execute([], first)
   }
 }), KarolineObject)
 
 KarolineString.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineString::@toKarolineString',
-  cb: () => this
+  cb () {
+    return this
+  }
+})))
+
+KarolineString.setMember(KarolineObject.OPERATOR_PLUS_BINARY, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineString::binary+',
+  cb: async function ([other]) {
+    const string = await other.getProperty(KarolineObject.TO_STRING).value.execute([], other)
+    return KarolineString.createNativeInstance(this.value.toString() + string.value)
+  },
+  expectedArguments: [{
+    types: KarolineObject.ANY
+  }]
 })))
 
 },{"./karoline-object.js":7,"./karoline-primitive.js":8,"./karoline-procedure.js":9,"./procedure.js":11,"./value.js":12}],11:[function(require,module,exports){
@@ -798,6 +877,7 @@ const Procedure = module.exports = class {
     this.userDefined = !!options.userDefined
     this.name = options.name || '<unnamed procedure>'
     this.scope = options.scope || null
+    this.thisArg = options.thisArg || null
   }
 
   async execute (args, thisArg) {
@@ -824,8 +904,11 @@ const Procedure = module.exports = class {
       // }
     }
 
-    console.log(thisArg)
-    return await cb.call(thisArg || null, args) // ... await ...
+    return await cb.call(this.thisArg || thisArg || null, args) // ... await ...
+  }
+
+  bind (thisArg) {
+    this.thisArg = thisArg
   }
 
 }
@@ -8739,10 +8822,16 @@ const Tokenizer = module.exports = class {
         name += ch
       } else {
         if (this.keyWords.indexOf(name) > -1) {
+          // return the key word
           break
         } else if (this.isAlpha(name[0]) && this.isAlphaNumeric(name + ch)) {
+          // make a new identifier token that starts with the current 'name' value
           return this.identifierToken(name + ch)
+        } else if (!this.isAlphaNumeric(ch)) {
+          // return the current token as identifier
+          return this.createToken(Token.TOKEN_TYPE_IDENTIFIER, name, iter.getCurrentPosition())
         } else {
+          // unknown token
           throw new SyntaxError(`unknown token ${name + ch}`)
         }
       }
@@ -9094,7 +9183,8 @@ const Application = module.exports = class {
         let index
         for (index in args) {
           const arg = args[index]
-          strings.push(await arg.getProperty(KarolineObject.TO_STRING).value.execute([arg], arg))
+          const string = await arg.getProperty(KarolineObject.TO_STRING).value.execute([], arg)
+          strings.push(string.value)
         }
         this.karolConsole.log(...strings)
       }

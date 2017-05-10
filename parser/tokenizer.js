@@ -116,10 +116,16 @@ const Tokenizer = module.exports = class {
         name += ch
       } else {
         if (this.keyWords.indexOf(name) > -1) {
+          // return the key word
           break
         } else if (this.isAlpha(name[0]) && this.isAlphaNumeric(name + ch)) {
+          // make a new identifier token that starts with the current 'name' value
           return this.identifierToken(name + ch)
+        } else if (!this.isAlphaNumeric(ch)) {
+          // return the current token as identifier
+          return this.createToken(Token.TOKEN_TYPE_IDENTIFIER, name, iter.getCurrentPosition())
         } else {
+          // unknown token
           throw new SyntaxError(`unknown token ${name + ch}`)
         }
       }

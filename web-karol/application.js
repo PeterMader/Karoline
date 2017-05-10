@@ -102,7 +102,8 @@ const Application = module.exports = class {
         let index
         for (index in args) {
           const arg = args[index]
-          strings.push(await arg.getProperty(KarolineObject.TO_STRING).value.execute([arg], arg))
+          const string = await arg.getProperty(KarolineObject.TO_STRING).value.execute([], arg)
+          strings.push(string.value)
         }
         this.karolConsole.log(...strings)
       }
