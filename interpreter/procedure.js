@@ -3,7 +3,7 @@ const TypeError = require('../util/type-error.js')
 const Procedure = module.exports = class {
 
   constructor (options) {
-    this.cb = options.cb
+    this.cb = options.cb || (() => undefined)
     this.expectedArguments = Array.isArray(options.expectedArguments) ? options.expectedArguments : []
     this.userDefined = !!options.userDefined
     this.name = options.name || '<unnamed procedure>'

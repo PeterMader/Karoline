@@ -1,10 +1,10 @@
-const Class = require('./class.js')
 const Value = require('./value.js')
 const Procedure = require('./procedure.js')
+const KarolinePrimitive = require('./karoline-primitive.js')
 const KarolineProcedure = require('./karoline-procedure.js')
 const TypeError = require('../util/type-error.js')
 
-const KarolineObject = module.exports = new Class('KarolineObject', new Procedure({
+const KarolineObject = module.exports = new KarolinePrimitive('KarolineObject', new Procedure({
   name: 'KarolineObject::@constructor'
 }))
 
@@ -54,7 +54,7 @@ KarolineObject.OPERATOR_EQUALITY = Symbol('Operator equality')
 KarolineObject.setMember(KarolineObject.OPERATOR_EQUALITY, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineObject::==',
   cb ([other]) {
-    return require('./karoline-boolean.js').createNativeInstance(this.type === other.type && this.value === other.value)
+    return require('./karoline-boolean.js').createNativeInstance(this === other)
   },
   expectedArguments: [{
     type: KarolineObject.ANY
@@ -76,11 +76,3 @@ KarolineObject.BINARY_OPERATORS = {
   '<': KarolineObject.OPERATOR_LESS_THAN,
   '>': KarolineObject.OPERATOR_GREATER_THAN
 }
-
-KarolineObject.TO_NUMBER = Symbol('to number')
-KarolineObject.setMember(KarolineObject.TO_NUMBER, KarolineProcedure.createNativeInstance(new Procedure({
-  name: 'KarolineObject::@toKarolineNumber',
-  cb () {
-    return require('./karoline-number.js').createNativeInstance(0)
-  }
-})))

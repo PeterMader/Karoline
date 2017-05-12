@@ -6,15 +6,19 @@ const Procedure = require('./procedure.js')
 
 const KarolineBoolean = module.exports = new KarolinePrimitive('KarolineBoolean', new Procedure({
   name: 'KarolineBoolean::@constructor',
-  cb: async ([first]) => {
-    this.value = await first.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], first)
+  async cb ([first]) {
+    if (first) {
+      this.value = await first.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], first)
+    } else {
+      this.value = false
+    }
   }
 }), KarolineObject)
 
 KarolineBoolean.setMember(KarolineObject.TO_NUMBER, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineBoolean::@toKarolineNumber',
   cb () {
-    return require('./karoline-number.js').createNativeInstance(this.value ? 'true' : 'false')
+    return require('./karoline-number.js').createNativeInstance(this.value ? 1 : 0)
   }
 })))
 

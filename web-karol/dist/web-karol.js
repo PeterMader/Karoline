@@ -1,12 +1,16 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-((factory) => {
-  module.exports = factory()
-  if (typeof window === 'object') {
-    window.Karoline = module.exports
+'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+(function (factory) {
+  module.exports = factory();
+  if ((typeof window === 'undefined' ? 'undefined' : _typeof(window)) === 'object') {
+    window.Karoline = module.exports;
   }
-})(() => {
-  require('babel-core/register')
-  require('babel-polyfill')
+})(function () {
+  require('babel-core/register');
+  require('babel-polyfill');
 
   return {
     Interpreter: require('./interpreter/interpreter.js'),
@@ -29,746 +33,1512 @@
     Error: require('./util/error.js'),
     SyntaxError: require('./util/syntax-error.js'),
     TypeError: require('./util/type-error.js')
-  }
-})
+  };
+});
 
 },{"./interpreter/class.js":2,"./interpreter/context.js":3,"./interpreter/interpreter.js":4,"./interpreter/karoline-boolean.js":5,"./interpreter/karoline-number.js":6,"./interpreter/karoline-object.js":7,"./interpreter/karoline-procedure.js":9,"./interpreter/karoline-string.js":10,"./interpreter/procedure.js":11,"./interpreter/value.js":12,"./parser/parser.js":319,"./parser/token.js":322,"./parser/tokenizer.js":323,"./util/error.js":324,"./util/event-emitter.js":325,"./util/syntax-error.js":326,"./util/type-error.js":327,"babel-core/register":13,"babel-polyfill":14}],2:[function(require,module,exports){
-const Value = require('./value.js')
+'use strict';
 
-const Class = module.exports = class extends Value {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  constructor (name, ctor, superClass) {
-    super(Class)
-    this.name = name
-    this.ctor = ctor
-    this.members = {}
-    this.setProperty('members', new Value())
-    this.superClass = superClass || null
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Value = require('./value.js');
+
+var Class = module.exports = function (_Value) {
+  _inherits(_class, _Value);
+
+  function _class(name, ctor, superClass) {
+    _classCallCheck(this, _class);
+
+    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, Class));
+
+    _this.name = name;
+    _this.ctor = ctor;
+    _this.members = {};
+    _this.setProperty('members', new Value());
+    _this.superClass = superClass || null;
+    return _this;
   }
 
-  isInstance (value) {
-    let cls = value.class
-    while (cls) {
-      if (cls === this) {
-        return true
+  _createClass(_class, [{
+    key: 'isInstance',
+    value: function isInstance(value) {
+      var cls = value.class;
+      while (cls) {
+        if (cls === this) {
+          return true;
+        }
+        cls = cls.superClass;
       }
-      cls = cls.superClass
     }
-  }
+  }, {
+    key: 'hasMember',
+    value: function hasMember(name) {
+      var visibility = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : Class.VISIBILITY_PUBLIC;
 
-  hasMember (name, visibility = Class.VISIBILITY_PUBLIC) {
-    return this.members.hasOwnProperty(name) && this.members[name].visibility === visibility
-  }
+      return this.members.hasOwnProperty(name) && this.members[name].visibility === visibility;
+    }
+  }, {
+    key: 'getMember',
+    value: function getMember(name) {
+      return this.members[name];
+    }
+  }, {
+    key: 'setMember',
+    value: function setMember(name, value, visibility) {
+      value.visibility = visibility || Class.VISIBILITY_PUBLIC;
+      this.members[name] = value;
+    }
+  }, {
+    key: 'createInstance',
+    value: function () {
+      var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(args) {
+        var instance, result;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                instance = new Value(this);
+                _context.next = 3;
+                return this.ctor.execute(args, instance);
 
-  getMember (name) {
-    return this.members[name]
-  }
+              case 3:
+                result = _context.sent;
+                return _context.abrupt('return', result || instance);
 
-  setMember (name, value, visibility) {
-    value.visibility = visibility || Class.VISIBILITY_PUBLIC
-    this.members[name] = value
-  }
+              case 5:
+              case 'end':
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
 
-  async createInstance (args) {
-    const instance = new Value(this)
-    const result = await this.ctor.execute(args, instance)
-    // if the constructor has a return statement, return that instead of the new instance
-    return result || instance
-  }
+      function createInstance(_x2) {
+        return _ref.apply(this, arguments);
+      }
 
-}
+      return createInstance;
+    }()
+  }]);
 
-Class.VISIBILITY_PUBLIC = Symbol('Public')
-Class.VISIBILITY_PROTECTED = Symbol('Protected')
-Class.VISIBILITY_PRIVATE = Symbol('Private')
+  return _class;
+}(Value);
+
+Class.VISIBILITY_PUBLIC = Symbol('Public');
+Class.VISIBILITY_PROTECTED = Symbol('Protected');
+Class.VISIBILITY_PRIVATE = Symbol('Private');
 
 },{"./value.js":12}],3:[function(require,module,exports){
-const Context = module.exports = class {
+'use strict';
 
-  constructor (main) {
-    this.scope = {}
-    this.scopes = [this.scope]
-    this.callStack = [main]
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Context = module.exports = function () {
+  function _class(main) {
+    _classCallCheck(this, _class);
+
+    this.scope = {};
+    this.scopes = [this.scope];
+    this.callStack = [main];
   }
 
-  overrideScope (scope) {
-    this.scopes.push(scope)
-    this.scope = scope
-  }
-
-  restoreScope () {
-    if (this.scopes.length > 1) {
-      this.scope = this.scopes.pop()
+  _createClass(_class, [{
+    key: 'overrideScope',
+    value: function overrideScope(scope) {
+      this.scopes.push(scope);
+      this.scope = scope;
     }
-  }
-
-  pushScope () {
-    this.scope = {
-      [Context.PARENT_SCOPE]: this.scope
-    }
-  }
-
-  popScope () {
-    this.scope = this.scope[Context.PARENT_SCOPE]
-  }
-
-  clearCallStack () {
-    while (this.callStack.length > 1) {
-      this.callStack.pop()
-    }
-  }
-
-  get (name) {
-    let {scope} = this
-    do {
-      if (scope.hasOwnProperty(name)) {
-        return scope[name]
+  }, {
+    key: 'restoreScope',
+    value: function restoreScope() {
+      if (this.scopes.length > 1) {
+        this.scope = this.scopes.pop();
       }
-    } while (scope = scope[Context.PARENT_SCOPE])
-    return null
-  }
-
-  set (name, value) {
-    let {scope} = this
-    do {
-      if (scope.hasOwnProperty(name)) {
-        return scope[name] = value
+    }
+  }, {
+    key: 'pushScope',
+    value: function pushScope() {
+      this.scope = _defineProperty({}, Context.PARENT_SCOPE, this.scope);
+    }
+  }, {
+    key: 'popScope',
+    value: function popScope() {
+      this.scope = this.scope[Context.PARENT_SCOPE];
+    }
+  }, {
+    key: 'clearCallStack',
+    value: function clearCallStack() {
+      while (this.callStack.length > 1) {
+        this.callStack.pop();
       }
-    } while (scope = scope[Context.PARENT_SCOPE])
-    this.scope[name] = value
-  }
+    }
+  }, {
+    key: 'get',
+    value: function get(name) {
+      var scope = this.scope;
 
-}
+      do {
+        if (scope.hasOwnProperty(name)) {
+          return scope[name];
+        }
+      } while (scope = scope[Context.PARENT_SCOPE]);
+      return null;
+    }
+  }, {
+    key: 'set',
+    value: function set(name, value) {
+      var scope = this.scope;
 
-Context.PARENT_SCOPE = Symbol('Parent scope')
-Context.CONSTANT = Symbol('Constant identifier')
+      do {
+        if (scope.hasOwnProperty(name)) {
+          return scope[name] = value;
+        }
+      } while (scope = scope[Context.PARENT_SCOPE]);
+      this.scope[name] = value;
+    }
+  }]);
+
+  return _class;
+}();
+
+Context.PARENT_SCOPE = Symbol('Parent scope');
+Context.CONSTANT = Symbol('Constant identifier');
 
 },{}],4:[function(require,module,exports){
-const Context = require('./context.js')
-const Token = require('../parser/token.js')
-const Value = require('./value.js')
-const KarolineObject = require('./karoline-object.js')
-const KarolineNumber = require('./karoline-number.js')
-const KarolineString = require('./karoline-string.js')
-const KarolineBoolean = require('./karoline-boolean.js')
-const KarolineProcedure = require('./karoline-procedure.js')
-const Class = require('./class.js')
-const TypeError = require('../util/type-error.js')
-const ParserSymbol = require('../parser/parser-symbol.js')
-const Procedure = require('./procedure.js')
-const KarolineParser = require('../parser/karoline-parser.js')
+'use strict';
 
-const Interpreter = module.exports = class extends KarolineParser {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  constructor () {
-    super()
-    this.nativeScope = {}
-    this.context = new Context(new Token({
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Context = require('./context.js');
+var Token = require('../parser/token.js');
+var Value = require('./value.js');
+var KarolineObject = require('./karoline-object.js');
+var KarolineNumber = require('./karoline-number.js');
+var KarolineString = require('./karoline-string.js');
+var KarolineBoolean = require('./karoline-boolean.js');
+var KarolineProcedure = require('./karoline-procedure.js');
+var Class = require('./class.js');
+var TypeError = require('../util/type-error.js');
+var ParserSymbol = require('../parser/parser-symbol.js');
+var Procedure = require('./procedure.js');
+var KarolineParser = require('../parser/karoline-parser.js');
+
+var Interpreter = module.exports = function (_KarolineParser) {
+  _inherits(_class, _KarolineParser);
+
+  function _class() {
+    _classCallCheck(this, _class);
+
+    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this));
+
+    _this.nativeScope = {};
+    _this.context = new Context(new Token({
       value: '<main>',
       position: {
         line: 0,
         column: 0
       }
-    }))
+    }));
 
-    this.speed = 500
-    this.running = false
-    this.stopped = true
+    _this.speed = 500;
+    _this.running = false;
+    _this.stopped = true;
+    return _this;
   }
 
-  setExecutionContext (context) {
-    this.context = context
-  }
+  _createClass(_class, [{
+    key: 'setExecutionContext',
+    value: function setExecutionContext(context) {
+      this.context = context;
+    }
+  }, {
+    key: 'addNativeProcedure',
+    value: function addNativeProcedure(procedure) {
+      this.nativeScope[procedure.name] = KarolineProcedure.createNativeInstance(procedure);
+    }
+  }, {
+    key: 'addNativeValue',
+    value: function addNativeValue(name, value) {
+      this.nativeScope[name] = value;
+    }
+  }, {
+    key: 'createProcedure',
+    value: function createProcedure(name, block) {
+      var length = block.length;
 
-  addNativeProcedure (procedure) {
-    this.nativeScope[procedure.name] = KarolineProcedure.createNativeInstance(procedure)
-  }
+      var procedure = new Procedure({
+        cb: this.evaluateBlock.bind(this, block),
+        name: name,
+        userDefined: true,
+        scope: this.context.scope
+      });
+      var value = KarolineProcedure.createNativeInstance(procedure);
+      this.context.set(name, value);
+      return value;
+    }
+  }, {
+    key: 'cleanUp',
+    value: function cleanUp() {
+      var procedures = this.procedures;
 
-  addNativeValue (name, value) {
-    this.nativeScope[name] = value
-  }
+      var index = void 0;
+      for (index in procedures) {
+        if (procedures[index].userDefined) {
+          delete procedures[index];
+        }
+      }
 
-  createProcedure (name, block) {
-    const {length} = block
-    const procedure = new Procedure({
-      cb: this.evaluateBlock.bind(this, block),
-      name,
-      userDefined: true,
-      scope: this.context.scope
-    })
-    const value = KarolineProcedure.createNativeInstance(procedure)
-    this.context.set(name, value)
-    return value
-  }
+      this.context.clearCallStack();
+      this.running = false;
+      this.stopped = true;
+    }
+  }, {
+    key: 'throwTypeError',
+    value: function throwTypeError(message, position) {
+      throw new TypeError(message, position, this.context.callStack);
+    }
+  }, {
+    key: 'wait',
+    value: function wait(ms) {
+      return new Promise(function (resolve) {
+        setTimeout(resolve, ms);
+      });
+    }
+  }, {
+    key: 'run',
+    value: function () {
+      var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(source) {
+        var result, trees;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                this.stopped = false;
+                this.running = true;
+                this.emit('run');
+                result = void 0;
+                _context.prev = 4;
+                trees = this.parser.parse(source);
 
-  cleanUp () {
-    const {procedures} = this
-    let index
-    for (index in procedures) {
-      if (procedures[index].userDefined) {
-        delete procedures[index]
+                this.emit('parse', trees);
+                _context.next = 9;
+                return this.evaluateBlock(trees);
+
+              case 9:
+                result = _context.sent;
+                _context.next = 15;
+                break;
+
+              case 12:
+                _context.prev = 12;
+                _context.t0 = _context['catch'](4);
+
+                if (_context.t0 !== Interpreter.EXECUTION_STOPPED) {
+                  console.error(_context.t0);
+                  this.emit('error', _context.t0);
+                  result = _context.t0;
+                } else {
+                  result = new Value();
+                }
+
+              case 15:
+                this.cleanUp();
+                this.emit('finish');
+                return _context.abrupt('return', result);
+
+              case 18:
+              case 'end':
+                return _context.stop();
+            }
+          }
+        }, _callee, this, [[4, 12]]);
+      }));
+
+      function run(_x) {
+        return _ref.apply(this, arguments);
+      }
+
+      return run;
+    }()
+  }, {
+    key: 'pause',
+    value: function pause() {
+      if (this.running) {
+        this.running = false;
+        this.emit('pause');
       }
     }
-
-    this.context.clearCallStack()
-    this.running = false
-    this.stopped = true
-  }
-
-  throwTypeError (message, position) {
-    throw new TypeError(message, position, this.context.callStack)
-  }
-
-  wait (ms) {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms)
-    })
-  }
-
-  async run (source) {
-    this.stopped = false
-    this.running = true
-    this.emit('run')
-    let result
-    try {
-      const trees = this.parser.parse(source)
-      this.emit('parse', trees)
-      result = await this.evaluateBlock(trees)
-    } catch (e) {
-      if (e !== Interpreter.EXECUTION_STOPPED) {
-        console.error(e)
-        this.emit('error', e)
-        result = e
-      } else {
-        result = new Value()
-      }
-    }
-    this.cleanUp()
-    this.emit('finish')
-    return result
-  }
-
-  pause () {
-    if (this.running) {
-      this.running = false
-      this.emit('pause')
-    }
-  }
-
-  unpause () {
-    if (!this.running && !this.stopped) {
-      this.running = true
-      this.emit('unpause')
-    }
-  }
-
-  stop () {
-    if (!this.stopped) {
-      if (!this.running) {
-        this.emit('unpause')
-      }
-      this.stopped = true
-      this.emit('stop')
-    }
-  }
-
-  async executeProcedure (procedure, args, caller) {
-    this.context.callStack.push(caller)
-    if (procedure.scope) {
-      this.context.overrideScope(procedure.scope)
-    }
-
-    let result
-    try {
-      result = (await procedure.execute(args)) || new Value()
-    } catch (e) {
-      if (e[Interpreter.RETURN]) {
-        result = e
-      } else {
-        throw e
-      }
-    }
-    if (procedure.scope) {
-      this.context.restoreScope()
-    }
-    this.context.callStack.pop()
-    return result
-  }
-
-  async evaluateBlock (block) {
-    const {length} = block
-    let value = new Value()
-    let i
-    this.context.pushScope()
-    for (i = 0; i < length; i += 1) {
-      const index = i
-      await this.wait(this.speed)
+  }, {
+    key: 'unpause',
+    value: function unpause() {
       if (!this.running && !this.stopped) {
-        await this.awaitEvent('unpause')
+        this.running = true;
+        this.emit('unpause');
       }
-      if (this.stopped) {
-        // break the promise chain
-        throw Interpreter.EXECUTION_STOPPED
-      }
-      value = await this.evaluate(block[index], true)
-      this.emit('statement')
     }
-    this.context.popScope()
-    return value
-  }
-
-  async evaluate (tree, isStatement) {
-    if (tree.type === Token.TOKEN_TYPE_NUMBER) {
-      return KarolineNumber.createNativeInstance(tree.value)
-    }
-
-    if (tree.type === Token.TOKEN_TYPE_STRING) {
-      return KarolineString.createNativeInstance(tree.value)
-    }
-
-    if (tree.isAssignment) {
-      const result = await this.evaluate(tree.second)
-      if (tree.first.type === Token.TOKEN_TYPE_IDENTIFIER) {
-        const identifier = this.context.get(tree.first.value)
-        if (!identifier) {
-          this.throwTypeError(`trying to set a value to undeclared identifier "${tree.first.value}"`, tree.position)
-        } else if (identifier[Context.CONSTANT]) {
-          this.throwTypeError(`invalid assignment to const identifier "${tree.first.value}"`, tree.position)
+  }, {
+    key: 'stop',
+    value: function stop() {
+      if (!this.stopped) {
+        if (!this.running) {
+          this.emit('unpause');
         }
-        this.context.set(tree.first.value, result)
-      } else if (tree.first.value === '.') {
-        const first = await this.evaluate(tree.first.first)
-        first.setProperty(tree.first.second.value, result)
-      } else {
-        const first = await this.evaluate(tree.first.first)
-        const second = await this.evaluate(tree.first.second)
-        const string = await second.getProperty(KarolineObject.TO_STRING).value.execute([], second)
-        first.setProperty(string.value, result)
-      }
-      return result
-    }
-
-    if (tree.type === Token.TOKEN_TYPE_IDENTIFIER) {
-      let value
-      if (value = this.context.get(tree.value)) {
-      } else if (this.nativeScope.hasOwnProperty(tree.value)) {
-        value = this.nativeScope[tree.value]
-      } else {
-        this.throwTypeError(`undefined identifier ${tree.value}`)
-      }
-
-      if (isStatement && value.class === KarolineProcedure) {
-        // procedure call without arguments
-        return this.executeProcedure(value.value, [], tree)
-      }
-      return value
-    }
-
-    if (tree.value === 'return') {
-      const result = await this.evaluate(tree.first)
-      result[Interpreter.RETURN] = true
-      throw result
-    }
-
-    if (tree.value === 'new') {
-      let cls, args = []
-      if (tree.first.value === '(') {
-        cls = await this.evaluate(tree.first.first)
-        let i
-        for (i = 0; i < tree.first.args.length; i += 1) {
-          args.push(await this.evaluate(tree.first.args[i]))
-        }
-      } else {
-        cls = await this.evaluate(tree.first)
-      }
-      // TODO: implement Class.getProperty(Class.IS_INSTANCE_OF).execute([cls])
-      if (cls.class !== Class && cls.class !== KarolinePrimitive) {
-        this.throwTypeError(`expected class`, tree)
-      }
-      
-      return cls.createInstance(args)
-    }
-
-    if (tree.value === '[') {
-      const first = await this.evaluate(tree.first)
-      const second = await this.evaluate(tree.second)
-      return first.getProperty(second.toString())
-    }
-
-    if (tree.value === '.') {
-      const first = await this.evaluate(tree.first)
-      return first.getProperty(tree.second.value)
-    }
-
-    if (tree.value === 'var') {
-      let index, value
-      const {identifiers} = tree
-      for (index in identifiers) {
-        const declaration = identifiers[index]
-        const {identifier} = declaration
-        if (this.context.scope.hasOwnProperty(identifier.value)) {
-          this.throwTypeError(`identifier ${identifier.value} has already been declared in this scope`, tree.position)
-        }
-        if (declaration.value) {
-          value = await this.evaluate(declaration.value)
-        } else {
-          value = new Value()
-        }
-        this.context.scope[identifier.value] = value
-      }
-      return value
-    }
-
-    if (tree.value === 'const') {
-      let index, value
-      const {identifiers} = tree
-      for (index in identifiers) {
-        const declaration = identifiers[index]
-        const {identifier} = declaration
-        if (this.context.scope.hasOwnProperty(identifier.value)) {
-          this.throwTypeError(`identifier ${identifier.value} has already been declared in this scope`, tree.position)
-        }
-        value = await this.evaluate(declaration.value)
-        value[Context.CONSTANT] = true
-        this.context.scope[identifier.value] = value
-      }
-      return value
-    }
-
-    if (tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY && KarolineObject.BINARY_OPERATORS.hasOwnProperty(tree.value)) {
-      const first = await this.evaluate(tree.first)
-      const second = await this.evaluate(tree.second)
-      return first.getProperty(KarolineObject.BINARY_OPERATORS[tree.value]).value.execute([second], first)
-    }
-
-    if (tree.value === '||') {
-      const first = await this.evaluate(tree.first)
-      const firstBoolean = await first.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], first)
-      if (firstBoolean.value) {
-        return first
-      }
-      const second = await this.evaluate(tree.second)
-      return second
-    }
-
-    if (tree.value === '&&') {
-      const first = await this.evaluate(tree.first)
-      const firstBoolean = await first.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], first)
-      if (!firstBoolean.value) {
-        return first
-      }
-      const second = await this.evaluate(tree.second)
-      return second
-    }
-
-    if (tree.value === '+') {
-      // unary +
-      const first = await this.evaluate(tree.first)
-      return first.getProperty(KarolineObject.OPERATOR_PLUS_UNARY).value.execute([], first)
-    }
-
-    if (tree.value === '-') {
-      // unary -
-      const first = await this.evaluate(tree.first)
-      return first.getProperty(KarolineObject.OPERATOR_MINUS_UNARY).value.execute([], first)
-    }
-
-    if (tree.value === '(' && tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY) {
-      // procedure call with arguments
-      let procedure
-      if (tree.first.type === Token.TOKEN_TYPE_IDENTIFIER) {
-        if (procedure = this.context.get(tree.first.value)) {
-        } else if (this.nativeScope.hasOwnProperty(tree.first.value)) {
-          procedure = this.nativeScope[tree.first.value]
-        } else {
-          this.throwTypeError(`undefined identifier ${tree.first.value}`)
-        }
-      } else {
-        procedure = await this.evaluate(tree.first)
-      }
-      if (procedure.class === KarolineProcedure) {
-        procedure = procedure.value
-      } else {
-        this.throwTypeError(`tried to call a value of type ${procedure.type}, expected a procedure`, tree.first.position)
-      }
-      const args = []
-      let i
-      for (i = 0; i < tree.args.length; i += 1) {
-        args.push(await this.evaluate(tree.args[i]))
-      }
-      return this.executeProcedure(procedure, args, tree)
-    }
-
-    if (tree.value === 'if') {
-      const condition = await this.evaluate(tree.condition)
-      if (condition.castToBoolean().value) {
-        return this.evaluateBlock(tree.ifBlock)
-      } else if (tree.elseBlock) {
-        return this.evaluateBlock(tree.elseBlock)
+        this.stopped = true;
+        this.emit('stop');
       }
     }
+  }, {
+    key: 'executeProcedure',
+    value: function () {
+      var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(procedure, args, caller) {
+        var result;
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                this.context.callStack.push(caller);
+                if (procedure.scope) {
+                  this.context.overrideScope(procedure.scope);
+                }
 
-    if (tree.value === 'repeat') {
-      const {block} = tree
-      if (typeof tree.times !== 'undefined') {
-        // repeat ... times structure
-        const times = await this.evaluate(tree.times)
-        if (times.class !== KarolineNumber) {
-          throw new TypeError(`repeat structure: expected ${Value.NUMBER}, got ${times.type}`)
-        }
-        let i
-        for (i = 0; i < times.value; i += 1) {
-          await this.evaluateBlock(block)
-        }
-      } else  {
-        // repeat while ... structure
-        while ((await this.evaluate(tree.condition)).castToBoolean().value) {
-          await this.evaluateBlock(block)
-        }
+                result = void 0;
+                _context2.prev = 3;
+                _context2.next = 6;
+                return procedure.execute(args);
+
+              case 6:
+                _context2.t0 = _context2.sent;
+
+                if (_context2.t0) {
+                  _context2.next = 9;
+                  break;
+                }
+
+                _context2.t0 = new Value();
+
+              case 9:
+                result = _context2.t0;
+                _context2.next = 19;
+                break;
+
+              case 12:
+                _context2.prev = 12;
+                _context2.t1 = _context2['catch'](3);
+
+                if (!_context2.t1[Interpreter.RETURN]) {
+                  _context2.next = 18;
+                  break;
+                }
+
+                result = _context2.t1;
+                _context2.next = 19;
+                break;
+
+              case 18:
+                throw _context2.t1;
+
+              case 19:
+                if (procedure.scope) {
+                  this.context.restoreScope();
+                }
+                this.context.callStack.pop();
+                return _context2.abrupt('return', result);
+
+              case 22:
+              case 'end':
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this, [[3, 12]]);
+      }));
+
+      function executeProcedure(_x2, _x3, _x4) {
+        return _ref2.apply(this, arguments);
       }
-      return new Value()
-    }
 
-    if (tree.value === 'procedure') {
-      const {first, block} = tree
-      const name = first.value // first is an identifier and does not have to be evalated
-      return this.createProcedure(name, block)
-    }
-    this.throwTypeError(`unexpected symbol ${tree.value}`, tree.position)
-  }
+      return executeProcedure;
+    }()
+  }, {
+    key: 'evaluateBlock',
+    value: function () {
+      var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(block) {
+        var length, value, i, index;
+        return regeneratorRuntime.wrap(function _callee3$(_context3) {
+          while (1) {
+            switch (_context3.prev = _context3.next) {
+              case 0:
+                length = block.length;
+                value = new Value();
+                i = void 0;
 
-}
+                this.context.pushScope();
+                i = 0;
 
-Interpreter.EXECUTION_STOPPED = Symbol('execution stopped')
-Interpreter.RETURN = Symbol('return')
+              case 5:
+                if (!(i < length)) {
+                  _context3.next = 21;
+                  break;
+                }
+
+                index = i;
+                _context3.next = 9;
+                return this.wait(this.speed);
+
+              case 9:
+                if (!(!this.running && !this.stopped)) {
+                  _context3.next = 12;
+                  break;
+                }
+
+                _context3.next = 12;
+                return this.awaitEvent('unpause');
+
+              case 12:
+                if (!this.stopped) {
+                  _context3.next = 14;
+                  break;
+                }
+
+                throw Interpreter.EXECUTION_STOPPED;
+
+              case 14:
+                _context3.next = 16;
+                return this.evaluate(block[index], true);
+
+              case 16:
+                value = _context3.sent;
+
+                this.emit('statement');
+
+              case 18:
+                i += 1;
+                _context3.next = 5;
+                break;
+
+              case 21:
+                this.context.popScope();
+                return _context3.abrupt('return', value);
+
+              case 23:
+              case 'end':
+                return _context3.stop();
+            }
+          }
+        }, _callee3, this);
+      }));
+
+      function evaluateBlock(_x5) {
+        return _ref3.apply(this, arguments);
+      }
+
+      return evaluateBlock;
+    }()
+  }, {
+    key: 'evaluate',
+    value: function () {
+      var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(tree, isStatement) {
+        var result, identifier, first, _first, second, string, value, _result, cls, args, i, _first2, _second, _first3, index, _value, identifiers, declaration, _identifier, _index, _value2, _identifiers, _declaration, _identifier2, _first4, _second2, _first5, firstBoolean, _second3, _first6, _firstBoolean, _second4, _first7, _first8, procedure, _args4, _i, condition, block, times, _i2, _first9, _block, name;
+
+        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
+                if (!(tree.type === Token.TOKEN_TYPE_NUMBER)) {
+                  _context4.next = 2;
+                  break;
+                }
+
+                return _context4.abrupt('return', KarolineNumber.createNativeInstance(tree.value));
+
+              case 2:
+                if (!(tree.type === Token.TOKEN_TYPE_STRING)) {
+                  _context4.next = 4;
+                  break;
+                }
+
+                return _context4.abrupt('return', KarolineString.createNativeInstance(tree.value));
+
+              case 4:
+                if (!tree.isAssignment) {
+                  _context4.next = 32;
+                  break;
+                }
+
+                _context4.next = 7;
+                return this.evaluate(tree.second);
+
+              case 7:
+                result = _context4.sent;
+
+                if (!(tree.first.type === Token.TOKEN_TYPE_IDENTIFIER)) {
+                  _context4.next = 14;
+                  break;
+                }
+
+                identifier = this.context.get(tree.first.value);
+
+                if (!identifier) {
+                  this.throwTypeError('trying to set a value to undeclared identifier "' + tree.first.value + '"', tree.position);
+                } else if (identifier[Context.CONSTANT]) {
+                  this.throwTypeError('invalid assignment to const identifier "' + tree.first.value + '"', tree.position);
+                }
+                this.context.set(tree.first.value, result);
+                _context4.next = 31;
+                break;
+
+              case 14:
+                if (!(tree.first.value === '.')) {
+                  _context4.next = 21;
+                  break;
+                }
+
+                _context4.next = 17;
+                return this.evaluate(tree.first.first);
+
+              case 17:
+                first = _context4.sent;
+
+                first.setProperty(tree.first.second.value, result);
+                _context4.next = 31;
+                break;
+
+              case 21:
+                _context4.next = 23;
+                return this.evaluate(tree.first.first);
+
+              case 23:
+                _first = _context4.sent;
+                _context4.next = 26;
+                return this.evaluate(tree.first.second);
+
+              case 26:
+                second = _context4.sent;
+                _context4.next = 29;
+                return second.getProperty(KarolineObject.TO_STRING).value.execute([], second);
+
+              case 29:
+                string = _context4.sent;
+
+                _first.setProperty(string.value, result);
+
+              case 31:
+                return _context4.abrupt('return', result);
+
+              case 32:
+                if (!(tree.type === Token.TOKEN_TYPE_IDENTIFIER)) {
+                  _context4.next = 38;
+                  break;
+                }
+
+                value = void 0;
+
+                if (value = this.context.get(tree.value)) {} else if (this.nativeScope.hasOwnProperty(tree.value)) {
+                  value = this.nativeScope[tree.value];
+                } else {
+                  this.throwTypeError('undefined identifier ' + tree.value);
+                }
+
+                if (!(isStatement && value.class === KarolineProcedure)) {
+                  _context4.next = 37;
+                  break;
+                }
+
+                return _context4.abrupt('return', this.executeProcedure(value.value, [], tree));
+
+              case 37:
+                return _context4.abrupt('return', value);
+
+              case 38:
+                if (!(tree.value === 'return')) {
+                  _context4.next = 44;
+                  break;
+                }
+
+                _context4.next = 41;
+                return this.evaluate(tree.first);
+
+              case 41:
+                _result = _context4.sent;
+
+                _result[Interpreter.RETURN] = true;
+                throw _result;
+
+              case 44:
+                if (!(tree.value === 'new')) {
+                  _context4.next = 68;
+                  break;
+                }
+
+                cls = void 0, args = [];
+
+                if (!(tree.first.value === '(')) {
+                  _context4.next = 63;
+                  break;
+                }
+
+                _context4.next = 49;
+                return this.evaluate(tree.first.first);
+
+              case 49:
+                cls = _context4.sent;
+                i = void 0;
+                i = 0;
+
+              case 52:
+                if (!(i < tree.first.args.length)) {
+                  _context4.next = 61;
+                  break;
+                }
+
+                _context4.t0 = args;
+                _context4.next = 56;
+                return this.evaluate(tree.first.args[i]);
+
+              case 56:
+                _context4.t1 = _context4.sent;
+
+                _context4.t0.push.call(_context4.t0, _context4.t1);
+
+              case 58:
+                i += 1;
+                _context4.next = 52;
+                break;
+
+              case 61:
+                _context4.next = 66;
+                break;
+
+              case 63:
+                _context4.next = 65;
+                return this.evaluate(tree.first);
+
+              case 65:
+                cls = _context4.sent;
+
+              case 66:
+                // TODO: implement Class.getProperty(Class.IS_INSTANCE_OF).execute([cls])
+                if (cls.class !== Class && cls.class !== KarolinePrimitive) {
+                  this.throwTypeError('expected class', tree);
+                }
+
+                return _context4.abrupt('return', cls.createInstance(args));
+
+              case 68:
+                if (!(tree.value === '[')) {
+                  _context4.next = 76;
+                  break;
+                }
+
+                _context4.next = 71;
+                return this.evaluate(tree.first);
+
+              case 71:
+                _first2 = _context4.sent;
+                _context4.next = 74;
+                return this.evaluate(tree.second);
+
+              case 74:
+                _second = _context4.sent;
+                return _context4.abrupt('return', _first2.getProperty(_second.toString()));
+
+              case 76:
+                if (!(tree.value === '.')) {
+                  _context4.next = 81;
+                  break;
+                }
+
+                _context4.next = 79;
+                return this.evaluate(tree.first);
+
+              case 79:
+                _first3 = _context4.sent;
+                return _context4.abrupt('return', _first3.getProperty(tree.second.value));
+
+              case 81:
+                if (!(tree.value === 'var')) {
+                  _context4.next = 101;
+                  break;
+                }
+
+                index = void 0, _value = void 0;
+                identifiers = tree.identifiers;
+                _context4.t2 = regeneratorRuntime.keys(identifiers);
+
+              case 85:
+                if ((_context4.t3 = _context4.t2()).done) {
+                  _context4.next = 100;
+                  break;
+                }
+
+                index = _context4.t3.value;
+                declaration = identifiers[index];
+                _identifier = declaration.identifier;
+
+                if (this.context.scope.hasOwnProperty(_identifier.value)) {
+                  this.throwTypeError('identifier ' + _identifier.value + ' has already been declared in this scope', tree.position);
+                }
+
+                if (!declaration.value) {
+                  _context4.next = 96;
+                  break;
+                }
+
+                _context4.next = 93;
+                return this.evaluate(declaration.value);
+
+              case 93:
+                _value = _context4.sent;
+                _context4.next = 97;
+                break;
+
+              case 96:
+                _value = new Value();
+
+              case 97:
+                this.context.scope[_identifier.value] = _value;
+                _context4.next = 85;
+                break;
+
+              case 100:
+                return _context4.abrupt('return', _value);
+
+              case 101:
+                if (!(tree.value === 'const')) {
+                  _context4.next = 118;
+                  break;
+                }
+
+                _index = void 0, _value2 = void 0;
+                _identifiers = tree.identifiers;
+                _context4.t4 = regeneratorRuntime.keys(_identifiers);
+
+              case 105:
+                if ((_context4.t5 = _context4.t4()).done) {
+                  _context4.next = 117;
+                  break;
+                }
+
+                _index = _context4.t5.value;
+                _declaration = _identifiers[_index];
+                _identifier2 = _declaration.identifier;
+
+                if (this.context.scope.hasOwnProperty(_identifier2.value)) {
+                  this.throwTypeError('identifier ' + _identifier2.value + ' has already been declared in this scope', tree.position);
+                }
+                _context4.next = 112;
+                return this.evaluate(_declaration.value);
+
+              case 112:
+                _value2 = _context4.sent;
+
+                _value2[Context.CONSTANT] = true;
+                this.context.scope[_identifier2.value] = _value2;
+                _context4.next = 105;
+                break;
+
+              case 117:
+                return _context4.abrupt('return', _value2);
+
+              case 118:
+                if (!(tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY && KarolineObject.BINARY_OPERATORS.hasOwnProperty(tree.value))) {
+                  _context4.next = 126;
+                  break;
+                }
+
+                _context4.next = 121;
+                return this.evaluate(tree.first);
+
+              case 121:
+                _first4 = _context4.sent;
+                _context4.next = 124;
+                return this.evaluate(tree.second);
+
+              case 124:
+                _second2 = _context4.sent;
+                return _context4.abrupt('return', _first4.getProperty(KarolineObject.BINARY_OPERATORS[tree.value]).value.execute([_second2], _first4));
+
+              case 126:
+                if (!(tree.value === '||')) {
+                  _context4.next = 139;
+                  break;
+                }
+
+                _context4.next = 129;
+                return this.evaluate(tree.first);
+
+              case 129:
+                _first5 = _context4.sent;
+                _context4.next = 132;
+                return _first5.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], _first5);
+
+              case 132:
+                firstBoolean = _context4.sent;
+
+                if (!firstBoolean.value) {
+                  _context4.next = 135;
+                  break;
+                }
+
+                return _context4.abrupt('return', _first5);
+
+              case 135:
+                _context4.next = 137;
+                return this.evaluate(tree.second);
+
+              case 137:
+                _second3 = _context4.sent;
+                return _context4.abrupt('return', _second3);
+
+              case 139:
+                if (!(tree.value === '&&')) {
+                  _context4.next = 152;
+                  break;
+                }
+
+                _context4.next = 142;
+                return this.evaluate(tree.first);
+
+              case 142:
+                _first6 = _context4.sent;
+                _context4.next = 145;
+                return _first6.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], _first6);
+
+              case 145:
+                _firstBoolean = _context4.sent;
+
+                if (_firstBoolean.value) {
+                  _context4.next = 148;
+                  break;
+                }
+
+                return _context4.abrupt('return', _first6);
+
+              case 148:
+                _context4.next = 150;
+                return this.evaluate(tree.second);
+
+              case 150:
+                _second4 = _context4.sent;
+                return _context4.abrupt('return', _second4);
+
+              case 152:
+                if (!(tree.value === '+')) {
+                  _context4.next = 157;
+                  break;
+                }
+
+                _context4.next = 155;
+                return this.evaluate(tree.first);
+
+              case 155:
+                _first7 = _context4.sent;
+                return _context4.abrupt('return', _first7.getProperty(KarolineObject.OPERATOR_PLUS_UNARY).value.execute([], _first7));
+
+              case 157:
+                if (!(tree.value === '-')) {
+                  _context4.next = 162;
+                  break;
+                }
+
+                _context4.next = 160;
+                return this.evaluate(tree.first);
+
+              case 160:
+                _first8 = _context4.sent;
+                return _context4.abrupt('return', _first8.getProperty(KarolineObject.OPERATOR_MINUS_UNARY).value.execute([], _first8));
+
+              case 162:
+                if (!(tree.value === '(' && tree.operatorType === ParserSymbol.OPERATOR_TYPE_BINARY)) {
+                  _context4.next = 185;
+                  break;
+                }
+
+                // procedure call with arguments
+                procedure = void 0;
+
+                if (!(tree.first.type === Token.TOKEN_TYPE_IDENTIFIER)) {
+                  _context4.next = 168;
+                  break;
+                }
+
+                if (procedure = this.context.get(tree.first.value)) {} else if (this.nativeScope.hasOwnProperty(tree.first.value)) {
+                  procedure = this.nativeScope[tree.first.value];
+                } else {
+                  this.throwTypeError('undefined identifier ' + tree.first.value);
+                }
+                _context4.next = 171;
+                break;
+
+              case 168:
+                _context4.next = 170;
+                return this.evaluate(tree.first);
+
+              case 170:
+                procedure = _context4.sent;
+
+              case 171:
+                if (procedure.class === KarolineProcedure) {
+                  procedure = procedure.value;
+                } else {
+                  this.throwTypeError('tried to call a value of type ' + procedure.type + ', expected a procedure', tree.first.position);
+                }
+                _args4 = [];
+                _i = void 0;
+                _i = 0;
+
+              case 175:
+                if (!(_i < tree.args.length)) {
+                  _context4.next = 184;
+                  break;
+                }
+
+                _context4.t6 = _args4;
+                _context4.next = 179;
+                return this.evaluate(tree.args[_i]);
+
+              case 179:
+                _context4.t7 = _context4.sent;
+
+                _context4.t6.push.call(_context4.t6, _context4.t7);
+
+              case 181:
+                _i += 1;
+                _context4.next = 175;
+                break;
+
+              case 184:
+                return _context4.abrupt('return', this.executeProcedure(procedure, _args4, tree));
+
+              case 185:
+                if (!(tree.value === 'if')) {
+                  _context4.next = 195;
+                  break;
+                }
+
+                _context4.next = 188;
+                return this.evaluate(tree.condition);
+
+              case 188:
+                condition = _context4.sent;
+
+                if (!condition.castToBoolean().value) {
+                  _context4.next = 193;
+                  break;
+                }
+
+                return _context4.abrupt('return', this.evaluateBlock(tree.ifBlock));
+
+              case 193:
+                if (!tree.elseBlock) {
+                  _context4.next = 195;
+                  break;
+                }
+
+                return _context4.abrupt('return', this.evaluateBlock(tree.elseBlock));
+
+              case 195:
+                if (!(tree.value === 'repeat')) {
+                  _context4.next = 221;
+                  break;
+                }
+
+                block = tree.block;
+
+                if (!(typeof tree.times !== 'undefined')) {
+                  _context4.next = 213;
+                  break;
+                }
+
+                _context4.next = 200;
+                return this.evaluate(tree.times);
+
+              case 200:
+                times = _context4.sent;
+
+                if (!(times.class !== KarolineNumber)) {
+                  _context4.next = 203;
+                  break;
+                }
+
+                throw new TypeError('repeat structure: expected ' + Value.NUMBER + ', got ' + times.type);
+
+              case 203:
+                _i2 = void 0;
+                _i2 = 0;
+
+              case 205:
+                if (!(_i2 < times.value)) {
+                  _context4.next = 211;
+                  break;
+                }
+
+                _context4.next = 208;
+                return this.evaluateBlock(block);
+
+              case 208:
+                _i2 += 1;
+                _context4.next = 205;
+                break;
+
+              case 211:
+                _context4.next = 220;
+                break;
+
+              case 213:
+                _context4.next = 215;
+                return this.evaluate(tree.condition);
+
+              case 215:
+                if (!_context4.sent.castToBoolean().value) {
+                  _context4.next = 220;
+                  break;
+                }
+
+                _context4.next = 218;
+                return this.evaluateBlock(block);
+
+              case 218:
+                _context4.next = 213;
+                break;
+
+              case 220:
+                return _context4.abrupt('return', new Value());
+
+              case 221:
+                if (!(tree.value === 'procedure')) {
+                  _context4.next = 225;
+                  break;
+                }
+
+                _first9 = tree.first, _block = tree.block;
+                name = _first9.value; // first is an identifier and does not have to be evalated
+
+                return _context4.abrupt('return', this.createProcedure(name, _block));
+
+              case 225:
+                this.throwTypeError('unexpected symbol ' + tree.value, tree.position);
+
+              case 226:
+              case 'end':
+                return _context4.stop();
+            }
+          }
+        }, _callee4, this);
+      }));
+
+      function evaluate(_x6, _x7) {
+        return _ref4.apply(this, arguments);
+      }
+
+      return evaluate;
+    }()
+  }]);
+
+  return _class;
+}(KarolineParser);
+
+Interpreter.EXECUTION_STOPPED = Symbol('execution stopped');
+Interpreter.RETURN = Symbol('return');
 
 },{"../parser/karoline-parser.js":317,"../parser/parser-symbol.js":318,"../parser/token.js":322,"../util/type-error.js":327,"./class.js":2,"./context.js":3,"./karoline-boolean.js":5,"./karoline-number.js":6,"./karoline-object.js":7,"./karoline-procedure.js":9,"./karoline-string.js":10,"./procedure.js":11,"./value.js":12}],5:[function(require,module,exports){
-const KarolineObject = require('./karoline-object.js')
-const KarolinePrimitive = require('./karoline-primitive.js')
-const KarolineProcedure = require('./karoline-procedure.js')
-const Value = require('./value.js')
-const Procedure = require('./procedure.js')
+'use strict';
 
-const KarolineBoolean = module.exports = new KarolinePrimitive('KarolineBoolean', new Procedure({
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+var KarolineObject = require('./karoline-object.js');
+var KarolinePrimitive = require('./karoline-primitive.js');
+var KarolineProcedure = require('./karoline-procedure.js');
+var Value = require('./value.js');
+var Procedure = require('./procedure.js');
+
+var KarolineBoolean = module.exports = new KarolinePrimitive('KarolineBoolean', new Procedure({
   name: 'KarolineBoolean::@constructor',
-  cb: async ([first]) => {
-    this.value = await first.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], first)
-  }
-}), KarolineObject)
+  cb: function () {
+    var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee(_ref) {
+      var _ref3 = _slicedToArray(_ref, 1),
+          first = _ref3[0];
+
+      return regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              if (!first) {
+                _context.next = 6;
+                break;
+              }
+
+              _context.next = 3;
+              return first.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], first);
+
+            case 3:
+              this.value = _context.sent;
+              _context.next = 7;
+              break;
+
+            case 6:
+              this.value = false;
+
+            case 7:
+            case 'end':
+              return _context.stop();
+          }
+        }
+      }, _callee, this);
+    }));
+
+    function cb(_x) {
+      return _ref2.apply(this, arguments);
+    }
+
+    return cb;
+  }()
+}), KarolineObject);
 
 KarolineBoolean.setMember(KarolineObject.TO_NUMBER, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineBoolean::@toKarolineNumber',
-  cb () {
-    return require('./karoline-number.js').createNativeInstance(this.value ? 'true' : 'false')
+  cb: function cb() {
+    return require('./karoline-number.js').createNativeInstance(this.value ? 1 : 0);
   }
-})))
+})));
 
 KarolineBoolean.setMember(KarolineObject.TO_BOOLEAN, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineBoolean::@toKarolineBoolean',
-  cb () {
-    return this
+  cb: function cb() {
+    return this;
   }
-})))
+})));
 
 KarolineBoolean.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineBoolean::@toKarolineString',
-  cb () {
-    return require('./karoline-string.js').createNativeInstance(this.value.toString())
+  cb: function cb() {
+    return require('./karoline-string.js').createNativeInstance(this.value.toString());
   }
-})))
+})));
 
 },{"./karoline-number.js":6,"./karoline-object.js":7,"./karoline-primitive.js":8,"./karoline-procedure.js":9,"./karoline-string.js":10,"./procedure.js":11,"./value.js":12}],6:[function(require,module,exports){
-const KarolineObject = require('./karoline-object.js')
-const KarolinePrimitive = require('./karoline-primitive.js')
-const KarolineProcedure = require('./karoline-procedure.js')
-const KarolineString = require('./karoline-string.js')
-const Value = require('./value.js')
-const Procedure = require('./procedure.js')
+'use strict';
 
-const KarolineNumber = module.exports = new KarolinePrimitive('KarolineNumber', new Procedure({
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+var KarolineObject = require('./karoline-object.js');
+var KarolinePrimitive = require('./karoline-primitive.js');
+var KarolineProcedure = require('./karoline-procedure.js');
+var KarolineString = require('./karoline-string.js');
+var Value = require('./value.js');
+var Procedure = require('./procedure.js');
+
+var KarolineNumber = module.exports = new KarolinePrimitive('KarolineNumber', new Procedure({
   name: 'KarolineNumber::@constructor',
-  cb: async ([first]) => {
-    this.value = (await first.getProperty(KarolineObject.TO_NUMBER).value.execute([], first)).value
-  }
-}), KarolineObject)
+  cb: function () {
+    var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee(_ref) {
+      var _ref3 = _slicedToArray(_ref, 1),
+          first = _ref3[0];
 
-KarolineNumber.setMember('test', KarolineNumber.createNativeInstance(4))
+      return regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              if (!first) {
+                _context.next = 6;
+                break;
+              }
+
+              _context.next = 3;
+              return first.getProperty(KarolineObject.TO_NUMBER).value.execute([], first);
+
+            case 3:
+              this.value = _context.sent.value;
+              _context.next = 7;
+              break;
+
+            case 6:
+              this.value = 0;
+
+            case 7:
+            case 'end':
+              return _context.stop();
+          }
+        }
+      }, _callee, this);
+    }));
+
+    function cb(_x) {
+      return _ref2.apply(this, arguments);
+    }
+
+    return cb;
+  }()
+}), KarolineObject);
+
+KarolineNumber.setMember('test', KarolineNumber.createNativeInstance(4));
 
 KarolineNumber.setMember(KarolineObject.TO_NUMBER, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::@toKarolineNumber',
-  cb () {
-    return this
+  cb: function cb() {
+    return this;
   }
-})))
+})));
 
 KarolineNumber.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::@toKarolineString',
-  cb () {
-    console.log(this)
-    return KarolineString.createNativeInstance(this.value.toString())
+  cb: function cb() {
+    return KarolineString.createNativeInstance(this.value.toString());
   }
-})))
+})));
 
 KarolineNumber.setMember(KarolineObject.TO_BOOLEAN, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::@toKarolineBoolean',
-  cb () {
-    return KarolineBoolean.createNativeInstance(this.value !== 0)
+  cb: function cb() {
+    return KarolineBoolean.createNativeInstance(this.value !== 0);
   }
-})))
+})));
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_PLUS_UNARY, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::unary+',
-  cb () {
-    return this
-  },
-  expectedArguments: [{
-    type: KarolineNumber
-  }]
-})))
+  cb: function cb() {
+    return this;
+  }
+})));
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_PLUS_BINARY, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::binary+',
-  cb: async function ([other]) {
-    if (other.class === KarolineNumber) {
-      return KarolineNumber.createNativeInstance(this.value + other.value)
+  cb: function () {
+    var _ref5 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(_ref4) {
+      var _ref6 = _slicedToArray(_ref4, 1),
+          other = _ref6[0];
+
+      var string;
+      return regeneratorRuntime.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              if (!(other.class === KarolineNumber)) {
+                _context2.next = 2;
+                break;
+              }
+
+              return _context2.abrupt('return', KarolineNumber.createNativeInstance(this.value + other.value));
+
+            case 2:
+              _context2.next = 4;
+              return other.getProperty(KarolineObject.TO_STRING).value.execute([], other);
+
+            case 4:
+              string = _context2.sent;
+              return _context2.abrupt('return', KarolineString.createNativeInstance(this.value.toString() + string.value));
+
+            case 6:
+            case 'end':
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this);
+    }));
+
+    function cb(_x2) {
+      return _ref5.apply(this, arguments);
     }
-    const string = await other.getProperty(KarolineObject.TO_STRING).value.execute([], other)
-    return KarolineString.createNativeInstance(this.value.toString() + string.value)
-  },
+
+    return cb;
+  }(),
+
   expectedArguments: [{
     types: [KarolineNumber, KarolineString]
   }]
-})))
+})));
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_MINUS_UNARY, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::unary-',
-  cb () {
-    return KarolineNumber.createNativeInstance(-this.value)
-  },
-  expectedArguments: [{
-    type: KarolineNumber
-  }]
-})))
+  cb: function cb() {
+    return KarolineNumber.createNativeInstance(-this.value);
+  }
+})));
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_MINUS_BINARY, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::binary-',
-  cb ([other]) {
-    return KarolineNumber.createNativeInstance(this.value - other.value)
+  cb: function cb(_ref7) {
+    var _ref8 = _slicedToArray(_ref7, 1),
+        other = _ref8[0];
+
+    return KarolineNumber.createNativeInstance(this.value - other.value);
   },
+
   expectedArguments: [{
     type: KarolineNumber
   }]
-})))
+})));
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_ASTERISK, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::*',
-  cb ([other]) {
-    return KarolineNumber.createNativeInstance(this.value * other.value)
+  cb: function cb(_ref9) {
+    var _ref10 = _slicedToArray(_ref9, 1),
+        other = _ref10[0];
+
+    return KarolineNumber.createNativeInstance(this.value * other.value);
   },
+
   expectedArguments: [{
     type: KarolineNumber
   }]
-})))
+})));
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_SLASH, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::/',
-  cb ([other]) {
-    return KarolineNumber.createNativeInstance(this.value / other.value)
+  cb: function cb(_ref11) {
+    var _ref12 = _slicedToArray(_ref11, 1),
+        other = _ref12[0];
+
+    return KarolineNumber.createNativeInstance(this.value / other.value);
   },
+
   expectedArguments: [{
     type: KarolineNumber
   }]
-})))
+})));
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_LESS_THAN, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::<',
-  cb ([other]) {
-    return KarolineNumber.createNativeInstance(this.value < other.value)
+  cb: function cb(_ref13) {
+    var _ref14 = _slicedToArray(_ref13, 1),
+        other = _ref14[0];
+
+    return KarolineBoolean.createNativeInstance(this.value < other.value);
   },
+
   expectedArguments: [{
     type: KarolineNumber
   }]
-})))
+})));
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_GREATER_THAN, KarolineProcedure.createNativeInstance(new Procedure({
-  name: 'KarolineNumber::<',
-  cb ([other]) {
-    return KarolineNumber.createNativeInstance(this.value > other.value)
+  name: 'KarolineNumber::>',
+  cb: function cb(_ref15) {
+    var _ref16 = _slicedToArray(_ref15, 1),
+        other = _ref16[0];
+
+    return KarolineBoolean.createNativeInstance(this.value > other.value);
   },
+
   expectedArguments: [{
     type: KarolineNumber
   }]
-})))
+})));
 
-},{"./karoline-object.js":7,"./karoline-primitive.js":8,"./karoline-procedure.js":9,"./karoline-string.js":10,"./procedure.js":11,"./value.js":12}],7:[function(require,module,exports){
-const Class = require('./class.js')
-const Value = require('./value.js')
-const Procedure = require('./procedure.js')
-const KarolineProcedure = require('./karoline-procedure.js')
-const TypeError = require('../util/type-error.js')
+KarolineNumber.setMember(KarolineObject.OPERATOR_EQUALITY, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineNumber::==',
+  cb: function cb(_ref17) {
+    var _ref18 = _slicedToArray(_ref17, 1),
+        other = _ref18[0];
 
-const KarolineObject = module.exports = new Class('KarolineObject', new Procedure({
-  name: 'KarolineObject::@constructor'
-}))
-
-KarolineObject.TO_NUMBER = Symbol('To number')
-KarolineObject.setMember(KarolineObject.TO_NUMBER, KarolineProcedure.createNativeInstance(new Procedure({
-  name: 'KarolineObject::@toKarolineNumber',
-  cb () {
-    return require('./karoline-number.js').createNativeInstance(0)
-  }
-})))
-
-KarolineObject.TO_STRING = Symbol('To string')
-KarolineObject.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativeInstance(new Procedure({
-  name: 'KarolineObject::@toKarolineString',
-  cb () {
-    return require('./karoline-string.js').createNativeInstance('<instance of KarolineObject>')
-  }
-})))
-
-KarolineObject.TO_BOOLEAN = Symbol('To boolean')
-KarolineObject.setMember(KarolineObject.TO_BOOLEAN, KarolineProcedure.createNativeInstance(new Procedure({
-  name: 'KarolineObject::@toKarolineBoolean',
-  cb () {
-    return require('./karoline-boolean.js').createNativeInstance(true)
-  }
-})))
-
-KarolineObject.OPERATOR_PLUS_UNARY = Symbol('Operator plus unary')
-KarolineObject.setMember(KarolineObject.OPERATOR_PLUS_UNARY, KarolineProcedure.createNativeInstance(Procedure.FAIL))
-
-KarolineObject.OPERATOR_PLUS_BINARY = Symbol('Operator plus binary')
-KarolineObject.setMember(KarolineObject.OPERATOR_PLUS_BINARY, KarolineProcedure.createNativeInstance(Procedure.FAIL))
-
-KarolineObject.OPERATOR_MINUS_UNARY = Symbol('Operator minus unary')
-KarolineObject.setMember(KarolineObject.OPERATOR_MINUS_UNARY, KarolineProcedure.createNativeInstance(Procedure.FAIL))
-
-KarolineObject.OPERATOR_MINUS_BINARY = Symbol('Operator minus binary')
-KarolineObject.setMember(KarolineObject.OPERATOR_MINUS_BINARY, KarolineProcedure.createNativeInstance(Procedure.FAIL))
-
-KarolineObject.OPERATOR_ASTERISK = Symbol('Operator asterisk')
-KarolineObject.setMember(KarolineObject.OPERATOR_ASTERISK, KarolineProcedure.createNativeInstance(Procedure.FAIL))
-
-KarolineObject.OPERATOR_SLASH = Symbol('Operator slash')
-KarolineObject.setMember(KarolineObject.OPERATOR_SLASH, KarolineProcedure.createNativeInstance(Procedure.FAIL))
-
-KarolineObject.OPERATOR_EQUALITY = Symbol('Operator equality')
-KarolineObject.setMember(KarolineObject.OPERATOR_EQUALITY, KarolineProcedure.createNativeInstance(new Procedure({
-  name: 'KarolineObject::==',
-  cb ([other]) {
-    return require('./karoline-boolean.js').createNativeInstance(this.type === other.type && this.value === other.value)
+    return KarolineBoolean.createNativeInstance(this.value === other.value);
   },
+
   expectedArguments: [{
     type: KarolineObject.ANY
   }]
-})))
+})));
 
-KarolineObject.OPERATOR_LESS_THAN = Symbol('Operator less than')
-KarolineObject.setMember(KarolineObject.OPERATOR_LESS_THAN, KarolineProcedure.createNativeInstance(Procedure.FAIL))
+},{"./karoline-object.js":7,"./karoline-primitive.js":8,"./karoline-procedure.js":9,"./karoline-string.js":10,"./procedure.js":11,"./value.js":12}],7:[function(require,module,exports){
+'use strict';
 
-KarolineObject.OPERATOR_GREATER_THAN = Symbol('Operator greater than')
-KarolineObject.setMember(KarolineObject.OPERATOR_GREATER_THAN, KarolineProcedure.createNativeInstance(Procedure.FAIL))
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var Value = require('./value.js');
+var Procedure = require('./procedure.js');
+var KarolinePrimitive = require('./karoline-primitive.js');
+var KarolineProcedure = require('./karoline-procedure.js');
+var TypeError = require('../util/type-error.js');
+
+var KarolineObject = module.exports = new KarolinePrimitive('KarolineObject', new Procedure({
+  name: 'KarolineObject::@constructor'
+}));
+
+KarolineObject.TO_NUMBER = Symbol('To number');
+KarolineObject.setMember(KarolineObject.TO_NUMBER, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineObject::@toKarolineNumber',
+  cb: function cb() {
+    return require('./karoline-number.js').createNativeInstance(0);
+  }
+})));
+
+KarolineObject.TO_STRING = Symbol('To string');
+KarolineObject.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineObject::@toKarolineString',
+  cb: function cb() {
+    return require('./karoline-string.js').createNativeInstance('<instance of KarolineObject>');
+  }
+})));
+
+KarolineObject.TO_BOOLEAN = Symbol('To boolean');
+KarolineObject.setMember(KarolineObject.TO_BOOLEAN, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineObject::@toKarolineBoolean',
+  cb: function cb() {
+    return require('./karoline-boolean.js').createNativeInstance(true);
+  }
+})));
+
+KarolineObject.OPERATOR_PLUS_UNARY = Symbol('Operator plus unary');
+KarolineObject.setMember(KarolineObject.OPERATOR_PLUS_UNARY, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+
+KarolineObject.OPERATOR_PLUS_BINARY = Symbol('Operator plus binary');
+KarolineObject.setMember(KarolineObject.OPERATOR_PLUS_BINARY, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+
+KarolineObject.OPERATOR_MINUS_UNARY = Symbol('Operator minus unary');
+KarolineObject.setMember(KarolineObject.OPERATOR_MINUS_UNARY, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+
+KarolineObject.OPERATOR_MINUS_BINARY = Symbol('Operator minus binary');
+KarolineObject.setMember(KarolineObject.OPERATOR_MINUS_BINARY, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+
+KarolineObject.OPERATOR_ASTERISK = Symbol('Operator asterisk');
+KarolineObject.setMember(KarolineObject.OPERATOR_ASTERISK, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+
+KarolineObject.OPERATOR_SLASH = Symbol('Operator slash');
+KarolineObject.setMember(KarolineObject.OPERATOR_SLASH, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+
+KarolineObject.OPERATOR_EQUALITY = Symbol('Operator equality');
+KarolineObject.setMember(KarolineObject.OPERATOR_EQUALITY, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineObject::==',
+  cb: function cb(_ref) {
+    var _ref2 = _slicedToArray(_ref, 1),
+        other = _ref2[0];
+
+    return require('./karoline-boolean.js').createNativeInstance(this === other);
+  },
+
+  expectedArguments: [{
+    type: KarolineObject.ANY
+  }]
+})));
+
+KarolineObject.OPERATOR_LESS_THAN = Symbol('Operator less than');
+KarolineObject.setMember(KarolineObject.OPERATOR_LESS_THAN, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+
+KarolineObject.OPERATOR_GREATER_THAN = Symbol('Operator greater than');
+KarolineObject.setMember(KarolineObject.OPERATOR_GREATER_THAN, KarolineProcedure.createNativeInstance(Procedure.FAIL));
 
 KarolineObject.BINARY_OPERATORS = {
   '+': KarolineObject.OPERATOR_PLUS_BINARY,
@@ -778,179 +1548,411 @@ KarolineObject.BINARY_OPERATORS = {
   '==': KarolineObject.OPERATOR_EQUALITY,
   '<': KarolineObject.OPERATOR_LESS_THAN,
   '>': KarolineObject.OPERATOR_GREATER_THAN
-}
+};
 
-KarolineObject.TO_NUMBER = Symbol('to number')
-KarolineObject.setMember(KarolineObject.TO_NUMBER, KarolineProcedure.createNativeInstance(new Procedure({
-  name: 'KarolineObject::@toKarolineNumber',
-  cb () {
-    return require('./karoline-number.js').createNativeInstance(0)
+},{"../util/type-error.js":327,"./karoline-boolean.js":5,"./karoline-number.js":6,"./karoline-primitive.js":8,"./karoline-procedure.js":9,"./karoline-string.js":10,"./procedure.js":11,"./value.js":12}],8:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Class = require('./class.js');
+var Value = require('./value.js');
+
+var KarolinePrimitive = module.exports = function (_Class) {
+  _inherits(_class, _Class);
+
+  function _class() {
+    _classCallCheck(this, _class);
+
+    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
   }
-})))
 
-},{"../util/type-error.js":327,"./class.js":2,"./karoline-boolean.js":5,"./karoline-number.js":6,"./karoline-procedure.js":9,"./karoline-string.js":10,"./procedure.js":11,"./value.js":12}],8:[function(require,module,exports){
-const Class = require('./class.js')
-const Value = require('./value.js')
+  _createClass(_class, [{
+    key: 'createNativeInstance',
+    value: function createNativeInstance(value) {
+      var instance = new Value(this);
+      instance.value = value;
+      return instance;
+    }
+  }]);
 
-const KarolinePrimitive = module.exports = class extends Class {
-
-  constructor () {
-    super(...arguments)
-  }
-
-  createNativeInstance (value) {
-    const instance = new Value(this)
-    instance.value = value
-    return instance
-  }
-
-}
+  return _class;
+}(Class);
 
 },{"./class.js":2,"./value.js":12}],9:[function(require,module,exports){
-const KarolineObject = require('./karoline-object.js')
-const KarolinePrimitive = require('./karoline-primitive.js')
-const Value = require('./value.js')
-const Procedure = require('./procedure.js')
+'use strict';
 
-const KarolineProcedure = module.exports = new KarolinePrimitive('KarolineProcedure', new Procedure({
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var KarolineObject = require('./karoline-object.js');
+var KarolinePrimitive = require('./karoline-primitive.js');
+var Value = require('./value.js');
+var Procedure = require('./procedure.js');
+
+var KarolineProcedure = module.exports = new KarolinePrimitive('KarolineProcedure', new Procedure({
   name: 'KarolineProcedure::@constructor',
-  cb: ([first]) => {
+  cb: function cb(_ref) {
+    var _ref2 = _slicedToArray(_ref, 1),
+        _ref2$ = _ref2[0],
+        first = _ref2$ === undefined ? KarolineObject.createNativeInstance() : _ref2$;
+
     if (first.class = KarolineProcedure) {
-      this.value = first
+      undefined.value = first;
     } else {
-      this.value = KarolineProcedure.createNativeInstance(new Procedure({
-        cb () {
-          return first
+      undefined.value = KarolineProcedure.createNativeInstance(new Procedure({
+        cb: function cb() {
+          return first;
         }
-      }))
+      }));
     }
   }
-}), KarolineObject)
+}), KarolineObject);
 
 KarolineProcedure.setMember('call', KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineProcedure::call',
-  cb (args) {
-    return this.value.execute(args.slice(0, -1), args.slice(-1)[0])
+  cb: function cb(args) {
+    return this.value.execute(args.slice(0, -1), args.slice(-1)[0]);
   }
-})))
+})));
 
 },{"./karoline-object.js":7,"./karoline-primitive.js":8,"./procedure.js":11,"./value.js":12}],10:[function(require,module,exports){
-const KarolineObject = require('./karoline-object.js')
-const KarolinePrimitive = require('./karoline-primitive.js')
-const KarolineProcedure = require('./karoline-procedure.js')
-const Value = require('./value.js')
-const Procedure = require('./procedure.js')
+'use strict';
 
-const KarolineString = module.exports = new KarolinePrimitive('KarolineString', new Procedure({
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+var KarolineObject = require('./karoline-object.js');
+var KarolineBoolean = require('./karoline-boolean.js');
+var KarolinePrimitive = require('./karoline-primitive.js');
+var KarolineProcedure = require('./karoline-procedure.js');
+var Value = require('./value.js');
+var Procedure = require('./procedure.js');
+
+var KarolineString = module.exports = new KarolinePrimitive('KarolineString', new Procedure({
   name: 'KarolineString::@constructor',
-  cb: async ([first]) => {
-    this.value = await first.getProperty(KarolineObject.TO_STRING).value.execute([], first)
-  }
-}), KarolineObject)
+  cb: function () {
+    var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee(_ref) {
+      var _ref3 = _slicedToArray(_ref, 1),
+          first = _ref3[0];
+
+      return regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              if (!first) {
+                _context.next = 6;
+                break;
+              }
+
+              _context.next = 3;
+              return first.getProperty(KarolineObject.TO_STRING).value.execute([], first);
+
+            case 3:
+              this.value = _context.sent;
+              _context.next = 7;
+              break;
+
+            case 6:
+              this.value = '';
+
+            case 7:
+            case 'end':
+              return _context.stop();
+          }
+        }
+      }, _callee, this);
+    }));
+
+    function cb(_x) {
+      return _ref2.apply(this, arguments);
+    }
+
+    return cb;
+  }()
+}), KarolineObject);
 
 KarolineString.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineString::@toKarolineString',
-  cb () {
-    return this
+  cb: function cb() {
+    return this;
   }
-})))
+})));
 
 KarolineString.setMember(KarolineObject.OPERATOR_PLUS_BINARY, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineString::binary+',
-  cb: async function ([other]) {
-    const string = await other.getProperty(KarolineObject.TO_STRING).value.execute([], other)
-    return KarolineString.createNativeInstance(this.value.toString() + string.value)
-  },
+  cb: function () {
+    var _ref5 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(_ref4) {
+      var _ref6 = _slicedToArray(_ref4, 1),
+          other = _ref6[0];
+
+      var string;
+      return regeneratorRuntime.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              _context2.next = 2;
+              return other.getProperty(KarolineObject.TO_STRING).value.execute([], other);
+
+            case 2:
+              string = _context2.sent;
+              return _context2.abrupt('return', KarolineString.createNativeInstance(this.value.toString() + string.value));
+
+            case 4:
+            case 'end':
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this);
+    }));
+
+    function cb(_x2) {
+      return _ref5.apply(this, arguments);
+    }
+
+    return cb;
+  }(),
   expectedArguments: [{
     types: KarolineObject.ANY
   }]
-})))
+})));
 
-},{"./karoline-object.js":7,"./karoline-primitive.js":8,"./karoline-procedure.js":9,"./procedure.js":11,"./value.js":12}],11:[function(require,module,exports){
-const TypeError = require('../util/type-error.js')
+KarolineString.setMember(KarolineObject.OPERATOR_PLUS_BINARY, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineString::binary+',
+  cb: function () {
+    var _ref8 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(_ref7) {
+      var _ref9 = _slicedToArray(_ref7, 1),
+          other = _ref9[0];
 
-const Procedure = module.exports = class {
+      var string;
+      return regeneratorRuntime.wrap(function _callee3$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              _context3.next = 2;
+              return other.getProperty(KarolineObject.TO_STRING).value.execute([], other);
 
-  constructor (options) {
-    this.cb = options.cb
-    this.expectedArguments = Array.isArray(options.expectedArguments) ? options.expectedArguments : []
-    this.userDefined = !!options.userDefined
-    this.name = options.name || '<unnamed procedure>'
-    this.scope = options.scope || null
-    this.thisArg = options.thisArg || null
-  }
+            case 2:
+              string = _context3.sent;
+              return _context3.abrupt('return', KarolineString.createNativeInstance(this.value.toString() + string.value));
 
-  async execute (args, thisArg) {
-    const Value = require('./value.js')
-    const {cb, expectedArguments} = this
-    let index
-    for (index in expectedArguments) {
-      const expected = expectedArguments[index]
-      const real = args[index]
-      if (expected.optional) {
-        continue
-      }
-      if (!real) {
-        throw new TypeError(`procedure ${this.name}: missing argument ${index}`)
-      }
+            case 4:
+            case 'end':
+              return _context3.stop();
+          }
+        }
+      }, _callee3, this);
+    }));
 
-      // if (Array.isArray(expected.types)) {
-      //   if (expected.types.indexOf(real.type) < 0) {
-      //     const types = expected.types.reduce((acc, b) => acc + ', ' + b, '')
-      //     throw new TypeError(`procedure ${this.name}: expected argument ${index} to be of types ${types}got type ${real.class}`)
-      //   }
-      // } else if (expected.type !== real.class && expected.type !== Value.ANY) {
-      //   throw new TypeError(`procedure ${this.name}: expected argument ${index} to be of type ${expected.type}, got type ${real.class}`)
-      // }
+    function cb(_x3) {
+      return _ref8.apply(this, arguments);
     }
 
-    return await cb.call(this.thisArg || thisArg || null, args) // ... await ...
+    return cb;
+  }(),
+
+  expectedArguments: [{
+    type: KarolineString
+  }]
+})));
+
+KarolineString.setMember(KarolineObject.OPERATOR_LESS_THAN, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineString::<',
+  cb: function cb(_ref10) {
+    var _ref11 = _slicedToArray(_ref10, 1),
+        other = _ref11[0];
+
+    return KarolineBoolean.createNativeInstance(this.value.localeCompare(other.value) === -1); // works like C's strcmp
+  },
+
+  expectedArguments: [{
+    type: KarolineString
+  }]
+})));
+
+KarolineString.setMember(KarolineObject.OPERATOR_GREATER_THAN, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineString::>',
+  cb: function cb(_ref12) {
+    var _ref13 = _slicedToArray(_ref12, 1),
+        other = _ref13[0];
+
+    return KarolineBoolean.createNativeInstance(this.value.localeCompare(other.value) === 1);
+  },
+
+  expectedArguments: [{
+    type: KarolineString
+  }]
+})));
+
+KarolineString.setMember(KarolineObject.OPERATOR_EQUALITY, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineString::==',
+  cb: function cb(_ref14) {
+    var _ref15 = _slicedToArray(_ref14, 1),
+        other = _ref15[0];
+
+    return KarolineBoolean.createNativeInstance(this.value === other.value);
+  },
+
+  expectedArguments: [{
+    type: KarolineObject.ANY
+  }]
+})));
+
+},{"./karoline-boolean.js":5,"./karoline-object.js":7,"./karoline-primitive.js":8,"./karoline-procedure.js":9,"./procedure.js":11,"./value.js":12}],11:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var TypeError = require('../util/type-error.js');
+
+var Procedure = module.exports = function () {
+  function _class(options) {
+    _classCallCheck(this, _class);
+
+    this.cb = options.cb || function () {
+      return undefined;
+    };
+    this.expectedArguments = Array.isArray(options.expectedArguments) ? options.expectedArguments : [];
+    this.userDefined = !!options.userDefined;
+    this.name = options.name || '<unnamed procedure>';
+    this.scope = options.scope || null;
+    this.thisArg = options.thisArg || null;
   }
 
-  bind (thisArg) {
-    this.thisArg = thisArg
-  }
+  _createClass(_class, [{
+    key: 'execute',
+    value: function () {
+      var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(args, thisArg) {
+        var Value, cb, expectedArguments, index, expected, real;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                Value = require('./value.js');
+                cb = this.cb, expectedArguments = this.expectedArguments;
+                index = void 0;
+                _context.t0 = regeneratorRuntime.keys(expectedArguments);
 
-}
+              case 4:
+                if ((_context.t1 = _context.t0()).done) {
+                  _context.next = 14;
+                  break;
+                }
+
+                index = _context.t1.value;
+                expected = expectedArguments[index];
+                real = args[index];
+
+                if (!expected.optional) {
+                  _context.next = 10;
+                  break;
+                }
+
+                return _context.abrupt('continue', 4);
+
+              case 10:
+                if (real) {
+                  _context.next = 12;
+                  break;
+                }
+
+                throw new TypeError('procedure ' + this.name + ': missing argument ' + index);
+
+              case 12:
+                _context.next = 4;
+                break;
+
+              case 14:
+                _context.next = 16;
+                return cb.call(this.thisArg || thisArg || null, args);
+
+              case 16:
+                return _context.abrupt('return', _context.sent);
+
+              case 17:
+              case 'end':
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
+
+      function execute(_x, _x2) {
+        return _ref.apply(this, arguments);
+      }
+
+      return execute;
+    }()
+  }, {
+    key: 'bind',
+    value: function bind(thisArg) {
+      this.thisArg = thisArg;
+    }
+  }]);
+
+  return _class;
+}();
 
 Procedure.FAIL = new Procedure({
-  cb: () => {
-    throw new TypeError(`undefined action`)
+  cb: function cb() {
+    throw new TypeError('undefined action');
   }
-})
+});
 
 },{"../util/type-error.js":327,"./value.js":12}],12:[function(require,module,exports){
-const TypeError = require('../util/type-error.js')
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var TypeError = require('../util/type-error.js');
 
 // TODO: Value is not the appropriate name
-const Value = module.exports = class {
+var Value = module.exports = function () {
+  function _class(cls) {
+    _classCallCheck(this, _class);
 
-  constructor (cls) {
-    this.class = cls || require('./karoline-object.js')
-    this.properties = {}
+    this.class = cls || require('./karoline-object.js');
+    this.properties = {};
   }
 
-  getProperty (name, visibility) {
-    if (this.properties.hasOwnProperty(name)) {
-      return this.properties[name]
-    }
-
-    let cls = this.class
-    while (cls) {
-      if (cls.hasMember(name, visibility)) {
-        return cls.getMember(name)
+  _createClass(_class, [{
+    key: 'getProperty',
+    value: function getProperty(name, visibility) {
+      if (this.properties.hasOwnProperty(name)) {
+        return this.properties[name];
       }
-      cls = cls.superClass
+
+      var cls = this.class;
+      while (cls) {
+        if (cls.hasMember(name, visibility)) {
+          return cls.getMember(name);
+        }
+        cls = cls.superClass;
+      }
+
+      throw new TypeError('does not have prop');
     }
+  }, {
+    key: 'setProperty',
+    value: function setProperty(name, value) {
+      this.properties[name] = value;
+    }
+  }]);
 
-    throw new TypeError(`does not have prop`)
-  }
-
-  setProperty (name, value) {
-    this.properties[name] = value
-  }
-
-}
+  return _class;
+}();
 
 },{"../util/type-error.js":327,"./karoline-object.js":7}],13:[function(require,module,exports){
 /* eslint max-len: 0 */
@@ -8101,1179 +9103,1559 @@ const World = module.exports = class {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],315:[function(require,module,exports){
-const SyntaxError = require('../util/syntax-error.js')
-const InfixOperator = require('./infix-operator.js')
-const ParserSymbol = require('./parser-symbol.js')
-const Token = require('./token.js')
+'use strict';
 
-const AssignmentOperator = module.exports = class extends InfixOperator {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  constructor (options) {
-    super(options)
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-    this.isAssignment = true
-    this.bindingPower = 10
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var SyntaxError = require('../util/syntax-error.js');
+var InfixOperator = require('./infix-operator.js');
+var ParserSymbol = require('./parser-symbol.js');
+var Token = require('./token.js');
+
+var AssignmentOperator = module.exports = function (_InfixOperator) {
+  _inherits(_class, _InfixOperator);
+
+  function _class(options) {
+    _classCallCheck(this, _class);
+
+    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, options));
+
+    _this.isAssignment = true;
+    _this.bindingPower = 10;
+    return _this;
   }
 
-  defaultLeftDenotation (self, first, parser) {
-    if (first.type !== Token.TOKEN_TYPE_IDENTIFIER && first.value !== '.' && first.value !== '[') {
-      throw new SyntaxError(`invalid assignment left-hand side: expected identifier, got ${first.type}`)
+  _createClass(_class, [{
+    key: 'defaultLeftDenotation',
+    value: function defaultLeftDenotation(self, first, parser) {
+      if (first.type !== Token.TOKEN_TYPE_IDENTIFIER && first.value !== '.' && first.value !== '[') {
+        throw new SyntaxError('invalid assignment left-hand side: expected identifier, got ' + first.type);
+      }
+      var item = self.clone();
+      item.first = first;
+      item.isAssignment = true;
+      item.second = parser.expression(self.bindingPower);
+      item.operatorType = ParserSymbol.OPERATOR_TYPE_BINARY;
+      return item;
     }
-    const item = self.clone()
-    item.first = first
-    item.isAssignment = true
-    item.second = parser.expression(self.bindingPower)
-    item.operatorType = ParserSymbol.OPERATOR_TYPE_BINARY
-    return item
-  }
+  }]);
 
-}
+  return _class;
+}(InfixOperator);
 
 },{"../util/syntax-error.js":326,"./infix-operator.js":316,"./parser-symbol.js":318,"./token.js":322}],316:[function(require,module,exports){
-const ParserSymbol = require('./parser-symbol.js')
+'use strict';
 
-const InfixOperator = module.exports = class extends ParserSymbol {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  constructor (options) {
-    super(options)
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var ParserSymbol = require('./parser-symbol.js');
+
+var InfixOperator = module.exports = function (_ParserSymbol) {
+  _inherits(_class, _ParserSymbol);
+
+  function _class(options) {
+    _classCallCheck(this, _class);
+
+    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, options));
   }
 
-  defaultNullDenotation (self, parser) {
-    throw new SyntaxError(`undefined null denotation`)
-  }
+  _createClass(_class, [{
+    key: 'defaultNullDenotation',
+    value: function defaultNullDenotation(self, parser) {
+      throw new SyntaxError('undefined null denotation');
+    }
+  }, {
+    key: 'defaultLeftDenotation',
+    value: function defaultLeftDenotation(self, first, parser) {
+      var item = this.clone();
+      item.first = first;
+      item.second = parser.expression(this.bindingPower);
+      item.operatorType = ParserSymbol.OPERATOR_TYPE_BINARY;
+      return item;
+    }
+  }]);
 
-  defaultLeftDenotation (self, first, parser) {
-    const item = this.clone()
-    item.first = first
-    item.second = parser.expression(this.bindingPower)
-    item.operatorType = ParserSymbol.OPERATOR_TYPE_BINARY
-    return item
-  }
-
-}
+  return _class;
+}(ParserSymbol);
 
 },{"./parser-symbol.js":318}],317:[function(require,module,exports){
-const EventEmitter = require('../util/event-emitter.js')
-const AssignmentOperator = require('./assignment-operator.js')
-const ParserSymbol = require('./parser-symbol.js')
-const PrefixOperator = require('./prefix-operator.js')
-const InfixOperator = require('./infix-operator.js')
-const Token = require('./token.js')
-const Parser = require('./parser.js')
-const SyntaxError = require('../util/syntax-error.js')
+'use strict';
 
-const KarolineParser = module.exports = class extends EventEmitter {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  constructor () {
-    super()
-    this.parser = new Parser()
-    this.prepareParser()
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var EventEmitter = require('../util/event-emitter.js');
+var AssignmentOperator = require('./assignment-operator.js');
+var ParserSymbol = require('./parser-symbol.js');
+var PrefixOperator = require('./prefix-operator.js');
+var InfixOperator = require('./infix-operator.js');
+var Token = require('./token.js');
+var Parser = require('./parser.js');
+var SyntaxError = require('../util/syntax-error.js');
+
+var KarolineParser = module.exports = function (_EventEmitter) {
+  _inherits(_class, _EventEmitter);
+
+  function _class() {
+    _classCallCheck(this, _class);
+
+    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this));
+
+    _this.parser = new Parser();
+    _this.prepareParser();
+    return _this;
   }
 
-  processBlock (...endTokens) {
-    const {parser} = this
-    const block = []
-    while (endTokens.indexOf(parser.token.value) === -1) {
-      block.push(parser.expression(0))
-      if (parser.token.value === '#end') {
-        throw new SyntaxError(`syntax error: unexpected end of script, expected one of these tokens: ${endTokens.join(', ')}`)
+  _createClass(_class, [{
+    key: 'processBlock',
+    value: function processBlock() {
+      var parser = this.parser;
+
+      var block = [];
+
+      for (var _len = arguments.length, endTokens = Array(_len), _key = 0; _key < _len; _key++) {
+        endTokens[_key] = arguments[_key];
       }
+
+      while (endTokens.indexOf(parser.token.value) === -1) {
+        block.push(parser.expression(0));
+        if (parser.token.value === '#end') {
+          throw new SyntaxError('syntax error: unexpected end of script, expected one of these tokens: ' + endTokens.join(', '));
+        }
+      }
+
+      return block;
     }
+  }, {
+    key: 'prepareParser',
+    value: function prepareParser() {
+      var _this2 = this;
 
-    return block
-  }
+      var parser = this.parser;
 
-  prepareParser () {
-    const {parser} = this
-    parser.tokenizer.addKeyWord('repeat')
-    parser.tokenizer.addKeyWord('times')
-    parser.tokenizer.addKeyWord('while')
-    parser.tokenizer.addKeyWord('*repeat')
-    parser.registerSymbol(new PrefixOperator({
-      value: 'repeat',
-      bindingPower: 0,
-      nullDenotation: (self) => {
-        const item = self.clone()
-        const next = parser.expression(0)
-        if (next.value === 'while') {
-          item.condition = parser.expression(0)
-        } else {
-          item.times = next
-          parser.nextToken('times')
-        }
-        item.block = this.processBlock('*repeat')
-        parser.nextToken()
-        return item
-      }
-    }))
-    parser.registerSymbol(new ParserSymbol({
-      value: '*repeat'
-    }))
-    parser.registerSymbol(new ParserSymbol({
-      value: 'times'
-    }))
-    parser.registerSymbol(new ParserSymbol({
-      value: 'while'
-    }))
-
-    parser.tokenizer.addKeyWord('procedure')
-    parser.tokenizer.addKeyWord('*procedure')
-    parser.registerSymbol(new PrefixOperator({
-      value: 'procedure',
-      nullDenotation: (self) => {
-        const item = self.clone()
-        if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
-          throw new SyntaxError(`expected identifier as name for procedure, got ${parser.token.type} token`)
-        }
-        item.first = parser.token
-        parser.nextToken()
-        item.block = this.processBlock('*procedure')
-        parser.nextToken()
-        return item
-      }
-    }))
-    parser.registerSymbol(new ParserSymbol({
-      value: '*procedure'
-    }))
-
-    parser.tokenizer.addKeyWords(['if', '*if', 'else', 'then'])
-    parser.registerSymbol(new PrefixOperator({
-      value: 'if',
-      nullDenotation: (self) => {
-        const item = self.clone()
-        item.condition = parser.expression(0)
-        parser.nextToken('then')
-        item.ifBlock = this.processBlock('*if', 'else')
-        if (parser.token.value === 'else') {
-          parser.nextToken()
-          item.elseBlock = this.processBlock('*if')
-        }
-        parser.nextToken()
-        return item
-      }
-    }))
-    parser.registerSymbol(new ParserSymbol({
-      value: '*if'
-    }))
-    parser.registerSymbol(new ParserSymbol({
-      value: 'then'
-    }))
-    parser.registerSymbol(new ParserSymbol({
-      value: 'else'
-    }))
-
-    parser.tokenizer.addKeyWords('(),'.split(''))
-    parser.registerSymbol(new InfixOperator({
-      value: '(',
-      bindingPower: 80,
-      nullDenotation: (self) => {
-        const item = parser.expression(0)
-        parser.nextToken(')')
-        return item
-      },
-      leftDenotation: (self, left) => {
-        const item = self.clone()
-        item.operatorType = ParserSymbol.OPERATOR_TYPE_BINARY
-        item.first = left
-        item.args = []
-        if (parser.token.value === ')') {
-          parser.nextToken()
-          return item
-        }
-        while (true) {
-          // parse the new argument
-          item.args.push(parser.expression(0))
-          if (parser.token.value === ')') {
-            break
-          }
-          if (parser.token.value !== ',') {
-            throw new SyntaxError(`expected ',' token, got ${parser.token.value}`)
-          }
-          parser.nextToken()
-        }
-        parser.nextToken()
-        return item
-      }
-    }))
-    parser.registerSymbol(new ParserSymbol({
-      value: ')'
-    }))
-    parser.registerSymbol(new ParserSymbol({
-      value: ','
-    }))
-
-    parser.tokenizer.addKeyWord('var')
-    parser.registerSymbol(new PrefixOperator({
-      value: 'var',
-      nullDenotation: (self) => {
-        const item = self.clone()
-        item.identifiers = []
-        if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
-          throw new SyntaxError(`expected identifier, got ${parser.token.type} token`)
-        }
-        while (parser.token.type === Token.TOKEN_TYPE_IDENTIFIER) {
-          const identifier = parser.token
-          parser.nextToken()
-          if (parser.token.value === '=') {
-            parser.nextToken('=')
-            const value = parser.expression(0)
-            item.identifiers.push({
-              identifier,
-              value
-            })
+      parser.tokenizer.addKeyWord('repeat');
+      parser.tokenizer.addKeyWord('times');
+      parser.tokenizer.addKeyWord('while');
+      parser.tokenizer.addKeyWord('*repeat');
+      parser.registerSymbol(new PrefixOperator({
+        value: 'repeat',
+        bindingPower: 0,
+        nullDenotation: function nullDenotation(self) {
+          var item = self.clone();
+          var next = parser.expression(0);
+          if (next.value === 'while') {
+            item.condition = parser.expression(0);
           } else {
+            item.times = next;
+            parser.nextToken('times');
+          }
+          item.block = _this2.processBlock('*repeat');
+          parser.nextToken();
+          return item;
+        }
+      }));
+      parser.registerSymbol(new ParserSymbol({
+        value: '*repeat'
+      }));
+      parser.registerSymbol(new ParserSymbol({
+        value: 'times'
+      }));
+      parser.registerSymbol(new ParserSymbol({
+        value: 'while'
+      }));
+
+      parser.tokenizer.addKeyWord('procedure');
+      parser.tokenizer.addKeyWord('*procedure');
+      parser.registerSymbol(new PrefixOperator({
+        value: 'procedure',
+        nullDenotation: function nullDenotation(self) {
+          var item = self.clone();
+          if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+            throw new SyntaxError('expected identifier as name for procedure, got ' + parser.token.type + ' token');
+          }
+          item.first = parser.token;
+          parser.nextToken();
+          item.block = _this2.processBlock('*procedure');
+          parser.nextToken();
+          return item;
+        }
+      }));
+      parser.registerSymbol(new ParserSymbol({
+        value: '*procedure'
+      }));
+
+      parser.tokenizer.addKeyWords(['if', '*if', 'else', 'then']);
+      parser.registerSymbol(new PrefixOperator({
+        value: 'if',
+        nullDenotation: function nullDenotation(self) {
+          var item = self.clone();
+          item.condition = parser.expression(0);
+          parser.nextToken('then');
+          item.ifBlock = _this2.processBlock('*if', 'else');
+          if (parser.token.value === 'else') {
+            parser.nextToken();
+            item.elseBlock = _this2.processBlock('*if');
+          }
+          parser.nextToken();
+          return item;
+        }
+      }));
+      parser.registerSymbol(new ParserSymbol({
+        value: '*if'
+      }));
+      parser.registerSymbol(new ParserSymbol({
+        value: 'then'
+      }));
+      parser.registerSymbol(new ParserSymbol({
+        value: 'else'
+      }));
+
+      parser.tokenizer.addKeyWords('(),'.split(''));
+      parser.registerSymbol(new InfixOperator({
+        value: '(',
+        bindingPower: 80,
+        nullDenotation: function nullDenotation(self) {
+          var item = parser.expression(0);
+          parser.nextToken(')');
+          return item;
+        },
+        leftDenotation: function leftDenotation(self, left) {
+          var item = self.clone();
+          item.operatorType = ParserSymbol.OPERATOR_TYPE_BINARY;
+          item.first = left;
+          item.args = [];
+          if (parser.token.value === ')') {
+            parser.nextToken();
+            return item;
+          }
+          while (true) {
+            // parse the new argument
+            item.args.push(parser.expression(0));
+            if (parser.token.value === ')') {
+              break;
+            }
+            if (parser.token.value !== ',') {
+              throw new SyntaxError('expected \',\' token, got ' + parser.token.value);
+            }
+            parser.nextToken();
+          }
+          parser.nextToken();
+          return item;
+        }
+      }));
+      parser.registerSymbol(new ParserSymbol({
+        value: ')'
+      }));
+      parser.registerSymbol(new ParserSymbol({
+        value: ','
+      }));
+
+      parser.tokenizer.addKeyWord('var');
+      parser.registerSymbol(new PrefixOperator({
+        value: 'var',
+        nullDenotation: function nullDenotation(self) {
+          var item = self.clone();
+          item.identifiers = [];
+          if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+            throw new SyntaxError('expected identifier, got ' + parser.token.type + ' token');
+          }
+          while (parser.token.type === Token.TOKEN_TYPE_IDENTIFIER) {
+            var identifier = parser.token;
+            parser.nextToken();
+            if (parser.token.value === '=') {
+              parser.nextToken('=');
+              var value = parser.expression(0);
+              item.identifiers.push({
+                identifier: identifier,
+                value: value
+              });
+            } else {
+              item.identifiers.push({
+                identifier: identifier
+              });
+            }
+            if (parser.token.value !== ',') {
+              break;
+            }
+            parser.nextToken();
+          }
+          return item;
+        }
+      }));
+
+      parser.tokenizer.addKeyWord('const');
+      parser.registerSymbol(new PrefixOperator({
+        value: 'const',
+        nullDenotation: function nullDenotation(self) {
+          var item = self.clone();
+          item.identifiers = [];
+          if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+            throw new SyntaxError('expected identifier, got ' + parser.token.type + ' token');
+          }
+          while (parser.token.type === Token.TOKEN_TYPE_IDENTIFIER) {
+            var identifier = parser.token;
+            parser.nextToken();
+            parser.nextToken('=');
+            var value = parser.expression(0);
             item.identifiers.push({
-              identifier
-            })
+              identifier: identifier,
+              value: value
+            });
+            if (parser.token.value !== ',') {
+              break;
+            }
+            parser.nextToken();
           }
-          if (parser.token.value !== ',') {
-            break
+          return item;
+        }
+      }));
+
+      parser.tokenizer.addKeyWords(['[', ']']);
+      parser.registerSymbol(new InfixOperator({
+        value: '[',
+        bindingPower: 75,
+        leftDenotation: function leftDenotation(self, left) {
+          var item = self.clone();
+          item.first = left;
+          item.second = parser.expression(0);
+          parser.nextToken(']');
+          return item;
+        }
+      }));
+      parser.registerSymbol(new ParserSymbol({
+        value: ']'
+      }));
+
+      parser.tokenizer.addKeyWord('return');
+      parser.registerSymbol(new PrefixOperator({
+        value: 'return'
+      }));
+
+      parser.tokenizer.addKeyWord('new');
+      parser.registerSymbol(new PrefixOperator({
+        value: 'new',
+        bindingPower: 70
+      }));
+
+      parser.tokenizer.addKeyWord('.');
+      parser.registerSymbol(new InfixOperator({
+        value: '.',
+        bindingPower: 75,
+        leftDenotation: function leftDenotation(self, left) {
+          var item = self.clone();
+          item.first = left;
+          if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+            throw new SyntaxError('expected identifier after "." operator');
           }
-          parser.nextToken()
+          item.second = parser.token;
+          parser.nextToken();
+          return item;
         }
-        return item
-      }
-    }))
+      }));
 
-    parser.tokenizer.addKeyWord('const')
-    parser.registerSymbol(new PrefixOperator({
-      value: 'const',
-      nullDenotation: (self) => {
-        const item = self.clone()
-        item.identifiers = []
-        if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
-          throw new SyntaxError(`expected identifier, got ${parser.token.type} token`)
-        }
-        while (parser.token.type === Token.TOKEN_TYPE_IDENTIFIER) {
-          const identifier = parser.token
-          parser.nextToken()
-          parser.nextToken('=')
-          const value = parser.expression(0)
-          item.identifiers.push({
-            identifier,
-            value
-          })
-          if (parser.token.value !== ',') {
-            break
-          }
-          parser.nextToken()
-        }
-        return item
-      }
-    }))
+      parser.tokenizer.addKeyWord('&&');
+      parser.registerSymbol(new InfixOperator({
+        value: '&&',
+        bindingPower: 30
+      }));
 
-    parser.tokenizer.addKeyWords(['[', ']'])
-    parser.registerSymbol(new InfixOperator({
-      value: '[',
-      bindingPower: 75,
-      leftDenotation: (self, left) => {
-        const item = self.clone()
-        item.first = left
-        item.second = parser.expression(0)
-        parser.nextToken(']')
-        return item
-      }
-    }))
-    parser.registerSymbol(new ParserSymbol({
-      value: ']'
-    }))
+      parser.tokenizer.addKeyWord('||');
+      parser.registerSymbol(new InfixOperator({
+        value: '||',
+        bindingPower: 28
+      }));
 
-    parser.tokenizer.addKeyWord('return')
-    parser.registerSymbol(new PrefixOperator({
-      value: 'return'
-    }))
+      parser.tokenizer.addKeyWord('<');
+      parser.registerSymbol(new InfixOperator({
+        value: '<',
+        bindingPower: 45
+      }));
 
-    parser.tokenizer.addKeyWord('new')
-    parser.registerSymbol(new PrefixOperator({
-      value: 'new',
-      bindingPower: 70
-    }))
+      parser.tokenizer.addKeyWord('>');
+      parser.registerSymbol(new InfixOperator({
+        value: '>',
+        bindingPower: 45
+      }));
 
-    parser.tokenizer.addKeyWord('.')
-    parser.registerSymbol(new InfixOperator({
-      value: '.',
-      bindingPower: 75,
-      leftDenotation: (self, left) => {
-        const item = self.clone()
-        item.first = left
-        if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
-          throw new SyntaxError(`expected identifier after "." operator`)
-        }
-        item.second = parser.token
-        parser.nextToken()
-        return item
-      }
-    }))
+      parser.tokenizer.addKeyWord('*');
+      parser.registerSymbol(new InfixOperator({
+        value: '*',
+        bindingPower: 60
+      }));
 
-    parser.tokenizer.addKeyWord('&&')
-    parser.registerSymbol(new InfixOperator({
-      value: '&&',
-      bindingPower: 30,
-    }))
+      parser.tokenizer.addKeyWord('/');
+      parser.registerSymbol(new InfixOperator({
+        value: '/',
+        bindingPower: 60
+      }));
 
-    parser.tokenizer.addKeyWord('||')
-    parser.registerSymbol(new InfixOperator({
-      value: '||',
-      bindingPower: 28,
-    }))
+      parser.tokenizer.addKeyWord('+');
+      parser.registerSymbol(new InfixOperator({
+        value: '+',
+        bindingPower: 50,
+        nullDenotation: PrefixOperator.prototype.defaultNullDenotation
+      }));
 
-    parser.tokenizer.addKeyWord('<')
-    parser.registerSymbol(new InfixOperator({
-      value: '<',
-      bindingPower: 45,
-    }))
+      parser.tokenizer.addKeyWord('-');
+      parser.registerSymbol(new InfixOperator({
+        value: '-',
+        bindingPower: 50,
+        nullDenotation: PrefixOperator.prototype.defaultNullDenotation
+      }));
 
-    parser.tokenizer.addKeyWord('>')
-    parser.registerSymbol(new InfixOperator({
-      value: '>',
-      bindingPower: 45,
-    }))
+      parser.tokenizer.addKeyWord('==');
+      parser.registerSymbol(new InfixOperator({
+        value: '==',
+        bindingPower: 40
+      }));
 
-    parser.tokenizer.addKeyWord('*')
-    parser.registerSymbol(new InfixOperator({
-      value: '*',
-      bindingPower: 60,
-    }))
+      parser.tokenizer.addKeyWord('=');
+      parser.registerSymbol(new AssignmentOperator({
+        value: '='
+      }));
 
-    parser.tokenizer.addKeyWord('/')
-    parser.registerSymbol(new InfixOperator({
-      value: '/',
-      bindingPower: 60,
-    }))
+      parser.tokenizer.addKeyWord(';');
+      parser.registerSymbol(new ParserSymbol({
+        value: ';',
+        bindingPower: -1
+      }));
+    }
+  }]);
 
-    parser.tokenizer.addKeyWord('+')
-    parser.registerSymbol(new InfixOperator({
-      value: '+',
-      bindingPower: 50,
-      nullDenotation: PrefixOperator.prototype.defaultNullDenotation
-    }))
-
-    parser.tokenizer.addKeyWord('-')
-    parser.registerSymbol(new InfixOperator({
-      value: '-',
-      bindingPower: 50,
-      nullDenotation: PrefixOperator.prototype.defaultNullDenotation
-    }))
-
-    parser.tokenizer.addKeyWord('==')
-    parser.registerSymbol(new InfixOperator({
-      value: '==',
-      bindingPower: 40
-    }))
-
-    parser.tokenizer.addKeyWord('=')
-    parser.registerSymbol(new AssignmentOperator({
-      value: '='
-    }))
-
-    parser.tokenizer.addKeyWord(';')
-    parser.registerSymbol(new ParserSymbol({
-      value: ';',
-      bindingPower: -1
-    }))
-  }
-
-}
+  return _class;
+}(EventEmitter);
 
 },{"../util/event-emitter.js":325,"../util/syntax-error.js":326,"./assignment-operator.js":315,"./infix-operator.js":316,"./parser-symbol.js":318,"./parser.js":319,"./prefix-operator.js":320,"./token.js":322}],318:[function(require,module,exports){
-const Token = require('./token.js')
-const SyntaxError = require('../util/syntax-error.js')
+'use strict';
 
-const ParserSymbol = module.exports = class extends Token {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  constructor (options) {
-    super(options)
-    this.bindingPower = options.bindingPower || 0
-    this.operatorType = ParserSymbol.OPERATOR_TYPE_UNARY
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-    this._nullDenotation = typeof options.nullDenotation === 'function' ? options.nullDenotation : this.defaultNullDenotation
-    this._leftDenotation = typeof options.leftDenotation === 'function' ? options.leftDenotation : this.defaultLeftDenotation
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Token = require('./token.js');
+var SyntaxError = require('../util/syntax-error.js');
+
+var ParserSymbol = module.exports = function (_Token) {
+  _inherits(_class, _Token);
+
+  function _class(options) {
+    _classCallCheck(this, _class);
+
+    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, options));
+
+    _this.bindingPower = options.bindingPower || 0;
+    _this.operatorType = ParserSymbol.OPERATOR_TYPE_UNARY;
+
+    _this._nullDenotation = typeof options.nullDenotation === 'function' ? options.nullDenotation : _this.defaultNullDenotation;
+    _this._leftDenotation = typeof options.leftDenotation === 'function' ? options.leftDenotation : _this.defaultLeftDenotation;
+    return _this;
   }
 
-  clone () {
-    return new ParserSymbol(this)
-  }
+  _createClass(_class, [{
+    key: 'clone',
+    value: function clone() {
+      return new ParserSymbol(this);
+    }
+  }, {
+    key: 'nullDenotation',
+    value: function nullDenotation(self, parser) {
+      var item = this._nullDenotation(self, parser);
+      item.position = self.position;
+      return item;
+    }
+  }, {
+    key: 'leftDenotation',
+    value: function leftDenotation(self, left, parser) {
+      var item = this._leftDenotation(self, left, parser);
+      item.position = self.position;
+      return item;
+    }
+  }, {
+    key: 'defaultNullDenotation',
+    value: function defaultNullDenotation(self, parser) {
+      return this;
+    }
+  }, {
+    key: 'defaultLeftDenotation',
+    value: function defaultLeftDenotation(self, left, parser) {
+      throw new SyntaxError('undefined left denotation');
+    }
+  }]);
 
-  nullDenotation (self, parser) {
-    const item = this._nullDenotation(self, parser)
-    item.position = self.position
-    return item
-  }
+  return _class;
+}(Token);
 
-  leftDenotation (self, left, parser) {
-    const item = this._leftDenotation(self, left, parser)
-    item.position = self.position
-    return item
-  }
-
-  defaultNullDenotation (self, parser) {
-    return this
-  }
-
-  defaultLeftDenotation (self, left, parser) {
-    throw new SyntaxError(`undefined left denotation`)
-  }
-
-}
-
-ParserSymbol.OPERATOR_TYPE_UNARY = 'OPERATOR_TYPE_UNARY'
-ParserSymbol.OPERATOR_TYPE_BINARY = 'OPERATOR_TYPE_BINARY'
+ParserSymbol.OPERATOR_TYPE_UNARY = 'OPERATOR_TYPE_UNARY';
+ParserSymbol.OPERATOR_TYPE_BINARY = 'OPERATOR_TYPE_BINARY';
 
 },{"../util/syntax-error.js":326,"./token.js":322}],319:[function(require,module,exports){
-const Tokenizer = require('./tokenizer.js')
-const ParserSymbol = require('./parser-symbol.js')
-const SyntaxError = require('../util/syntax-error.js')
-const Token = require('./token.js')
+'use strict';
 
-const Parser = module.exports = class {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  constructor () {
-    this.tokenizer = new Tokenizer([])
-    this.symbols = {}
-    this.token = null
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-    this.tokens = []
-    this.currentIndex = 0
+var Tokenizer = require('./tokenizer.js');
+var ParserSymbol = require('./parser-symbol.js');
+var SyntaxError = require('../util/syntax-error.js');
+var Token = require('./token.js');
+
+var Parser = module.exports = function () {
+  function _class() {
+    _classCallCheck(this, _class);
+
+    this.tokenizer = new Tokenizer([]);
+    this.symbols = {};
+    this.token = null;
+
+    this.tokens = [];
+    this.currentIndex = 0;
 
     this.registerSymbol(new ParserSymbol({
       value: '#end',
       bindingPower: 0
-    }))
+    }));
   }
 
-  nextToken (expected) {
-    const token = this.tokens[this.currentIndex]
-    if (expected && this.token.value !== expected) {
-      throw new SyntaxError(`Expected token "${expected}", got "${this.token.value}"`)
-      this.token = this.symbols['#end']
-      return
-    }
-    if (typeof token === 'undefined') {
-      this.token = this.symbols['#end']
-      return
-    }
-    if (token.type === Token.TOKEN_TYPE_KEY_WORD) {
-      this.token = this.symbols[token.value]
-      if (typeof this.token === 'undefined') {
-        throw new SyntaxError(`Undefined key word "${token.value}"`)
-        this.token = this.symbols['#end']
-        return
+  _createClass(_class, [{
+    key: 'nextToken',
+    value: function nextToken(expected) {
+      var token = this.tokens[this.currentIndex];
+      if (expected && this.token.value !== expected) {
+        throw new SyntaxError('Expected token "' + expected + '", got "' + this.token.value + '"');
+        this.token = this.symbols['#end'];
+        return;
       }
-    } else {
-      this.token = new ParserSymbol(token)
+      if (typeof token === 'undefined') {
+        this.token = this.symbols['#end'];
+        return;
+      }
+      if (token.type === Token.TOKEN_TYPE_KEY_WORD) {
+        this.token = this.symbols[token.value];
+        if (typeof this.token === 'undefined') {
+          throw new SyntaxError('Undefined key word "' + token.value + '"');
+          this.token = this.symbols['#end'];
+          return;
+        }
+      } else {
+        this.token = new ParserSymbol(token);
+      }
+      this.currentIndex += 1;
     }
-    this.currentIndex += 1
-  }
-
-  registerSymbol (symbol) {
-    this.symbols[symbol.value] = symbol
-  }
-
-  parse (string) {
-    this.currentIndex = 0
-    this.tokens = this.tokenizer.tokenize(string)
-    this.nextToken()
-    const expressions = []
-    while (this.token.value !== '#end') {
-      expressions.push(this.expression(0))
+  }, {
+    key: 'registerSymbol',
+    value: function registerSymbol(symbol) {
+      this.symbols[symbol.value] = symbol;
     }
-    return expressions
-  }
-
-  expression (rightBindingPower) {
-    // skip all semicolons
-    while (this.token.value === ';') {
-      this.nextToken()
+  }, {
+    key: 'parse',
+    value: function parse(string) {
+      this.currentIndex = 0;
+      this.tokens = this.tokenizer.tokenize(string);
+      this.nextToken();
+      var expressions = [];
+      while (this.token.value !== '#end') {
+        expressions.push(this.expression(0));
+      }
+      return expressions;
     }
+  }, {
+    key: 'expression',
+    value: function expression(rightBindingPower) {
+      // skip all semicolons
+      while (this.token.value === ';') {
+        this.nextToken();
+      }
 
-    if (this.token.value === '#end') {
-      throw new SyntaxError(`Unexpected end of line, expected an expression.`)
-      return null
+      if (this.token.value === '#end') {
+        throw new SyntaxError('Unexpected end of line, expected an expression.');
+        return null;
+      }
+
+      var oldToken = this.token;
+      this.nextToken();
+      var left = oldToken.nullDenotation(oldToken, this);
+      while (rightBindingPower < this.token.bindingPower) {
+        oldToken = this.token;
+        this.nextToken();
+        left = oldToken.leftDenotation(oldToken, left, this);
+      }
+      return left;
     }
+  }]);
 
-    let oldToken = this.token
-    this.nextToken()
-    let left = oldToken.nullDenotation(oldToken, this)
-    while (rightBindingPower < this.token.bindingPower) {
-      oldToken = this.token
-      this.nextToken()
-      left = oldToken.leftDenotation(oldToken, left, this)
-    }
-    return left
-  }
-
-}
+  return _class;
+}();
 
 },{"../util/syntax-error.js":326,"./parser-symbol.js":318,"./token.js":322,"./tokenizer.js":323}],320:[function(require,module,exports){
-const ParserSymbol = require('./parser-symbol.js')
+'use strict';
 
-const PrefixOperator = module.exports = class extends ParserSymbol {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  constructor (options) {
-    super(options)
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var ParserSymbol = require('./parser-symbol.js');
+
+var PrefixOperator = module.exports = function (_ParserSymbol) {
+  _inherits(_class, _ParserSymbol);
+
+  function _class(options) {
+    _classCallCheck(this, _class);
+
+    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, options));
   }
 
-  defaultNullDenotation (self, parser) {
-    const item = this.clone()
-    item.first = parser.expression(this.bindingPower)
-    item.operatorType = ParserSymbol.OPERATOR_TYPE_UNARY
-    return item
-  }
+  _createClass(_class, [{
+    key: 'defaultNullDenotation',
+    value: function defaultNullDenotation(self, parser) {
+      var item = this.clone();
+      item.first = parser.expression(this.bindingPower);
+      item.operatorType = ParserSymbol.OPERATOR_TYPE_UNARY;
+      return item;
+    }
+  }, {
+    key: 'defaultLeftDenotation',
+    value: function defaultLeftDenotation(self, left, parser) {
+      throw new SyntaxError('undefined left denotation');
+    }
+  }]);
 
-  defaultLeftDenotation (self, left, parser) {
-    throw new SyntaxError(`undefined left denotation`)
-  }
-
-}
+  return _class;
+}(ParserSymbol);
 
 },{"./parser-symbol.js":318}],321:[function(require,module,exports){
-const StringIterator = module.exports = class {
+'use strict';
 
-  constructor (str) {
-    this.string = typeof str === 'string' ? str : ''
-    this.currentIndex = 0
-    this.backIndex = 0
-    this.line = 0
-    this.column = 0
-    this.char = ''
-    this.wasNewLine = false
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var StringIterator = module.exports = function () {
+  function _class(str) {
+    _classCallCheck(this, _class);
+
+    this.string = typeof str === 'string' ? str : '';
+    this.currentIndex = 0;
+    this.backIndex = 0;
+    this.line = 0;
+    this.column = 0;
+    this.char = '';
+    this.wasNewLine = false;
   }
 
-  hadNewLine () {
-    const nl = this.wasNewLine
-    this.wasNewLine = false
-    return nl
-  }
-
-  hasNext () {
-    return !!this.getCurrentChar()
-  }
-
-  getCurrentPosition () {
-    return {
-      line: this.line,
-      column: this.column
+  _createClass(_class, [{
+    key: 'hadNewLine',
+    value: function hadNewLine() {
+      var nl = this.wasNewLine;
+      this.wasNewLine = false;
+      return nl;
     }
-  }
-
-  getCurrentChar () {
-    return this.char = this.string.charAt(this.currentIndex)
-  }
-
-  next () {
-    this.getCurrentChar()
-    this.currentIndex += 1
-    if (this.backIndex > 0) {
-      this.backIndex -= 1
-    } else {
-      this.column += 1
-      if (this.char === '\n') {
-        this.wasNewLine = true
-        this.line += 1
-        this.column = 0
+  }, {
+    key: 'hasNext',
+    value: function hasNext() {
+      return !!this.getCurrentChar();
+    }
+  }, {
+    key: 'getCurrentPosition',
+    value: function getCurrentPosition() {
+      return {
+        line: this.line,
+        column: this.column
+      };
+    }
+  }, {
+    key: 'getCurrentChar',
+    value: function getCurrentChar() {
+      return this.char = this.string.charAt(this.currentIndex);
+    }
+  }, {
+    key: 'next',
+    value: function next() {
+      this.getCurrentChar();
+      this.currentIndex += 1;
+      if (this.backIndex > 0) {
+        this.backIndex -= 1;
+      } else {
+        this.column += 1;
+        if (this.char === '\n') {
+          this.wasNewLine = true;
+          this.line += 1;
+          this.column = 0;
+        }
       }
+      return this.char;
     }
-    return this.char
-  }
+  }, {
+    key: 'back',
+    value: function back() {
+      this.currentIndex -= 1;
+      this.backIndex += 1;
+      return this.getCurrentChar();
+    }
+  }]);
 
-  back () {
-    this.currentIndex -= 1
-    this.backIndex += 1
-    return this.getCurrentChar()
-  }
-
-}
+  return _class;
+}();
 
 },{}],322:[function(require,module,exports){
-const Token = module.exports = class {
+'use strict';
 
-  constructor (options) {
-    this.type = options.type || ''
-    this.value = options.value || ''
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Token = module.exports = function () {
+  function _class(options) {
+    _classCallCheck(this, _class);
+
+    this.type = options.type || '';
+    this.value = options.value || '';
     this.position = options.position || {
       line: 0,
       column: 0
-    }
+    };
   }
 
-}
+  return _class;
+}();
 
-Token.TOKEN_TYPE_IDENTIFIER = 'TOKEN_TYPE_IDENTIFIER'
-Token.TOKEN_TYPE_KEY_WORD = 'TOKEN_TYPE_KEY_WORD'
-Token.TOKEN_TYPE_STRING = 'TOKEN_TYPE_STRING'
-Token.TOKEN_TYPE_NUMBER = 'TOKEN_TYPE_NUMBER'
+Token.TOKEN_TYPE_IDENTIFIER = 'TOKEN_TYPE_IDENTIFIER';
+Token.TOKEN_TYPE_KEY_WORD = 'TOKEN_TYPE_KEY_WORD';
+Token.TOKEN_TYPE_STRING = 'TOKEN_TYPE_STRING';
+Token.TOKEN_TYPE_NUMBER = 'TOKEN_TYPE_NUMBER';
 
 },{}],323:[function(require,module,exports){
-const Token = require('./token.js')
-const SyntaxError = require('../util/syntax-error.js')
-const StringIterator = require('./string-iterator.js')
+'use strict';
 
-const Tokenizer = module.exports = class {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  constructor (keyWords) {
-    this.iter = null
-    this.keyWords = Array.isArray(keyWords) ? keyWords : []
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Token = require('./token.js');
+var SyntaxError = require('../util/syntax-error.js');
+var StringIterator = require('./string-iterator.js');
+
+var Tokenizer = module.exports = function () {
+  function _class(keyWords) {
+    _classCallCheck(this, _class);
+
+    this.iter = null;
+    this.keyWords = Array.isArray(keyWords) ? keyWords : [];
   }
 
-  addKeyWord (keyWord) {
-    if (keyWord) {
-      this.keyWords.push(keyWord.toString())
-    }
-  }
-
-  addKeyWords (keyWords) {
-    this.keyWords = this.keyWords.concat(keyWords)
-  }
-
-  keyWordStartsWith (str) {
-    const length = str.length
-    return this.keyWords.some((item) => {
-      return item.slice(0, length) === str
-    })
-  }
-
-  isAlpha (char) {
-    return /^[a-zA-ZäöüÄÖÜß]+$/i.test(char)
-  }
-
-  isNumeric (char) {
-    return /^[0-9]+$/i.test(char)
-  }
-
-  isAlphaNumeric (char) {
-    return /^[a-zA-Z0-9äöüÄÖÜß]+$/i.test(char)
-  }
-
-  stringToken (quote) {
-    const {iter} = this
-    let str = ''
-    let ch = ''
-    let escape = false
-    while (ch = iter.next()) {
-      if (!ch) {
-        throw new SyntaxError(`Unterminated string literal`, iter.getCurrentPosition())
-      }
-      if (escape) {
-        escape = false
-        if (ch === 'b') {
-          ch = '\b'
-        }
-        if (ch === 'f') {
-          ch = '\f'
-        }
-        if (ch === 'n') {
-          ch = '\n'
-        }
-        if (ch === 'r') {
-          ch = '\r'
-        }
-        if (ch === 't') {
-          ch = '\t'
-        }
-        str += ch
-        continue
-      }
-      if (ch === '\\') {
-        escape = true
-        continue
-      }
-      if (ch === quote) {
-        break
-      }
-      str += ch
-    }
-    return this.createToken(Token.TOKEN_TYPE_STRING, str, iter.getCurrentPosition())
-  }
-
-  identifierToken (start) {
-    const {iter} = this
-    let name = start
-    let ch = ''
-    while (ch = iter.next()) {
-      if (this.isAlphaNumeric(ch)) {
-        name += ch
-      } else {
-        break
+  _createClass(_class, [{
+    key: 'addKeyWord',
+    value: function addKeyWord(keyWord) {
+      if (keyWord) {
+        this.keyWords.push(keyWord.toString());
       }
     }
-    return this.createToken(Token.TOKEN_TYPE_IDENTIFIER, name, iter.getCurrentPosition())
-  }
-
-  numberToken (start) {
-    const {iter} = this
-    let number = start
-    let ch = ''
-    while (ch = iter.next()) {
-      if (this.isNumeric(ch)) {
-        number += ch
-      } else {
-        break
-      }
+  }, {
+    key: 'addKeyWords',
+    value: function addKeyWords(keyWords) {
+      this.keyWords = this.keyWords.concat(keyWords);
     }
-    return this.createToken(Token.TOKEN_TYPE_NUMBER, Number(number), iter.getCurrentPosition())
-  }
+  }, {
+    key: 'keyWordStartsWith',
+    value: function keyWordStartsWith(str) {
+      var length = str.length;
+      return this.keyWords.some(function (item) {
+        return item.slice(0, length) === str;
+      });
+    }
+  }, {
+    key: 'isAlpha',
+    value: function isAlpha(char) {
+      return (/^[a-zA-ZäöüÄÖÜß]+$/i.test(char)
+      );
+    }
+  }, {
+    key: 'isNumeric',
+    value: function isNumeric(char) {
+      return (/^[0-9]+$/i.test(char)
+      );
+    }
+  }, {
+    key: 'isAlphaNumeric',
+    value: function isAlphaNumeric(char) {
+      return (/^[a-zA-Z0-9äöüÄÖÜß]+$/i.test(char)
+      );
+    }
+  }, {
+    key: 'stringToken',
+    value: function stringToken(quote) {
+      var iter = this.iter;
 
-  keyWordToken (start) {
-    const {iter} = this
-    let name = start
-    let ch = ''
-    while (ch = iter.next()) {
-      if (this.keyWordStartsWith(name + ch)) {
-        name += ch
-      } else {
-        if (this.keyWords.indexOf(name) > -1) {
-          // return the key word
-          break
-        } else if (this.isAlpha(name[0]) && this.isAlphaNumeric(name + ch)) {
-          // make a new identifier token that starts with the current 'name' value
-          return this.identifierToken(name + ch)
-        } else if (!this.isAlphaNumeric(ch)) {
-          // return the current token as identifier
-          return this.createToken(Token.TOKEN_TYPE_IDENTIFIER, name, iter.getCurrentPosition())
+      var str = '';
+      var ch = '';
+      var escape = false;
+      while (ch = iter.next()) {
+        if (!ch) {
+          throw new SyntaxError('Unterminated string literal', iter.getCurrentPosition());
+        }
+        if (escape) {
+          escape = false;
+          if (ch === 'b') {
+            ch = '\b';
+          }
+          if (ch === 'f') {
+            ch = '\f';
+          }
+          if (ch === 'n') {
+            ch = '\n';
+          }
+          if (ch === 'r') {
+            ch = '\r';
+          }
+          if (ch === 't') {
+            ch = '\t';
+          }
+          str += ch;
+          continue;
+        }
+        if (ch === '\\') {
+          escape = true;
+          continue;
+        }
+        if (ch === quote) {
+          break;
+        }
+        str += ch;
+      }
+      return this.createToken(Token.TOKEN_TYPE_STRING, str, iter.getCurrentPosition());
+    }
+  }, {
+    key: 'identifierToken',
+    value: function identifierToken(start) {
+      var iter = this.iter;
+
+      var name = start;
+      var ch = '';
+      while (ch = iter.next()) {
+        if (this.isAlphaNumeric(ch)) {
+          name += ch;
         } else {
-          // unknown token
-          throw new SyntaxError(`unknown token ${name + ch}`)
+          break;
         }
       }
+      return this.createToken(Token.TOKEN_TYPE_IDENTIFIER, name, iter.getCurrentPosition());
     }
-    return this.createToken(Token.TOKEN_TYPE_KEY_WORD, name, iter.getCurrentPosition())
-  }
+  }, {
+    key: 'numberToken',
+    value: function numberToken(start) {
+      var iter = this.iter;
 
-  createToken (type, value, position) {
-    position.column -= value.length // TODO: doesn't work properly
-    return new Token({
-      type,
-      value,
-      position
-    })
-  }
-
-  tokenize (string) {
-    const iter = this.iter = new StringIterator(string)
-    const tokens = []
-    let ch = ''
-
-    while (ch = iter.next()) {
-      if (!ch.trim()) {
-        continue
+      var number = start;
+      var ch = '';
+      while (ch = iter.next()) {
+        if (this.isNumeric(ch)) {
+          number += ch;
+        } else {
+          break;
+        }
       }
-      if (this.keyWordStartsWith(ch)) {
-        // key word
-        tokens.push(this.keyWordToken(ch))
-        iter.back()
-      } else if (ch === '\'' || ch === '"') {
-        // string literal
-        tokens.push(this.stringToken(ch))
-      } else if (this.isNumeric(ch)) {
-        // number literal
-        tokens.push(this.numberToken(ch))
-        iter.back()
-      } else if (this.isAlphaNumeric(ch)) {
-        // identifier
-        tokens.push(this.identifierToken(ch))
-        iter.back()
-      } else {
-        throw new SyntaxError(`illegal character "${ch}"`, iter.getCurrentPosition())
-      }
+      return this.createToken(Token.TOKEN_TYPE_NUMBER, Number(number), iter.getCurrentPosition());
     }
+  }, {
+    key: 'keyWordToken',
+    value: function keyWordToken(start) {
+      var iter = this.iter;
 
-    return tokens
-  }
+      var name = start;
+      var ch = '';
+      while (ch = iter.next()) {
+        if (this.keyWordStartsWith(name + ch)) {
+          name += ch;
+        } else {
+          if (this.keyWords.indexOf(name) > -1) {
+            // return the key word
+            break;
+          } else if (this.isAlpha(name[0]) && this.isAlphaNumeric(name + ch)) {
+            // make a new identifier token that starts with the current 'name' value
+            return this.identifierToken(name + ch);
+          } else if (!this.isAlphaNumeric(ch)) {
+            // return the current token as identifier
+            return this.createToken(Token.TOKEN_TYPE_IDENTIFIER, name, iter.getCurrentPosition());
+          } else {
+            // unknown token
+            throw new SyntaxError('unknown token ' + (name + ch));
+          }
+        }
+      }
+      return this.createToken(Token.TOKEN_TYPE_KEY_WORD, name, iter.getCurrentPosition());
+    }
+  }, {
+    key: 'createToken',
+    value: function createToken(type, value, position) {
+      position.column -= value.length; // TODO: doesn't work properly
+      return new Token({
+        type: type,
+        value: value,
+        position: position
+      });
+    }
+  }, {
+    key: 'tokenize',
+    value: function tokenize(string) {
+      var iter = this.iter = new StringIterator(string);
+      var tokens = [];
+      var ch = '';
 
-}
+      while (ch = iter.next()) {
+        if (!ch.trim()) {
+          continue;
+        }
+        if (this.keyWordStartsWith(ch)) {
+          // key word
+          tokens.push(this.keyWordToken(ch));
+          iter.back();
+        } else if (ch === '\'' || ch === '"') {
+          // string literal
+          tokens.push(this.stringToken(ch));
+        } else if (this.isNumeric(ch)) {
+          // number literal
+          tokens.push(this.numberToken(ch));
+          iter.back();
+        } else if (this.isAlphaNumeric(ch)) {
+          // identifier
+          tokens.push(this.identifierToken(ch));
+          iter.back();
+        } else {
+          throw new SyntaxError('illegal character "' + ch + '"', iter.getCurrentPosition());
+        }
+      }
+
+      return tokens;
+    }
+  }]);
+
+  return _class;
+}();
 
 },{"../util/syntax-error.js":326,"./string-iterator.js":321,"./token.js":322}],324:[function(require,module,exports){
-const Error = module.exports = class {
+'use strict';
 
-  constructor (message, position, stack) {
-    this.message = message
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Error = module.exports = function () {
+  function _class(message, position, stack) {
+    _classCallCheck(this, _class);
+
+    this.message = message;
     this.position = position || {
       line: 0,
       column: 0
+    };
+    this.stack = stack || [];
+  }
+
+  _createClass(_class, [{
+    key: 'toString',
+    value: function toString() {
+      return 'Error: ' + this.message;
     }
-    this.stack = stack || []
-  }
+  }]);
 
-  toString () {
-    return 'Error: ' + this.message
-  }
-
-}
+  return _class;
+}();
 
 },{}],325:[function(require,module,exports){
-const EventEmitter = module.exports = class {
+'use strict';
 
-  constructor () {
-    this._events = {}
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var EventEmitter = module.exports = function () {
+  function _class() {
+    _classCallCheck(this, _class);
+
+    this._events = {};
   }
 
-  on (channel, ...listeners) {
-    const filtered = listeners.filter((cb) => typeof cb === 'function')
-    if (Array.isArray(this._events[channel])) {
-      this._events[channel] = this._events[channel].concat(filtered)
-    } else {
-      this._events[channel] = filtered
-    }
-    return this
-  }
-
-  listen (channels, ...listeners) {
-    if (Array.isArray(channels)) {
-      let index
-      for (index in channels) {
-        this.on(channels[index], ...listeners)
+  _createClass(_class, [{
+    key: 'on',
+    value: function on(channel) {
+      for (var _len = arguments.length, listeners = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        listeners[_key - 1] = arguments[_key];
       }
-    }
-    return this
-  }
 
-  listenOnce (channels, ...listeners) {
-    if (Array.isArray(channels)) {
-      let index
-      for (index in channels) {
-        this.once(channels[index], ...listeners)
+      var filtered = listeners.filter(function (cb) {
+        return typeof cb === 'function';
+      });
+      if (Array.isArray(this._events[channel])) {
+        this._events[channel] = this._events[channel].concat(filtered);
+      } else {
+        this._events[channel] = filtered;
       }
+      return this;
     }
-    return this
-  }
+  }, {
+    key: 'listen',
+    value: function listen(channels) {
+      if (Array.isArray(channels)) {
+        var index = void 0;
 
-  awaitEvent (channel) {
-    return new Promise((resolve, reject) => {
-      this.once(channel, resolve)
-    })
-  }
+        for (var _len2 = arguments.length, listeners = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+          listeners[_key2 - 1] = arguments[_key2];
+        }
 
-  once (channel, ...listeners) {
-    const filtered = listeners.filter((cb) => typeof cb === 'function').map((cb) => {
-      const listener = (...args) => {
-        this.remove(channel, listener)
-        cb.apply(null, args)
-      }
-      return listener
-    })
-    if (Array.isArray(this._events[channel])) {
-      this._events[channel] = this._events[channel].concat(filtered)
-    } else {
-      this._events[channel] = filtered
-    }
-    return this
-  }
-
-  emit (channel, ...args) {
-    if (Array.isArray(this._events[channel])) {
-      const listeners = this._events[channel]
-      let index
-      for (index in listeners) {
-        listeners[index].apply(null, args)
-      }
-    }
-    return this
-  }
-
-  remove (channel, ...listeners) {
-    const listenersToRemove = Array.slice(arguments, 1).filter((cb) => typeof cb === 'function')
-    if (Array.isArray(this._events[channel])) {
-      const listeners = this._events[channel]
-      let index
-      for (index in listenersToRemove) {
-        const listener = listenersToRemove[index]
-        const removeIndex = listeners.indexOf(listener)
-        if (removeIndex > -1) {
-          this._events[channel].splice(removeIndex, 1)
+        for (index in channels) {
+          this.on.apply(this, [channels[index]].concat(listeners));
         }
       }
+      return this;
     }
-    return this
-  }
+  }, {
+    key: 'listenOnce',
+    value: function listenOnce(channels) {
+      if (Array.isArray(channels)) {
+        var index = void 0;
 
-  removeAll (channel) {
-    if (Array.isArray(this._events[channel])) {
-      delete this._events[channel]
+        for (var _len3 = arguments.length, listeners = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+          listeners[_key3 - 1] = arguments[_key3];
+        }
+
+        for (index in channels) {
+          this.once.apply(this, [channels[index]].concat(listeners));
+        }
+      }
+      return this;
     }
-    return this
-  }
+  }, {
+    key: 'awaitEvent',
+    value: function awaitEvent(channel) {
+      var _this = this;
 
-}
+      return new Promise(function (resolve, reject) {
+        _this.once(channel, resolve);
+      });
+    }
+  }, {
+    key: 'once',
+    value: function once(channel) {
+      var _this2 = this;
+
+      for (var _len4 = arguments.length, listeners = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+        listeners[_key4 - 1] = arguments[_key4];
+      }
+
+      var filtered = listeners.filter(function (cb) {
+        return typeof cb === 'function';
+      }).map(function (cb) {
+        var listener = function listener() {
+          for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+            args[_key5] = arguments[_key5];
+          }
+
+          _this2.remove(channel, listener);
+          cb.apply(null, args);
+        };
+        return listener;
+      });
+      if (Array.isArray(this._events[channel])) {
+        this._events[channel] = this._events[channel].concat(filtered);
+      } else {
+        this._events[channel] = filtered;
+      }
+      return this;
+    }
+  }, {
+    key: 'emit',
+    value: function emit(channel) {
+      if (Array.isArray(this._events[channel])) {
+        var _listeners = this._events[channel];
+        var index = void 0;
+
+        for (var _len6 = arguments.length, args = Array(_len6 > 1 ? _len6 - 1 : 0), _key6 = 1; _key6 < _len6; _key6++) {
+          args[_key6 - 1] = arguments[_key6];
+        }
+
+        for (index in _listeners) {
+          _listeners[index].apply(null, args);
+        }
+      }
+      return this;
+    }
+  }, {
+    key: 'remove',
+    value: function remove(channel) {
+      for (var _len7 = arguments.length, listeners = Array(_len7 > 1 ? _len7 - 1 : 0), _key7 = 1; _key7 < _len7; _key7++) {
+        listeners[_key7 - 1] = arguments[_key7];
+      }
+
+      var listenersToRemove = Array.slice(arguments, 1).filter(function (cb) {
+        return typeof cb === 'function';
+      });
+      if (Array.isArray(this._events[channel])) {
+        var _listeners2 = this._events[channel];
+        var index = void 0;
+        for (index in listenersToRemove) {
+          var listener = listenersToRemove[index];
+          var removeIndex = _listeners2.indexOf(listener);
+          if (removeIndex > -1) {
+            this._events[channel].splice(removeIndex, 1);
+          }
+        }
+      }
+      return this;
+    }
+  }, {
+    key: 'removeAll',
+    value: function removeAll(channel) {
+      if (Array.isArray(this._events[channel])) {
+        delete this._events[channel];
+      }
+      return this;
+    }
+  }]);
+
+  return _class;
+}();
 
 },{}],326:[function(require,module,exports){
-const Error = require('./error.js')
+'use strict';
 
-const SyntaxError = module.exports = class extends Error {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  toString () {
-    return 'Syntax error: ' + this.message
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Error = require('./error.js');
+
+var SyntaxError = module.exports = function (_Error) {
+  _inherits(_class, _Error);
+
+  function _class() {
+    _classCallCheck(this, _class);
+
+    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
   }
 
-}
+  _createClass(_class, [{
+    key: 'toString',
+    value: function toString() {
+      return 'Syntax error: ' + this.message;
+    }
+  }]);
+
+  return _class;
+}(Error);
 
 },{"./error.js":324}],327:[function(require,module,exports){
-const Error = require('./error.js')
+'use strict';
 
-const TypeError = module.exports = class extends Error {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  toString () {
-    return 'Type error: ' + this.message
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Error = require('./error.js');
+
+var TypeError = module.exports = function (_Error) {
+  _inherits(_class, _Error);
+
+  function _class() {
+    _classCallCheck(this, _class);
+
+    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
   }
 
-}
+  _createClass(_class, [{
+    key: 'toString',
+    value: function toString() {
+      return 'Type error: ' + this.message;
+    }
+  }]);
+
+  return _class;
+}(Error);
 
 },{"./error.js":324}],328:[function(require,module,exports){
-document.addEventListener('DOMContentLoaded', () => {
+'use strict';
 
-  const Application = require('./application.js')
-  const Console = require('./console.js')
-  const {Interpreter} = require('../index.js')
+document.addEventListener('DOMContentLoaded', function () {
 
-  const canvas = document.getElementById('canvas')
-  const editor = document.getElementById('editor')
-  const interpreter = new Interpreter()
-  const karolConsole = new Console(document.getElementById('console-output'), document.getElementById('console-input'))
-  const app = window.app = new Application(interpreter, canvas, karolConsole)
-  app.world.render()
+  var Application = require('./application.js');
+  var Console = require('./console.js');
 
-  const runButton = document.getElementById('run')
-  runButton.addEventListener('click', () => {
+  var _require = require('../index.js'),
+      Interpreter = _require.Interpreter;
+
+  var canvas = document.getElementById('canvas');
+  var editor = document.getElementById('editor');
+  var interpreter = new Interpreter();
+  var karolConsole = new Console(document.getElementById('console-output'), document.getElementById('console-input'));
+  var app = window.app = new Application(interpreter, canvas, karolConsole);
+  app.world.render();
+
+  var runButton = document.getElementById('run');
+  runButton.addEventListener('click', function () {
     if (interpreter.stopped) {
-      interpreter.run(editor.value).then(console.log).catch(console.error)
+      interpreter.run(editor.value).then(console.log).catch(console.error);
     } else if (!interpreter.running) {
-      interpreter.unpause()
+      interpreter.unpause();
     }
-  })
-  runButton.disabled = false
+  });
+  runButton.disabled = false;
 
-  interpreter.on('run', () => {
-    runButton.disabled = true
-    pauseButton.disabled = false
-    stopButton.disabled = false
-  })
-  interpreter.on('unpause', () => {
-    runButton.disabled = true
-    pauseButton.disabled = false
-    stopButton.disabled = false
-  })
+  interpreter.on('run', function () {
+    runButton.disabled = true;
+    pauseButton.disabled = false;
+    stopButton.disabled = false;
+  });
+  interpreter.on('unpause', function () {
+    runButton.disabled = true;
+    pauseButton.disabled = false;
+    stopButton.disabled = false;
+  });
 
-  const pauseButton = document.getElementById('pause')
-  pauseButton.addEventListener('click', () => {
-    interpreter.pause() // can do that safely because interpreter won't do anything if it isn't running
-  })
-  pauseButton.disabled = true
+  var pauseButton = document.getElementById('pause');
+  pauseButton.addEventListener('click', function () {
+    interpreter.pause(); // can do that safely because interpreter won't do anything if it isn't running
+  });
+  pauseButton.disabled = true;
 
-  interpreter.on('pause', () => {
-    runButton.disabled = false
-    pauseButton.disabled = true
-    stopButton.disabled = false
-  })
+  interpreter.on('pause', function () {
+    runButton.disabled = false;
+    pauseButton.disabled = true;
+    stopButton.disabled = false;
+  });
 
-  const stopButton = document.getElementById('stop')
-  stopButton.addEventListener('click', () => {
-    interpreter.stop()
-  })
-  stopButton.disabled = true
+  var stopButton = document.getElementById('stop');
+  stopButton.addEventListener('click', function () {
+    interpreter.stop();
+  });
+  stopButton.disabled = true;
 
-  interpreter.listen(['finish', 'stop'], () => {
-    runButton.disabled = false
-    pauseButton.disabled = true
-    stopButton.disabled = true
-  })
-
-})
+  interpreter.listen(['finish', 'stop'], function () {
+    runButton.disabled = false;
+    pauseButton.disabled = true;
+    stopButton.disabled = true;
+  });
+});
 
 },{"../index.js":1,"./application.js":329,"./console.js":330}],329:[function(require,module,exports){
-const {Error, Procedure, KarolineNumber, KarolineBoolean, KarolineObject, Class, Value} = require('../index.js')
-const {Robot, World} = require('karol.js')
+'use strict';
 
-const Application = module.exports = class {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  constructor (interpreter, canvas, karolConsole) {
-    this.interpreter = interpreter
-    this.ctx = canvas.getContext('2d')
-    this.karolConsole = karolConsole
-    this.world = new World(canvas)
-    this.robot = new Robot(this.world)
-    this.robot.x = 4
-    this.robot.z = 3
-    this.addStandardLibrary()
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
-    this.interpreter.on('statement', this.world.render.bind(this.world))
-    this.interpreter.on('error', this.printError.bind(this))
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _require = require('../index.js'),
+    Error = _require.Error,
+    Procedure = _require.Procedure,
+    KarolineNumber = _require.KarolineNumber,
+    KarolineBoolean = _require.KarolineBoolean,
+    KarolineString = _require.KarolineString,
+    KarolineObject = _require.KarolineObject,
+    Class = _require.Class,
+    Value = _require.Value;
+
+var _require2 = require('karol.js'),
+    Robot = _require2.Robot,
+    World = _require2.World;
+
+var Application = module.exports = function () {
+  function _class(interpreter, canvas, karolConsole) {
+    _classCallCheck(this, _class);
+
+    this.interpreter = interpreter;
+    this.ctx = canvas.getContext('2d');
+    this.karolConsole = karolConsole;
+    this.world = new World(canvas);
+    this.robot = new Robot(this.world);
+    this.robot.x = 4;
+    this.robot.z = 3;
+    this.addStandardLibrary();
+
+    this.interpreter.on('statement', this.world.render.bind(this.world));
+    this.interpreter.on('error', this.printError.bind(this));
   }
 
-  addStandardLibrary () {
-    const {interpreter} = this
+  _createClass(_class, [{
+    key: 'addStandardLibrary',
+    value: function addStandardLibrary() {
+      var _this = this;
 
-    interpreter.addNativeValue('true', KarolineBoolean.createNativeInstance(true))
-    interpreter.addNativeValue('false', KarolineBoolean.createNativeInstance(false))
-    interpreter.addNativeValue('Number', KarolineNumber)
+      var interpreter = this.interpreter;
 
-    interpreter.addNativeProcedure(new Procedure({
-      name: 'step',
-      cb: (args) => this.robot.step(args[0] ? args[0].value : 1),
-      expectedArguments: [{
-        type: KarolineNumber,
-        optional: true
-      }]
-    }))
 
-    interpreter.addNativeProcedure(new Procedure({
-      name: 'turnleft',
-      cb: this.robot.turnLeft.bind(this.robot, undefined)
-    }))
+      interpreter.addNativeValue('true', KarolineBoolean.createNativeInstance(true));
+      interpreter.addNativeValue('false', KarolineBoolean.createNativeInstance(false));
+      interpreter.addNativeValue('Object', KarolineObject);
+      interpreter.addNativeValue('Number', KarolineNumber);
+      interpreter.addNativeValue('Boolean', KarolineBoolean);
+      interpreter.addNativeValue('String', KarolineString);
 
-    interpreter.addNativeProcedure(new Procedure({
-      name: 'turnright',
-      cb: this.robot.turnRight.bind(this.robot, undefined)
-    }))
+      interpreter.addNativeProcedure(new Procedure({
+        name: 'step',
+        cb: function cb(args) {
+          return _this.robot.step(args[0] ? args[0].value : 1);
+        },
+        expectedArguments: [{
+          type: KarolineNumber,
+          optional: true
+        }]
+      }));
 
-    interpreter.addNativeProcedure(new Procedure({
-      name: 'laydown',
-      cb: this.robot.layDown.bind(this.robot, undefined)
-    }))
+      interpreter.addNativeProcedure(new Procedure({
+        name: 'turnleft',
+        cb: this.robot.turnLeft.bind(this.robot, undefined)
+      }));
 
-    interpreter.addNativeProcedure(new Procedure({
-      name: 'pickup',
-      cb: this.robot.pickUp.bind(this.robot, undefined)
-    }))
+      interpreter.addNativeProcedure(new Procedure({
+        name: 'turnright',
+        cb: this.robot.turnRight.bind(this.robot, undefined)
+      }));
 
-    interpreter.addNativeProcedure(new Procedure({
-      name: 'setmark',
-      cb: this.robot.setMark.bind(this.robot)
-    }))
+      interpreter.addNativeProcedure(new Procedure({
+        name: 'laydown',
+        cb: this.robot.layDown.bind(this.robot, undefined)
+      }));
 
-    interpreter.addNativeProcedure(new Procedure({
-      name: 'deletemark',
-      cb: this.robot.removeMark.bind(this.robot)
-    }))
+      interpreter.addNativeProcedure(new Procedure({
+        name: 'pickup',
+        cb: this.robot.pickUp.bind(this.robot, undefined)
+      }));
 
-    interpreter.addNativeProcedure(new Procedure({
-      name: 'wall',
-      cb: () => {
-        const position = this.robot.getPositionBefore()
-        return Value.createBoolean(!this.world.getTileAt(position.x, position.z))
-      }
-    }))
+      interpreter.addNativeProcedure(new Procedure({
+        name: 'setmark',
+        cb: this.robot.setMark.bind(this.robot)
+      }));
 
-    interpreter.addNativeProcedure(new Procedure({
-      name: 'not',
-      cb: (args) => {
-        return Value.createBoolean(!args[0].castToBoolean().value)
-      },
-      expectedArguments: [{
-        type: Value.ANY
-      }]
-    }))
+      interpreter.addNativeProcedure(new Procedure({
+        name: 'deletemark',
+        cb: this.robot.removeMark.bind(this.robot)
+      }));
 
-    interpreter.addNativeProcedure(new Procedure({
-      name: 'fast',
-      cb: () => {
-        interpreter.speed = 200
-      }
-    }))
-
-    interpreter.addNativeProcedure(new Procedure({
-      name: 'slow',
-      cb: () => {
-        interpreter.speed = 600
-      }
-    }))
-
-    interpreter.addNativeProcedure(new Procedure({
-      name: 'print',
-      cb: async (args) => {
-        const strings = []
-        let index
-        for (index in args) {
-          const arg = args[index]
-          const string = await arg.getProperty(KarolineObject.TO_STRING).value.execute([], arg)
-          strings.push(string.value)
+      interpreter.addNativeProcedure(new Procedure({
+        name: 'wall',
+        cb: function cb() {
+          var position = _this.robot.getPositionBefore();
+          return Value.createBoolean(!_this.world.getTileAt(position.x, position.z));
         }
-        this.karolConsole.log(...strings)
-      }
-    }))
+      }));
 
-    interpreter.addNativeProcedure(new Procedure({
-      name: 'wait',
-      cb: (args) => {
-        const time = args[0].value
-        return new Promise((resolve, reject) => {
-          setTimeout(resolve, time)
-        })
-      },
-      expectedArguments: [{
-        type: KarolineNumber
-      }]
-    }))
-  }
+      interpreter.addNativeProcedure(new Procedure({
+        name: 'not',
+        cb: function cb(args) {
+          return Value.createBoolean(!args[0].castToBoolean().value);
+        },
+        expectedArguments: [{
+          type: Value.ANY
+        }]
+      }));
 
-  printError (error) {
-    if (error instanceof window.Error) {
-      this.karolConsole.error(new Error(`Interpreter error in file ${error.fileName}: ` + error.message, {
-        line: error.lineKarolineNumber,
-        column: error.columnKarolineNumber
-      }))
-    } else {
-      this.karolConsole.error(error)
+      interpreter.addNativeProcedure(new Procedure({
+        name: 'fast',
+        cb: function cb() {
+          interpreter.speed = 200;
+        }
+      }));
+
+      interpreter.addNativeProcedure(new Procedure({
+        name: 'slow',
+        cb: function cb() {
+          interpreter.speed = 600;
+        }
+      }));
+
+      interpreter.addNativeProcedure(new Procedure({
+        name: 'print',
+        cb: function () {
+          var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(args) {
+            var _karolConsole;
+
+            var strings, index, arg, string;
+            return regeneratorRuntime.wrap(function _callee$(_context) {
+              while (1) {
+                switch (_context.prev = _context.next) {
+                  case 0:
+                    strings = [];
+                    index = void 0;
+                    _context.t0 = regeneratorRuntime.keys(args);
+
+                  case 3:
+                    if ((_context.t1 = _context.t0()).done) {
+                      _context.next = 12;
+                      break;
+                    }
+
+                    index = _context.t1.value;
+                    arg = args[index];
+                    _context.next = 8;
+                    return arg.getProperty(KarolineObject.TO_STRING).value.execute([], arg);
+
+                  case 8:
+                    string = _context.sent;
+
+                    strings.push(string.value);
+                    _context.next = 3;
+                    break;
+
+                  case 12:
+                    (_karolConsole = _this.karolConsole).log.apply(_karolConsole, strings);
+
+                  case 13:
+                  case 'end':
+                    return _context.stop();
+                }
+              }
+            }, _callee, _this);
+          }));
+
+          function cb(_x) {
+            return _ref.apply(this, arguments);
+          }
+
+          return cb;
+        }()
+      }));
+
+      interpreter.addNativeProcedure(new Procedure({
+        name: 'wait',
+        cb: function cb(args) {
+          var time = args[0].value;
+          return new Promise(function (resolve, reject) {
+            setTimeout(resolve, time);
+          });
+        },
+        expectedArguments: [{
+          type: KarolineNumber
+        }]
+      }));
     }
-  }
+  }, {
+    key: 'printError',
+    value: function printError(error) {
+      if (error instanceof window.Error) {
+        this.karolConsole.error(new Error('Interpreter error in file ' + error.fileName + ': ' + error.message, {
+          line: error.lineKarolineNumber,
+          column: error.columnKarolineNumber
+        }));
+      } else {
+        this.karolConsole.error(error);
+      }
+    }
+  }]);
 
-}
+  return _class;
+}();
 
 },{"../index.js":1,"karol.js":310}],330:[function(require,module,exports){
-const {EventEmitter} = require('../index.js')
+'use strict';
 
-const Console = module.exports = class extends EventEmitter {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  constructor (output, input) {
-    super()
-    this.output = output
-    this.input = input
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _require = require('../index.js'),
+    EventEmitter = _require.EventEmitter;
+
+var Console = module.exports = function (_EventEmitter) {
+  _inherits(_class, _EventEmitter);
+
+  function _class(output, input) {
+    _classCallCheck(this, _class);
+
+    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this));
+
+    _this.output = output;
+    _this.input = input;
+    return _this;
   }
 
-  createMessage (string) {
-    const element = document.createElement('div')
-    element.classList.add('console-message')
-    const time = document.createElement('span')
-    time.textContent = (new Date()).toTimeString()
-    element.appendChild(time)
-    const content = document.createElement('span')
-    content.textContent = string
-    element.appendChild(content)
-    this.output.appendChild(element)
-    return element
-  }
-
-  log () {
-    let index
-    let str = ''
-    const args = Array.from(arguments)
-    for (index in args) {
-      str += args[index].toString() + ' '
+  _createClass(_class, [{
+    key: 'createMessage',
+    value: function createMessage(string) {
+      var element = document.createElement('div');
+      element.classList.add('console-message');
+      var time = document.createElement('span');
+      time.textContent = new Date().toTimeString();
+      element.appendChild(time);
+      var content = document.createElement('span');
+      content.textContent = string;
+      element.appendChild(content);
+      this.output.appendChild(element);
+      return element;
     }
-    const element = this.createMessage(str.slice(0, -1))
-    element.classList.add('console-log-message')
-    this.output.scrollTo(0, this.output.scrollHeight)
-  }
-
-  error (err) {
-    const element = this.createMessage(`${err.position.line}:${err.position.column}: ${err.toString()}`)
-    const stack = err.stack.slice().reverse()
-    let index
-    for (index in stack) {
-      const stackItem = stack[index]
-      const item = document.createElement('div')
-      item.classList.add('console-error-stack-item')
-      item.textContent = `${stackItem.position.line}:${stackItem.position.column}: ${stackItem.value}`
-      element.appendChild(item)
+  }, {
+    key: 'log',
+    value: function log() {
+      var index = void 0;
+      var str = '';
+      var args = Array.from(arguments);
+      for (index in args) {
+        str += args[index].toString() + ' ';
+      }
+      var element = this.createMessage(str.slice(0, -1));
+      element.classList.add('console-log-message');
+      this.output.scrollTo(0, this.output.scrollHeight);
     }
-    element.classList.add('console-error-message')
-    this.output.scrollTo(0, this.output.scrollHeight)
-  }
+  }, {
+    key: 'error',
+    value: function error(err) {
+      var element = this.createMessage(err.position.line + ':' + err.position.column + ': ' + err.toString());
+      var stack = err.stack.slice().reverse();
+      var index = void 0;
+      for (index in stack) {
+        var stackItem = stack[index];
+        var item = document.createElement('div');
+        item.classList.add('console-error-stack-item');
+        item.textContent = stackItem.position.line + ':' + stackItem.position.column + ': ' + stackItem.value;
+        element.appendChild(item);
+      }
+      element.classList.add('console-error-message');
+      this.output.scrollTo(0, this.output.scrollHeight);
+    }
+  }, {
+    key: 'info',
+    value: function info(str) {
+      var element = this.createMessage(str.toString());
+      element.classList.add('console-info-message');
+      this.output.scrollTo(0, this.output.scrollHeight);
+    }
+  }]);
 
-  info (str) {
-    const element = this.createMessage(str.toString())
-    element.classList.add('console-info-message')
-    this.output.scrollTo(0, this.output.scrollHeight)
-  }
-
-}
+  return _class;
+}(EventEmitter);
 
 },{"../index.js":1}]},{},[328]);

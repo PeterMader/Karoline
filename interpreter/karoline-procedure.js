@@ -5,7 +5,7 @@ const Procedure = require('./procedure.js')
 
 const KarolineProcedure = module.exports = new KarolinePrimitive('KarolineProcedure', new Procedure({
   name: 'KarolineProcedure::@constructor',
-  cb: ([first]) => {
+  cb: ([first = KarolineObject.createNativeInstance()]) => {
     if (first.class = KarolineProcedure) {
       this.value = first
     } else {

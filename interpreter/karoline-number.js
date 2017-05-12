@@ -7,8 +7,12 @@ const Procedure = require('./procedure.js')
 
 const KarolineNumber = module.exports = new KarolinePrimitive('KarolineNumber', new Procedure({
   name: 'KarolineNumber::@constructor',
-  cb: async ([first]) => {
-    this.value = (await first.getProperty(KarolineObject.TO_NUMBER).value.execute([], first)).value
+  async cb ([first]) {
+    if (first) {
+      this.value = (await first.getProperty(KarolineObject.TO_NUMBER).value.execute([], first)).value
+    } else {
+      this.value = 0
+    }
   }
 }), KarolineObject)
 
@@ -24,7 +28,6 @@ KarolineNumber.setMember(KarolineObject.TO_NUMBER, KarolineProcedure.createNativ
 KarolineNumber.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::@toKarolineString',
   cb () {
-    console.log(this)
     return KarolineString.createNativeInstance(this.value.toString())
   }
 })))
@@ -40,15 +43,12 @@ KarolineNumber.setMember(KarolineObject.OPERATOR_PLUS_UNARY, KarolineProcedure.c
   name: 'KarolineNumber::unary+',
   cb () {
     return this
-  },
-  expectedArguments: [{
-    type: KarolineNumber
-  }]
+  }
 })))
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_PLUS_BINARY, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::binary+',
-  cb: async function ([other]) {
+  async cb ([other]) {
     if (other.class === KarolineNumber) {
       return KarolineNumber.createNativeInstance(this.value + other.value)
     }
@@ -64,10 +64,7 @@ KarolineNumber.setMember(KarolineObject.OPERATOR_MINUS_UNARY, KarolineProcedure.
   name: 'KarolineNumber::unary-',
   cb () {
     return KarolineNumber.createNativeInstance(-this.value)
-  },
-  expectedArguments: [{
-    type: KarolineNumber
-  }]
+  }
 })))
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_MINUS_BINARY, KarolineProcedure.createNativeInstance(new Procedure({
@@ -103,7 +100,7 @@ KarolineNumber.setMember(KarolineObject.OPERATOR_SLASH, KarolineProcedure.create
 KarolineNumber.setMember(KarolineObject.OPERATOR_LESS_THAN, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineNumber::<',
   cb ([other]) {
-    return KarolineNumber.createNativeInstance(this.value < other.value)
+    return KarolineBoolean.createNativeInstance(this.value < other.value)
   },
   expectedArguments: [{
     type: KarolineNumber
@@ -111,11 +108,21 @@ KarolineNumber.setMember(KarolineObject.OPERATOR_LESS_THAN, KarolineProcedure.cr
 })))
 
 KarolineNumber.setMember(KarolineObject.OPERATOR_GREATER_THAN, KarolineProcedure.createNativeInstance(new Procedure({
-  name: 'KarolineNumber::<',
+  name: 'KarolineNumber::>',
   cb ([other]) {
-    return KarolineNumber.createNativeInstance(this.value > other.value)
+    return KarolineBoolean.createNativeInstance(this.value > other.value)
   },
   expectedArguments: [{
     type: KarolineNumber
+  }]
+})))
+
+KarolineNumber.setMember(KarolineObject.OPERATOR_EQUALITY, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineNumber::==',
+  cb ([other]) {
+    return KarolineBoolean.createNativeInstance(this.value === other.value)
+  },
+  expectedArguments: [{
+    type: KarolineObject.ANY
   }]
 })))

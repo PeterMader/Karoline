@@ -22,14 +22,6 @@ repeat 2 times
 *repeat
 ```
 
-Go until you reach the wall:
-```
-repeat while not(wall)
-  step
-  print(not(wall))
-*repeat
-```
-
 Variables and constants:
 ```
 procedure test
@@ -45,4 +37,21 @@ a = 2
 print(a)
 test()
 print(a)
+```
+
+Objects:
+```
+const obj = new Object()
+
+obj.property = 'hello world!'
+obj.method = procedure m
+  print("I'm in the method!")
+*procedure
+
+procedure printTheProperty
+  print(obj.property)
+*procedure
+
+printTheProperty()
+obj.method()
 ```

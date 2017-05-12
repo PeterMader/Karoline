@@ -1,4 +1,13 @@
-const {Error, Procedure, KarolineNumber, KarolineBoolean, KarolineObject, Class, Value} = require('../index.js')
+const {
+  Error,
+  Procedure,
+  KarolineNumber,
+  KarolineBoolean,
+  KarolineString,
+  KarolineObject,
+  Class,
+  Value
+} = require('../index.js')
 const {Robot, World} = require('karol.js')
 
 const Application = module.exports = class {
@@ -22,7 +31,10 @@ const Application = module.exports = class {
 
     interpreter.addNativeValue('true', KarolineBoolean.createNativeInstance(true))
     interpreter.addNativeValue('false', KarolineBoolean.createNativeInstance(false))
+    interpreter.addNativeValue('Object', KarolineObject)
     interpreter.addNativeValue('Number', KarolineNumber)
+    interpreter.addNativeValue('Boolean', KarolineBoolean)
+    interpreter.addNativeValue('String', KarolineString)
 
     interpreter.addNativeProcedure(new Procedure({
       name: 'step',
