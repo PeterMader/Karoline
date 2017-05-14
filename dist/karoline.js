@@ -62,7 +62,7 @@ var Class = module.exports = function (_Value) {
     _this.name = name;
     _this.ctor = ctor;
     _this.members = {};
-    _this.setProperty('members', new Value());
+    _this.setProperty('members', new Value()); // TODO: only work with .properties.member.properties instead of .members
     _this.superClass = superClass || null;
     return _this;
   }
@@ -286,14 +286,40 @@ var Interpreter = module.exports = function (_KarolineParser) {
     value: function createProcedure(name, block) {
       var length = block.length;
 
-      var procedure = new Procedure({
+      var proc = new Procedure({
         cb: this.evaluateBlock.bind(this, block),
         name: name,
         userDefined: true,
         scope: this.context.scope
       });
-      var value = KarolineProcedure.createNativeInstance(procedure);
-      this.context.set(name, value);
+      var value = KarolineProcedure.createNativeInstance(proc);
+      return value;
+    }
+  }, {
+    key: 'createFunction',
+    value: function createFunction(name, params, block) {
+      var length = block.length;
+
+      var self = this;
+      var func = new Procedure({
+        cb: function cb(args) {
+          var index = void 0;
+          for (index in params) {
+            if (args[index]) {
+              self.context.set(params[index], args[index]);
+            } else {
+              self.context.set(params[index], new KarolineObject());
+            }
+          }
+          self.context.set('this', this);
+          return self.evaluateBlock(block);
+        },
+
+        name: name,
+        userDefined: true,
+        scope: this.context.scope
+      });
+      var value = KarolineProcedure.createNativeInstance(func);
       return value;
     }
   }, {
@@ -557,7 +583,7 @@ var Interpreter = module.exports = function (_KarolineParser) {
     key: 'evaluate',
     value: function () {
       var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(tree, isStatement) {
-        var result, identifier, first, _first, second, string, value, _result, cls, args, i, _first2, _second, _first3, index, _value, identifiers, declaration, _identifier, _index, _value2, _identifiers, _declaration, _identifier2, _first4, _second2, _first5, firstBoolean, _second3, _first6, _firstBoolean, _second4, _first7, _first8, procedure, _args4, _i, condition, block, times, _i2, _first9, _block, name;
+        var result, identifier, first, _first, second, string, value, _result, cls, args, i, _first2, _second, _first3, index, _value, identifiers, declaration, _identifier, _index, _value2, _identifiers, _declaration, _identifier2, _first4, _second2, _first5, firstBoolean, _second3, _first6, _firstBoolean, _second4, _first7, _first8, procedure, _args4, _i, condition, block, times, _i2, _condition, bool, _first9, _block, name, proc, _name, params, _block2, func;
 
         return regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
@@ -1031,7 +1057,7 @@ var Interpreter = module.exports = function (_KarolineParser) {
 
               case 185:
                 if (!(tree.value === 'if')) {
-                  _context4.next = 195;
+                  _context4.next = 198;
                   break;
                 }
 
@@ -1040,105 +1066,143 @@ var Interpreter = module.exports = function (_KarolineParser) {
 
               case 188:
                 condition = _context4.sent;
+                _context4.next = 191;
+                return condition.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], condition);
 
-                if (!condition.castToBoolean().value) {
-                  _context4.next = 193;
+              case 191:
+                if (!_context4.sent.value) {
+                  _context4.next = 195;
                   break;
                 }
 
                 return _context4.abrupt('return', this.evaluateBlock(tree.ifBlock));
 
-              case 193:
+              case 195:
                 if (!tree.elseBlock) {
-                  _context4.next = 195;
+                  _context4.next = 197;
                   break;
                 }
 
                 return _context4.abrupt('return', this.evaluateBlock(tree.elseBlock));
 
-              case 195:
+              case 197:
+                return _context4.abrupt('return', new Value());
+
+              case 198:
                 if (!(tree.value === 'repeat')) {
-                  _context4.next = 221;
+                  _context4.next = 228;
                   break;
                 }
 
                 block = tree.block;
 
                 if (!(typeof tree.times !== 'undefined')) {
-                  _context4.next = 213;
+                  _context4.next = 216;
                   break;
                 }
 
-                _context4.next = 200;
+                _context4.next = 203;
                 return this.evaluate(tree.times);
 
-              case 200:
+              case 203:
                 times = _context4.sent;
 
                 if (!(times.class !== KarolineNumber)) {
-                  _context4.next = 203;
+                  _context4.next = 206;
                   break;
                 }
 
                 throw new TypeError('repeat structure: expected ' + Value.NUMBER + ', got ' + times.type);
 
-              case 203:
+              case 206:
                 _i2 = void 0;
                 _i2 = 0;
 
-              case 205:
+              case 208:
                 if (!(_i2 < times.value)) {
-                  _context4.next = 211;
+                  _context4.next = 214;
                   break;
                 }
 
-                _context4.next = 208;
+                _context4.next = 211;
                 return this.evaluateBlock(block);
-
-              case 208:
-                _i2 += 1;
-                _context4.next = 205;
-                break;
 
               case 211:
-                _context4.next = 220;
+                _i2 += 1;
+                _context4.next = 208;
                 break;
 
-              case 213:
-                _context4.next = 215;
+              case 214:
+                _context4.next = 227;
+                break;
+
+              case 216:
+                _context4.next = 218;
                 return this.evaluate(tree.condition);
 
-              case 215:
-                if (!_context4.sent.castToBoolean().value) {
-                  _context4.next = 220;
+              case 218:
+                _condition = _context4.sent;
+                _context4.next = 221;
+                return _condition.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], _condition);
+
+              case 221:
+                bool = _context4.sent;
+
+                if (bool.value) {
+                  _context4.next = 224;
                   break;
                 }
 
-                _context4.next = 218;
+                return _context4.abrupt('break', 227);
+
+              case 224:
+                _context4.next = 226;
                 return this.evaluateBlock(block);
 
-              case 218:
-                _context4.next = 213;
-                break;
+              case 226:
+                if (true) {
+                  _context4.next = 216;
+                  break;
+                }
 
-              case 220:
+              case 227:
                 return _context4.abrupt('return', new Value());
 
-              case 221:
+              case 228:
                 if (!(tree.value === 'procedure')) {
-                  _context4.next = 225;
+                  _context4.next = 234;
                   break;
                 }
 
                 _first9 = tree.first, _block = tree.block;
                 name = _first9.value; // first is an identifier and does not have to be evalated
 
-                return _context4.abrupt('return', this.createProcedure(name, _block));
+                proc = this.createProcedure(name, _block);
 
-              case 225:
+                this.context.set(name, proc);
+                return _context4.abrupt('return', proc);
+
+              case 234:
+                if (!(tree.value === 'function')) {
+                  _context4.next = 239;
+                  break;
+                }
+
+                _name = tree.name, params = tree.params, _block2 = tree.block;
+                func = this.createFunction(_name ? _name.value : '<anonymous function expression>', params.map(function (param) {
+                  return param.value;
+                }), _block2);
+
+                if (_name) {
+                  this.context.set(_name.value, func);
+                }
+                return _context4.abrupt('return', func);
+
+              case 239:
+
                 this.throwTypeError('unexpected symbol ' + tree.value, tree.position);
 
-              case 226:
+              case 240:
               case 'end':
                 return _context4.stop();
             }
@@ -1470,7 +1534,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 var Value = require('./value.js');
 var Procedure = require('./procedure.js');
 var KarolinePrimitive = require('./karoline-primitive.js');
-var KarolineProcedure = require('./karoline-procedure.js');
 var TypeError = require('../util/type-error.js');
 
 var KarolineObject = module.exports = new KarolinePrimitive('KarolineObject', new Procedure({
@@ -1478,6 +1541,12 @@ var KarolineObject = module.exports = new KarolinePrimitive('KarolineObject', ne
 }));
 
 KarolineObject.TO_NUMBER = Symbol('To number');
+KarolineObject.TO_STRING = Symbol('To string');
+KarolineObject.TO_BOOLEAN = Symbol('To boolean');
+
+var KarolineProcedure = require('./karoline-procedure.js');
+var failProcedure = KarolineProcedure.createNativeInstance(Procedure.FAIL);
+
 KarolineObject.setMember(KarolineObject.TO_NUMBER, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineObject::@toKarolineNumber',
   cb: function cb() {
@@ -1485,7 +1554,6 @@ KarolineObject.setMember(KarolineObject.TO_NUMBER, KarolineProcedure.createNativ
   }
 })));
 
-KarolineObject.TO_STRING = Symbol('To string');
 KarolineObject.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineObject::@toKarolineString',
   cb: function cb() {
@@ -1493,7 +1561,6 @@ KarolineObject.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativ
   }
 })));
 
-KarolineObject.TO_BOOLEAN = Symbol('To boolean');
 KarolineObject.setMember(KarolineObject.TO_BOOLEAN, KarolineProcedure.createNativeInstance(new Procedure({
   name: 'KarolineObject::@toKarolineBoolean',
   cb: function cb() {
@@ -1502,22 +1569,22 @@ KarolineObject.setMember(KarolineObject.TO_BOOLEAN, KarolineProcedure.createNati
 })));
 
 KarolineObject.OPERATOR_PLUS_UNARY = Symbol('Operator plus unary');
-KarolineObject.setMember(KarolineObject.OPERATOR_PLUS_UNARY, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+KarolineObject.setMember(KarolineObject.OPERATOR_PLUS_UNARY, failProcedure);
 
 KarolineObject.OPERATOR_PLUS_BINARY = Symbol('Operator plus binary');
-KarolineObject.setMember(KarolineObject.OPERATOR_PLUS_BINARY, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+KarolineObject.setMember(KarolineObject.OPERATOR_PLUS_BINARY, failProcedure);
 
 KarolineObject.OPERATOR_MINUS_UNARY = Symbol('Operator minus unary');
-KarolineObject.setMember(KarolineObject.OPERATOR_MINUS_UNARY, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+KarolineObject.setMember(KarolineObject.OPERATOR_MINUS_UNARY, failProcedure);
 
 KarolineObject.OPERATOR_MINUS_BINARY = Symbol('Operator minus binary');
-KarolineObject.setMember(KarolineObject.OPERATOR_MINUS_BINARY, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+KarolineObject.setMember(KarolineObject.OPERATOR_MINUS_BINARY, failProcedure);
 
 KarolineObject.OPERATOR_ASTERISK = Symbol('Operator asterisk');
-KarolineObject.setMember(KarolineObject.OPERATOR_ASTERISK, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+KarolineObject.setMember(KarolineObject.OPERATOR_ASTERISK, failProcedure);
 
 KarolineObject.OPERATOR_SLASH = Symbol('Operator slash');
-KarolineObject.setMember(KarolineObject.OPERATOR_SLASH, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+KarolineObject.setMember(KarolineObject.OPERATOR_SLASH, failProcedure);
 
 KarolineObject.OPERATOR_EQUALITY = Symbol('Operator equality');
 KarolineObject.setMember(KarolineObject.OPERATOR_EQUALITY, KarolineProcedure.createNativeInstance(new Procedure({
@@ -1535,10 +1602,10 @@ KarolineObject.setMember(KarolineObject.OPERATOR_EQUALITY, KarolineProcedure.cre
 })));
 
 KarolineObject.OPERATOR_LESS_THAN = Symbol('Operator less than');
-KarolineObject.setMember(KarolineObject.OPERATOR_LESS_THAN, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+KarolineObject.setMember(KarolineObject.OPERATOR_LESS_THAN, failProcedure);
 
 KarolineObject.OPERATOR_GREATER_THAN = Symbol('Operator greater than');
-KarolineObject.setMember(KarolineObject.OPERATOR_GREATER_THAN, KarolineProcedure.createNativeInstance(Procedure.FAIL));
+KarolineObject.setMember(KarolineObject.OPERATOR_GREATER_THAN, failProcedure);
 
 KarolineObject.BINARY_OPERATORS = {
   '+': KarolineObject.OPERATOR_PLUS_BINARY,
@@ -1603,9 +1670,9 @@ var KarolineProcedure = module.exports = new KarolinePrimitive('KarolineProcedur
         first = _ref2$ === undefined ? KarolineObject.createNativeInstance() : _ref2$;
 
     if (first.class = KarolineProcedure) {
-      undefined.value = first;
+      this.value = first;
     } else {
-      undefined.value = KarolineProcedure.createNativeInstance(new Procedure({
+      this.value = KarolineProcedure.createNativeInstance(new Procedure({
         cb: function cb() {
           return first;
         }
@@ -1621,7 +1688,14 @@ KarolineProcedure.setMember('call', KarolineProcedure.createNativeInstance(new P
   }
 })));
 
-},{"./karoline-object.js":7,"./karoline-primitive.js":8,"./procedure.js":11,"./value.js":12}],10:[function(require,module,exports){
+KarolineProcedure.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineProcedure::@toKarolineString',
+  cb: function cb() {
+    return require('./karoline-string.js').createNativeInstance('function ' + this.value.name + '()');
+  }
+})));
+
+},{"./karoline-object.js":7,"./karoline-primitive.js":8,"./karoline-string.js":10,"./procedure.js":11,"./value.js":12}],10:[function(require,module,exports){
 'use strict';
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -8991,6 +9065,51 @@ var KarolineParser = module.exports = function (_EventEmitter) {
         value: '*procedure'
       }));
 
+      parser.tokenizer.addKeyWord('function');
+      parser.tokenizer.addKeyWord('*function');
+      parser.registerSymbol(new PrefixOperator({
+        value: 'function',
+        nullDenotation: function nullDenotation(self) {
+          var item = self.clone();
+          item.params = [];
+          if (parser.token.type === Token.TOKEN_TYPE_IDENTIFIER) {
+            item.name = parser.token;
+            parser.nextToken();
+          }
+          parser.nextToken('(');
+          if (parser.token.value === ')') {
+            // no params
+            parser.nextToken();
+            item.block = _this2.processBlock('*function');
+            parser.nextToken();
+            return item;
+          }
+
+          while (true) {
+            if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+              throw new SyntaxError('expected identifier as parameter name');
+            }
+            item.params.push(parser.token);
+            parser.nextToken();
+            if (parser.token.value === ')') {
+              break;
+            }
+            if (parser.token.value !== ',') {
+              throw new SyntaxError('expected \',\' token, got ' + parser.token.value);
+            }
+            parser.nextToken();
+          }
+
+          parser.nextToken();
+          item.block = _this2.processBlock('*function');
+          parser.nextToken();
+          return item;
+        }
+      }));
+      parser.registerSymbol(new ParserSymbol({
+        value: '*function'
+      }));
+
       parser.tokenizer.addKeyWords(['if', '*if', 'else', 'then']);
       parser.registerSymbol(new PrefixOperator({
         value: 'if',
@@ -9521,8 +9640,8 @@ var Token = module.exports = function () {
   function _class(options) {
     _classCallCheck(this, _class);
 
-    this.type = options.type || '';
-    this.value = options.value || '';
+    this.type = options.type || Token.TOKEN_TYPE_KEY_WORD;
+    this.value = options.value === undefined ? '' : options.value;
     this.position = options.position || {
       line: 0,
       column: 0

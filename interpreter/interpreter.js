@@ -44,14 +44,37 @@ const Interpreter = module.exports = class extends KarolineParser {
 
   createProcedure (name, block) {
     const {length} = block
-    const procedure = new Procedure({
+    const proc = new Procedure({
       cb: this.evaluateBlock.bind(this, block),
       name,
       userDefined: true,
       scope: this.context.scope
     })
-    const value = KarolineProcedure.createNativeInstance(procedure)
-    this.context.set(name, value)
+    const value = KarolineProcedure.createNativeInstance(proc)
+    return value
+  }
+
+  createFunction (name, params, block) {
+    const {length} = block
+    const self = this
+    const func = new Procedure({
+      cb (args) {
+        let index
+        for (index in params) {
+          if (args[index]) {
+            self.context.set(params[index], args[index])
+          } else {
+            self.context.set(params[index], new KarolineObject())
+          }
+        }
+        self.context.set('this', this)
+        return self.evaluateBlock(block)
+      },
+      name,
+      userDefined: true,
+      scope: this.context.scope
+    })
+    const value = KarolineProcedure.createNativeInstance(func)
     return value
   }
 
@@ -239,7 +262,7 @@ const Interpreter = module.exports = class extends KarolineParser {
       if (cls.class !== Class && cls.class !== KarolinePrimitive) {
         this.throwTypeError(`expected class`, tree)
       }
-      
+
       return cls.createInstance(args)
     }
 
@@ -355,11 +378,12 @@ const Interpreter = module.exports = class extends KarolineParser {
 
     if (tree.value === 'if') {
       const condition = await this.evaluate(tree.condition)
-      if (condition.castToBoolean().value) {
+      if ((await condition.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], condition)).value) {
         return this.evaluateBlock(tree.ifBlock)
       } else if (tree.elseBlock) {
         return this.evaluateBlock(tree.elseBlock)
       }
+      return new Value()
     }
 
     if (tree.value === 'repeat') {
@@ -376,9 +400,14 @@ const Interpreter = module.exports = class extends KarolineParser {
         }
       } else  {
         // repeat while ... structure
-        while ((await this.evaluate(tree.condition)).castToBoolean().value) {
+        do {
+          const condition = await this.evaluate(tree.condition)
+          const bool = (await condition.getProperty(KarolineObject.TO_BOOLEAN).value.execute([], condition))
+          if (!bool.value) {
+            break
+          }
           await this.evaluateBlock(block)
-        }
+        } while (true)
       }
       return new Value()
     }
@@ -386,8 +415,24 @@ const Interpreter = module.exports = class extends KarolineParser {
     if (tree.value === 'procedure') {
       const {first, block} = tree
       const name = first.value // first is an identifier and does not have to be evalated
-      return this.createProcedure(name, block)
+      const proc = this.createProcedure(name, block)
+      this.context.set(name, proc)
+      return proc
     }
+
+    if (tree.value === 'function') {
+      const {name, params, block} = tree
+      const func =  this.createFunction(
+        name ? name.value : '<anonymous function expression>',
+        params.map((param) => param.value),
+        block
+      )
+      if (name) {
+        this.context.set(name.value, func)
+      }
+      return func
+    }
+
     this.throwTypeError(`unexpected symbol ${tree.value}`, tree.position)
   }
 

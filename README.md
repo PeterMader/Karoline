@@ -55,3 +55,19 @@ procedure printTheProperty
 printTheProperty()
 obj.method()
 ```
+
+Function expressions:
+```
+const fn = function test ()
+  return 42
+*function
+
+print(fn, fn())
+
+
+print(function test ()
+  return 42
+*function, function test ()
+  return 42
+*function())
+```

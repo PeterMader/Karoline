@@ -1,8 +1,8 @@
 const Token = module.exports = class {
 
   constructor (options) {
-    this.type = options.type || ''
-    this.value = options.value || ''
+    this.type = options.type || Token.TOKEN_TYPE_KEY_WORD
+    this.value = options.value === undefined ? '' : options.value
     this.position = options.position || {
       line: 0,
       column: 0

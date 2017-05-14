@@ -5,7 +5,7 @@ const Procedure = require('./procedure.js')
 
 const KarolineProcedure = module.exports = new KarolinePrimitive('KarolineProcedure', new Procedure({
   name: 'KarolineProcedure::@constructor',
-  cb: ([first = KarolineObject.createNativeInstance()]) => {
+  cb ([first = KarolineObject.createNativeInstance()]) {
     if (first.class = KarolineProcedure) {
       this.value = first
     } else {
@@ -22,5 +22,12 @@ KarolineProcedure.setMember('call', KarolineProcedure.createNativeInstance(new P
   name: 'KarolineProcedure::call',
   cb (args) {
     return this.value.execute(args.slice(0, -1), args.slice(-1)[0])
+  }
+})))
+
+KarolineProcedure.setMember(KarolineObject.TO_STRING, KarolineProcedure.createNativeInstance(new Procedure({
+  name: 'KarolineProcedure::@toKarolineString',
+  cb () {
+    return require('./karoline-string.js').createNativeInstance('function ' + this.value.name + '()')
   }
 })))

@@ -7,7 +7,7 @@ const Class = module.exports = class extends Value {
     this.name = name
     this.ctor = ctor
     this.members = {}
-    this.setProperty('members', new Value())
+    this.setProperty('members', new Value()) // TODO: only work with .properties.member.properties instead of .members
     this.superClass = superClass || null
   }
 

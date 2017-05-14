@@ -81,6 +81,51 @@ const KarolineParser = module.exports = class extends EventEmitter {
       value: '*procedure'
     }))
 
+    parser.tokenizer.addKeyWord('function')
+    parser.tokenizer.addKeyWord('*function')
+    parser.registerSymbol(new PrefixOperator({
+      value: 'function',
+      nullDenotation: (self) => {
+        const item = self.clone()
+        item.params = []
+        if (parser.token.type === Token.TOKEN_TYPE_IDENTIFIER) {
+          item.name = parser.token
+          parser.nextToken()
+        }
+        parser.nextToken('(')
+        if (parser.token.value === ')') {
+          // no params
+          parser.nextToken()
+          item.block = this.processBlock('*function')
+          parser.nextToken()
+          return item
+        }
+
+        while (true) {
+          if (parser.token.type !== Token.TOKEN_TYPE_IDENTIFIER) {
+            throw new SyntaxError(`expected identifier as parameter name`)
+          }
+          item.params.push(parser.token)
+          parser.nextToken()
+          if (parser.token.value === ')') {
+            break
+          }
+          if (parser.token.value !== ',') {
+            throw new SyntaxError(`expected ',' token, got ${parser.token.value}`)
+          }
+          parser.nextToken()
+        }
+
+        parser.nextToken()
+        item.block = this.processBlock('*function')
+        parser.nextToken()
+        return item
+      }
+    }))
+    parser.registerSymbol(new ParserSymbol({
+      value: '*function'
+    }))
+
     parser.tokenizer.addKeyWords(['if', '*if', 'else', 'then'])
     parser.registerSymbol(new PrefixOperator({
       value: 'if',
